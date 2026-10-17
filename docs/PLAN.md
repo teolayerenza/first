@@ -1,8 +1,8 @@
 # Positos LP — Plan de proyecto
 
-> Mapa colaborativo y en tiempo real del estado de las calles del **casco urbano de La Plata**.
-> La gente reporta pozos, el sistema los asigna a la cuadra correspondiente y pinta cada cuadra
-> y cada zona según su estado.
+> Tablero público y en tiempo real del estado de las calles del **casco urbano de La Plata**.
+> Lo primero que se ve son **números claros**: qué porcentaje de las calles está roto, cuánto es
+> nuevo, cuántos pozos hay abiertos y cuánto tardan en arreglarse. El mapa viene después, como detalle.
 
 ---
 
@@ -10,256 +10,332 @@
 
 - En La Plata la obra pública es muy visible en plazas y avenidas, pero las **calles secundarias**
   acumulan pozos sin que exista un registro público y comparable de su estado.
-- Hoy un reclamo individual (147, redes) se pierde: no hay **historial**, ni **mapa**, ni forma de
-  decir "esta zona está peor que aquella".
-- Objetivo: transformar quejas sueltas en **datos abiertos, geolocalizados y agregados**, que
-  cualquiera pueda ver y compartir.
+- Un reclamo individual (147, redes) se pierde: no hay **historial** ni forma de decir
+  "esta zona está peor que aquella" o "este mes empeoró".
+- Objetivo: transformar quejas sueltas en **indicadores abiertos**, fáciles de leer y de compartir.
+
+### Público (por prioridad)
+1. **Vecinos**: reportar en pocos segundos y ver el estado de su cuadra y su zona.
+2. **Prensa / redes**: números contundentes, rankings y tarjetas para compartir.
 
 ### Alcance geográfico
-Solo el **casco urbano**: el cuadrado delimitado por la Av. de Circunvalación
-(Av. 31, Av. 32, Av. 72 y Av. 122). El polígono exacto se arma en la Fase 0 y vive en
-`data/casco_urbano.geojson`. Todo reporte fuera del polígono se rechaza (en el cliente **y** en la base).
+Solo el **casco urbano**: el cuadrado de la Av. de Circunvalación (31, 32, 72 y 122). El polígono vive en
+`data/casco_urbano.geojson`, y un reporte fuera de él se rechaza en el cliente **y** en la base.
 
 ---
 
-## 2. Qué se muestra (leyenda de colores)
+## 2. Decisiones tomadas
 
-| Color | Significado | Cómo se calcula |
+| Tema | Decisión |
+|---|---|
+| Pantalla principal | **Indicadores arriba y mapa debajo** |
+| Base de los porcentajes | **Km de calle** como dato principal y **cantidad de cuadras** como secundario |
+| "Calle nueva" | Repavimentada (con fecha) en los **últimos 12 meses** |
+| Zonas | **Cuadrantes entre avenidas** (por ejemplo, "7–13 / 44–51") |
+| Empedrado | **Categoría aparte**: no entra en el % de rotas, nuevas ni bien |
+| Cuadras sin información | Se muestran como **"Sin relevar"** dentro de la barra del 100% |
+| Buen estado | Botón **"calificar mi cuadra"**: 🟢 bien / 🟡 regular / 🔴 rota |
+| Reportar | **Anónimo con límite y verificación** (ver §6) |
+| Foto | **Opcional**: un reporte con foto cuenta como verificado |
+| Backend | **Supabase** (Postgres + PostGIS, Auth anónima, Storage, Realtime) |
+| Evolución | Variación mensual · arreglados vs. nuevos · tiempo promedio de arreglo · pozo más viejo |
+
+---
+
+## 3. Indicadores (lo principal de la app)
+
+### 3.1 Categorías de cada cuadra de asfalto
+
+| Estado | Color | Regla |
 |---|---|---|
-| 🟢 Verde | Buen estado o recién repavimentada | Puntaje bajo, o reporte "repavimentada" confirmado en los últimos N meses |
-| 🟡 Amarillo | Estado regular | Puntaje medio (pocos pozos o pozos leves) |
-| 🔴 Rojo | Mal estado | Puntaje alto (muchos pozos, graves o sin resolver hace tiempo) |
-| 🔵 Azul | Empedrado / adoquinado | Atributo de superficie de la cuadra (no es un puntaje) |
-| ⚪ Gris | Sin datos | Cuadra sin ningún reporte ni información |
+| **Nueva** | 🟢 verde intenso | Repavimentación verificada hace ≤ 12 meses y sin pozos verificados posteriores |
+| **Bien** | 🟢 verde claro | Calificación "bien" vigente y sin pozos activos verificados |
+| **Regular** | 🟡 amarillo | Calificación "regular" o puntaje de pozos medio |
+| **Rota** | 🔴 rojo | Calificación "rota" o puntaje de pozos alto |
+| **Sin relevar** | ⚪ gris | Sin calificaciones ni reportes verificados en los últimos 12 meses |
 
-**Decisión de diseño:** el azul es una *capa de superficie*, no un estado. Una cuadra empedrada
-también puede tener pozos. Propuesta: la línea se dibuja azul y los pozos encima como marcadores;
-con un toggle "ver estado" se pinta con verde/amarillo/rojo igual que el resto.
+Aparte de esas categorías: 🔵 **Empedrado** (superficie `sett`/`cobblestone` en OSM o marcada por usuarios).
+Tiene su propio indicador ("X% del casco es empedrado") y, si se quiere, su propio estado, pero
+**no entra en los porcentajes de asfalto**.
 
-Dos niveles de visualización:
-1. **Cuadra** (zoom alto): cada tramo entre dos esquinas se colorea.
-2. **Zona** (zoom bajo): hexágonos [H3](https://h3geo.org/) (resolución 9, ~0,1 km²) coloreados
-   por densidad de pozos por km de calle. Así "si una zona tiene muchos pozos, se califica como mala".
+**Regla de combinación: "el peor gana".** Estado = el peor entre (a) la calificación vigente de los
+vecinos y (b) el estado que surge del puntaje de pozos. La única excepción es una repavimentación
+verificada, que reinicia la cuadra a "Nueva".
+
+### 3.2 KPIs del tablero (arriba de todo)
+
+```
+┌──────────────────────────────────────────────────────────┐
+│  POSITOS LP · Casco urbano · actualizado hace 2 min      │
+│                                                          │
+│   18%  de las calles están ROTAS       ▲ +2 pp vs. sept. │
+│   (412 de 2.300 cuadras · 96 km)                         │
+│                                                          │
+│  ████████▓▓▓▓▓▓▓▓▒▒▒▒▒▒░░░░░░░░░░░░░░░░░░░░              │
+│  Nuevas 6% · Bien 21% · Regular 12% · Rotas 18%          │
+│  · Sin relevar 43%                                       │
+│                                                          │
+│  ┌────────┐ ┌────────┐ ┌────────┐ ┌────────┐             │
+│  │ 1.284  │ │  37 vs │ │ 64 días│ │412 días│             │
+│  │ pozos  │ │  210   │ │ prom.  │ │ el más │             │
+│  │abiertos│ │arreglad│ │de arre-│ │ viejo  │             │
+│  │        │ │vs nuevo│ │ glo    │ │ 7 y 50 │             │
+│  └────────┘ └────────┘ └────────┘ └────────┘             │
+│  🔵 11% del casco es empedrado                           │
+│                                                          │
+│  [ 📍 Reportar pozo ]   [ ⭐ Calificar mi cuadra ]        │
+├──────────────────────────────────────────────────────────┤
+│                 MAPA (cuadras coloreadas)                │
+├──────────────────────────────────────────────────────────┤
+│  Ranking de zonas (cuadrantes) por % de rotas            │
+│  1. 19–25 / 60–66 ....... 41% rotas                      │
+│  2. 1–7 / 66–72 ......... 37% rotas                      │
+│  Pozos más viejos sin arreglar · Peores cuadras          │
+│  Gráfico: % de rotas por mes · arreglados vs. nuevos     │
+└──────────────────────────────────────────────────────────┘
+```
+
+| KPI | Definición | Fuente |
+|---|---|---|
+| **% rotas** | km de asfalto en estado "Rota" / km totales de asfalto (+ cantidad de cuadras) | `segments` |
+| **% nuevas** | ídem con "Nueva" | `segments` |
+| **% bien / regular / sin relevar** | ídem | `segments` |
+| **% empedrado** | km empedrados / km totales del casco | `segments` |
+| **Pozos abiertos** | reportes verificados en estado `abierto` | `reports` |
+| **Arreglados vs. nuevos (mes)** | resueltos en el mes vs. creados en el mes | `reports` |
+| **Tiempo promedio de arreglo** | promedio de `resolved_at - created_at` de los resueltos en los últimos 90 días (mostrar también la mediana) | `reports` |
+| **Pozo más viejo** | `max(now() - created_at)` entre los abiertos, con dirección "7 y 50" | `reports` |
+| **Variación mensual** | KPI actual - KPI del snapshot de hace 30 días, en puntos porcentuales | `stats_snapshots` |
+
+**Para que los números sean honestos:**
+- Siempre se muestra "Sin relevar". Nunca se presenta un % calculado solo sobre lo relevado sin decirlo.
+- Debajo de cada número hay un link a "¿Cómo se calcula?" (página de metodología).
+- Se muestra cuántos vecinos distintos aportaron datos, porque las zonas con más usuarios
+  pueden parecer peores (sesgo de reporte).
+
+### 3.3 Zonas: cuadrantes entre avenidas
+La grilla del casco tiene una avenida cada 6 cuadras, así que cada zona es el rectángulo entre dos avenidas
+paralelas y dos perpendiculares, con nombre del tipo **"7–13 / 44–51"**, que es la forma en que se ubica cualquier platense.
+- Se arma a mano una sola vez en `data/zonas.geojson` (geojson.io) tomando las avenidas de OSM.
+- Casos a validar: la franja 51–53, las zonas cortadas por diagonales y el Bosque (se excluye o se toma como zona propia).
+- Cada zona tiene los mismos KPIs que el casco, y el ranking ordena por % de rotas (con un mínimo de % relevado para entrar).
 
 ---
 
-## 3. ¿Se puede sacar la info de Google Maps / 3D Maps?
+## 4. ¿Se puede sacar la info de Google Maps / 3D Maps?
 
-**No, y no conviene intentarlo.**
-- Google Maps no expone el estado del pavimento ni pozos; no existe esa capa.
-- Los Términos de Servicio de Google Maps Platform **prohíben** extraer/scrapear contenido
-  (incluido Street View) para crear bases de datos derivadas.
-
-**Fuentes que sí podemos usar:**
+**No.** Google no tiene una capa de estado del pavimento, y sus Términos de Servicio prohíben
+extraer contenido (incluido Street View) para armar bases de datos propias.
 
 | Fuente | Qué aporta | Licencia |
 |---|---|---|
-| **OpenStreetMap** (vía Overpass API) | Geometría de todas las calles del casco + tag `surface` (`sett`, `cobblestone`, `paving_stones` = empedrado/adoquín; `asphalt`) | ODbL (atribución obligatoria) |
-| **Reportes ciudadanos** (nuestra app) | Pozos, fotos, gravedad, "ya lo arreglaron" | Propia, publicable como datos abiertos |
-| **Mapillary** (futuro) | Imágenes a nivel calle con licencia abierta → posible detección automática de pozos con visión computacional | CC BY-SA |
-| **Municipalidad / Ordenanza 75934/24** (futuro) | Relevamiento oficial de calles patrimoniales empedradas | A pedir / acceso a la información pública |
-
-⚠️ La cobertura del tag `surface` en OSM es incompleta. Plan: usarlo como semilla y permitir que
-los usuarios marquen "esta cuadra es empedrada" (y, como bonus, devolver esas correcciones a OSM).
+| **OpenStreetMap** (Overpass API) | Geometría de las calles del casco + tag `surface` (empedrado) | ODbL (atribución obligatoria) |
+| **Vecinos** (la app) | Pozos, calificaciones, repavimentaciones, fotos | Propia, se publica como datos abiertos |
+| **Mapillary** (futuro) | Fotos a nivel calle → detección automática de pozos con ML | CC BY-SA |
+| **Municipalidad** (futuro) | Relevamiento de calles empedradas (Ordenanza 75934/24) y obras de repavimentación | Pedido de acceso a la información pública |
 
 ---
 
-## 4. Inspiración: el "dashboard de municipios" viral
+## 5. Inspiración: dashboards de datos públicos que se viralizan
+- **Primero un número grande**, después el detalle.
+- Fuente y fecha de actualización siempre visibles.
+- **Rankings y tarjetas para compartir** (imagen OG por zona/cuadra: "La zona 19–25 / 60–66 tiene 41% de calles rotas").
+- **Datos abiertos** descargables (GeoJSON/CSV).
 
-La idea a tomar de ese tipo de proyectos (transparencia de datos públicos que se viraliza):
-- **Datos primero, opinión después**: números claros, fuente visible, fecha de actualización.
-- **Rankings compartibles**: "Top 10 cuadras con más pozos", "Barrios peor/mejor calificados",
-  "Pozos más viejos sin arreglar" (con contador de días 🕐).
-- **Tarjetas para compartir en X/WhatsApp** (imagen OG generada por cuadra/zona).
-- **Datos abiertos descargables**: GeoJSON / CSV con todos los reportes.
-- **Diseño sobrio y rápido**, mobile-first.
-
-> TODO: pasar el link exacto de la app de referencia para revisar su UI y stack.
+> TODO: pasar el link de la app de municipios de referencia para revisar su UI.
 
 ---
 
-## 5. Arquitectura propuesta
+## 6. Reportar sin cuenta: anónimo con límite y verificación
+
+- **Supabase Anonymous Sign-In**: cada dispositivo recibe un `user_id` sin pedir datos. Sirve para
+  RLS, para el rate limit y para que un mismo dispositivo no pueda votar dos veces. El usuario
+  puede vincular Google más adelante si quiere (aporte con más peso, historial propio).
+- **Captcha invisible** (Cloudflare Turnstile) para evitar que bots creen sesiones anónimas.
+- **Límites**: 10 reportes y 30 calificaciones por día por dispositivo (configurable).
+- **Verificación**: un reporte o una calificación **cuenta en los KPIs** recién cuando cumple alguna de estas condiciones:
+  - tiene **foto**; o
+  - lo **confirma otro dispositivo** distinto ("sigue ahí" / misma calificación); o
+  - lo hizo un usuario con cuenta vinculada.
+- Mientras no está verificado se muestra en el mapa con un marcador "pendiente", pero no suma en los porcentajes.
+- Si varios dispositivos lo marcan como `falso`, se oculta.
+- **Privacidad**: se quita el EXIF de las fotos en el cliente, nunca se muestra quién reportó y hay una política simple (Ley 25.326).
+
+---
+
+## 7. Arquitectura
 
 ```
- ┌──────────────── Cliente (PWA, Next.js) ────────────────┐
- │  MapLibre GL  ← tiles base (OpenFreeMap / Protomaps)   │
- │  Capa cuadras (GeoJSON/vector) + capa hexágonos H3     │
- │  Form reporte: GPS + foto + gravedad                   │
- └───────────────┬───────────────────────▲────────────────┘
-                 │ REST/RPC              │ Realtime (websocket)
- ┌───────────────▼───────────────────────┴────────────────┐
- │                     Supabase                           │
- │  Postgres + PostGIS   Auth   Storage (fotos)  Realtime │
- │  Triggers: snap a cuadra, recálculo de puntaje         │
- └────────────────────────────────────────────────────────┘
-         ▲
-         │ script de importación (una vez / periódico)
-   OpenStreetMap (Overpass) → cuadras del casco
+ ┌──────────────── Cliente (PWA, Next.js) ─────────────────┐
+ │  Dashboard de KPIs  ← vista SQL `v_kpis_casco`/`zona`    │
+ │  MapLibre GL        ← cuadras coloreadas por estado      │
+ │  Reportar / Calificar (GPS + foto opcional)              │
+ └───────────────┬─────────────────────────▲───────────────┘
+                 │ RPC                     │ Realtime
+ ┌───────────────▼─────────────────────────┴───────────────┐
+ │                       Supabase                          │
+ │  Postgres + PostGIS · Auth anónima · Storage · Realtime │
+ │  Triggers: validar casco, snap a cuadra, dedupe,        │
+ │            verificar, recalcular estado de la cuadra    │
+ │  pg_cron: snapshot diario de KPIs (para la evolución)   │
+ └─────────────────────────────────────────────────────────┘
+        ▲
+        │ script de importación
+  OpenStreetMap → cuadras · data/zonas.geojson → zonas
 ```
 
-### Stack
-| Capa | Elección | Por qué |
-|---|---|---|
-| Frontend | **Next.js (App Router) + TypeScript**, PWA | Mobile-first, instalable, SSR para las páginas compartibles |
-| Mapa | **MapLibre GL JS** | Open source, sin costo por carga, estilos por datos (`match`/`interpolate`) |
-| Tiles base | **OpenFreeMap** o **Protomaps** | Gratis, sin API key |
-| Backend | **Supabase** (Postgres + PostGIS + Auth + Storage + Realtime) | Tiempo real resuelto, consultas geoespaciales en SQL, free tier |
-| Zonas | **H3** (`h3-js` / extensión `h3-pg`) | Agregación uniforme, independiente de límites de barrios |
-| Deploy | **Vercel** (front) + Supabase cloud | Cero ops |
-| Estilo | Tailwind CSS | Rápido para iterar |
+| Capa | Elección |
+|---|---|
+| Frontend | Next.js (App Router) + TypeScript + Tailwind, PWA |
+| Gráficos | Recharts (o similar): barra apilada al 100%, línea mensual |
+| Mapa | MapLibre GL JS + tiles OpenFreeMap / Protomaps (sin API key) |
+| Backend | Supabase: Postgres + PostGIS, Auth anónima, Storage, Realtime, pg_cron |
+| Anti-bot | Cloudflare Turnstile |
+| Deploy | Vercel + Supabase cloud |
 
-Alternativa si querés más control/backend propio (bueno para la facultad): **FastAPI o NestJS + PostGIS + WebSockets**. Se puede migrar después porque la lógica clave queda en SQL.
+La lógica de estados y KPIs queda en **SQL** (vistas y funciones). Eso permite migrar después a un backend propio sin reescribirla.
 
 ---
 
-## 6. Modelo de datos (PostGIS)
+## 8. Modelo de datos (PostGIS)
 
 ```sql
--- Cuadras: tramo de calle entre dos intersecciones (importado de OSM)
-create table segments (
-  id            bigserial primary key,
-  osm_way_id    bigint,
-  street_name   text,                    -- "Calle 7", "Diagonal 74"
-  between_a     text,                    -- "entre 45"
-  between_b     text,                    -- "y 46"
-  surface       text,                    -- asphalt | sett | cobblestone | unpaved | unknown
-  is_cobbled    boolean generated always as (surface in ('sett','cobblestone','paving_stones')) stored,
-  geom          geometry(LineString, 4326) not null,
-  length_m      double precision,
-  h3_index      text,                    -- celda H3 res 9 del centroide
-  score         double precision default 0,
-  status        text default 'sin_datos',-- verde | amarillo | rojo | sin_datos
-  last_repaved  date,
-  updated_at    timestamptz default now()
+create table zones (
+  id          serial primary key,
+  name        text not null,                 -- "7–13 / 44–51"
+  geom        geometry(Polygon, 4326) not null
+);
+
+create table segments (                       -- una cuadra
+  id          bigserial primary key,
+  osm_way_id  bigint,
+  street_name text,                           -- "Calle 7", "Diagonal 74"
+  between_a   text, between_b text,           -- "45", "46"
+  surface     text default 'asphalt',         -- asphalt | sett | cobblestone | unpaved
+  is_cobbled  boolean generated always as (surface in ('sett','cobblestone','paving_stones')) stored,
+  zone_id     int references zones,
+  geom        geometry(LineString, 4326) not null,
+  length_m    double precision not null,
+  pothole_score double precision default 0,
+  status      text default 'sin_relevar',     -- nueva | bien | regular | rota | sin_relevar
+  repaved_at  date,
+  status_updated_at timestamptz default now()
 );
 create index on segments using gist (geom);
 
--- Reportes ciudadanos
-create table reports (
-  id            uuid primary key default gen_random_uuid(),
-  user_id       uuid references auth.users,
-  type          text not null,           -- pozo | hundimiento | repavimentada | es_empedrado
-  severity      smallint check (severity between 1 and 3), -- 1 leve, 2 medio, 3 peligroso
-  geom          geometry(Point, 4326) not null,
-  segment_id    bigint references segments, -- asignado por trigger (snap)
-  photo_path    text,
-  description   text,
-  status        text default 'abierto',  -- abierto | resuelto | rechazado
-  created_at    timestamptz default now(),
-  resolved_at   timestamptz
+create table reports (                        -- pozos y repavimentaciones
+  id          uuid primary key default gen_random_uuid(),
+  user_id     uuid references auth.users not null,
+  type        text not null check (type in ('pozo','repavimentada','es_empedrado')),
+  severity    smallint check (severity between 1 and 3),   -- solo pozos
+  geom        geometry(Point, 4326) not null,
+  segment_id  bigint references segments,     -- lo asigna un trigger (snap)
+  photo_path  text,
+  verified    boolean default false,
+  status      text default 'abierto',         -- abierto | resuelto | oculto
+  created_at  timestamptz default now(),
+  resolved_at timestamptz
 );
 create index on reports using gist (geom);
 
--- Confirmaciones: "sigue ahí" / "ya lo arreglaron"
 create table report_votes (
-  report_id     uuid references reports on delete cascade,
-  user_id       uuid references auth.users,
-  vote          text check (vote in ('sigue','arreglado','falso')),
-  created_at    timestamptz default now(),
+  report_id   uuid references reports on delete cascade,
+  user_id     uuid references auth.users,
+  vote        text check (vote in ('sigue','arreglado','falso')),
+  created_at  timestamptz default now(),
   primary key (report_id, user_id)
 );
 
-create table casco_urbano (id int primary key, geom geometry(Polygon, 4326));
+create table segment_ratings (                -- "calificar mi cuadra"
+  segment_id  bigint references segments,
+  user_id     uuid references auth.users,
+  rating      text check (rating in ('bien','regular','rota')),
+  created_at  timestamptz default now(),
+  primary key (segment_id, user_id)           -- un voto vigente por dispositivo
+);
+
+create table stats_snapshots (                -- una fila por día y por ámbito
+  day         date,
+  zone_id     int,                            -- null = casco completo
+  km_total numeric, km_nueva numeric, km_bien numeric, km_regular numeric,
+  km_rota numeric, km_sin_relevar numeric, km_empedrado numeric,
+  cuadras_rota int, cuadras_nueva int,
+  pozos_abiertos int, pozos_nuevos_mes int, pozos_resueltos_mes int,
+  dias_promedio_arreglo numeric,
+  primary key (day, zone_id)
+);
+
+create table config (key text primary key, value jsonb);  -- umbrales, pesos y límites
 ```
 
-### Lógica clave
-1. **Validación de zona**: `ST_Within(new.geom, casco.geom)` en un trigger `before insert`.
-2. **Snap a cuadra**: buscar la cuadra más cercana con KNN (`order by geom <-> new.geom limit 1`)
-   y aceptar solo si `ST_Distance(geography) < 25 m`.
-3. **Deduplicación**: si hay un pozo abierto a < 8 m en la misma cuadra, sugerir "¿es este?" y
-   convertirlo en voto `sigue` en lugar de un reporte nuevo.
-4. **Puntaje de cuadra** (recalculado por trigger o job cada X minutos):
-
-   ```
-   score = Σ (peso_gravedad × factor_confirmación × decaimiento_tiempo)  /  (length_m / 100)
-     peso_gravedad      = {1: 1, 2: 2, 3: 4}
-     factor_confirmación = 1 + 0.25 × votos_sigue   (tope 2)
-     decaimiento_tiempo  = 1 si < 6 meses; baja suave después (reportes viejos sin confirmar pesan menos)
-   ```
-   - Reporte se marca `resuelto` cuando `votos_arreglado ≥ 2` (o 1 con foto).
-   - Umbrales iniciales (a calibrar con datos reales): `< 1` verde · `1–3` amarillo · `> 3` rojo.
-   - `repavimentada` confirmada → `last_repaved = hoy` y verde por N meses.
-5. **Puntaje de zona (H3)**: pozos abiertos ponderados / km de calle en la celda.
-
-Los umbrales y pesos van en una tabla `config` para poder ajustarlos sin redeploy.
-
----
-
-## 7. "Tiempo real"
-
-- Supabase Realtime escucha `insert/update` en `reports` y `segments`.
-- El cliente actualiza el feature del mapa (`setFeatureState` / actualizar source) sin recargar.
-- Para escalar: servir las cuadras como **vector tiles** desde PostGIS (`ST_AsMVT`) o un
-  archivo PMTiles estático + "parches" en vivo por Realtime.
-
----
-
-## 8. Anti-abuso y privacidad
-
-- Login obligatorio para reportar (magic link por email o Google). Ver mapa: público, sin login.
-- Rate limit: p. ej. 10 reportes/día por usuario.
-- Reportes con foto pesan más; reportes marcados `falso` por varios usuarios se ocultan.
-- **Quitar metadata EXIF** de las fotos (contiene GPS del celular y modelo).
-- No mostrar quién reportó. Política de privacidad simple (Ley 25.326 de datos personales).
-- Fase futura: blur automático de caras/patentes en fotos.
+### Lógica clave (funciones/triggers SQL)
+1. **Validar casco**: `ST_Within(new.geom, casco)` en un trigger `before insert`.
+2. **Snap a cuadra**: KNN `order by geom <-> new.geom limit 1`, aceptado si la distancia es < 25 m.
+3. **Dedupe**: si hay un pozo abierto a < 8 m en la misma cuadra, se sugiere "¿es este?" y se registra como voto `sigue`.
+4. **Verificación**: `verified = photo_path is not null or votos 'sigue' de otro usuario >= 1 or usuario no anónimo`.
+5. **Puntaje de pozos** (solo con reportes verificados y abiertos):
+   `Σ(peso_gravedad{1,2,4} × (1 + 0.25·votos_sigue, tope 2)) / (length_m / 100)`
+6. **Resolución**: un pozo pasa a `resuelto` con ≥ 2 votos `arreglado` (o 1 con foto), y `resolved_at = now()`.
+7. **Estado de la cuadra** = el peor entre la calificación vigente (moda de los últimos 6 meses, con ≥ 2 votos
+   o 1 verificado) y el estado por puntaje. Una repavimentación verificada en los últimos 12 meses → `nueva`.
+8. **KPIs en vivo**: vistas `v_kpis_casco` y `v_kpis_zona` (sumas de `length_m` agrupadas por `status`).
+9. **Snapshot diario** con `pg_cron` → `stats_snapshots`, usado para la variación mensual y los gráficos.
 
 ---
 
 ## 9. Pantallas (MVP)
 
-1. **Mapa** (home): cuadras coloreadas, leyenda, toggle "cuadras / zonas", toggle "empedrado".
-2. **Reportar** (botón flotante): ubica con GPS → arrastrás el pin → foto → gravedad → enviar.
-3. **Detalle de cuadra**: "Calle 7 e/ 45 y 46", estado, lista de pozos, botones "sigue ahí" / "ya lo arreglaron".
-4. **Rankings / Dashboard**: peores cuadras, peores zonas, pozos más antiguos, total de reportes, evolución semanal.
-5. **Datos abiertos**: descarga GeoJSON/CSV + explicación de la metodología del puntaje.
+1. **Inicio = Tablero**: los KPIs de §3.2, los botones Reportar/Calificar, el mapa y los rankings.
+2. **Reportar pozo**: GPS → ajustar el pin → gravedad → foto opcional → enviar (≤ 15 s).
+3. **Calificar mi cuadra**: detecta la cuadra por GPS → 🟢/🟡/🔴 en un toque. También se puede marcar "la repavimentaron" o "es empedrado".
+4. **Zona** (`/zona/7-13-44-51`): los mismos KPIs filtrados, mapa de la zona y botón para compartir.
+5. **Cuadra** (`/cuadra/:id`): estado, pozos, votar "sigue ahí" / "arreglado".
+6. **Metodología y datos abiertos**: cómo se calcula cada número + descarga.
 
 ---
 
 ## 10. Roadmap por fases
 
-### Fase 0 — Setup (1–2 días)
-- [ ] Crear proyecto Next.js + TS + Tailwind (`npx create-next-app@latest`).
-- [ ] Crear proyecto en Supabase y habilitar extensión `postgis`.
-- [ ] Armar `data/casco_urbano.geojson` (dibujar en [geojson.io](https://geojson.io) siguiendo 31/32/72/122 o tomarlo de OSM).
-- [ ] Script `scripts/import_osm.ts`: Overpass → calles dentro del polígono → partir ways en cuadras por intersección → insertar en `segments`.
+### Fase 0 — Setup y datos base
+- [ ] Next.js + TS + Tailwind. Proyecto Supabase con `postgis` y `pg_cron`.
+- [ ] `data/casco_urbano.geojson` y `data/zonas.geojson` (cuadrantes entre avenidas).
+- [ ] `scripts/import_osm.ts`: Overpass → partir en cuadras por intersección → `segments` con `zone_id`.
+- [ ] Validar visualmente las diagonales y el total de km (debería coincidir con el orden de magnitud real del casco).
 
-### Fase 1 — Mapa estático (≈1 semana)
-- [ ] Mapa MapLibre centrado en La Plata (-34.9214, -57.9545), limitado al casco (`maxBounds`).
-- [ ] Capa de cuadras en gris + capa azul de empedrado desde OSM.
-- [ ] Atribución OSM visible.
+### Fase 1 — Tablero con datos de prueba ⭐ (lo principal)
+- [ ] Vistas `v_kpis_casco` / `v_kpis_zona`.
+- [ ] Hero con % de rotas, barra apilada al 100% (km), tarjetas de KPIs y % empedrado.
+- [ ] Seed con datos falsos para diseñar los números antes de tener usuarios.
 
-### Fase 2 — Reportes (≈1–2 semanas)
-- [ ] Auth Supabase.
-- [ ] Formulario de reporte con geolocalización y foto (Storage, compresión + quitar EXIF en el cliente).
-- [ ] Triggers: validación casco, snap a cuadra, dedupe.
-- [ ] Marcadores de pozos (clustering).
+### Fase 2 — Reportar y calificar
+- [ ] Auth anónima + Turnstile + rate limit.
+- [ ] Formulario de pozo (foto opcional, EXIF removido) y calificación de cuadra.
+- [ ] Triggers: casco, snap, dedupe, verificación, estado de la cuadra.
 
-### Fase 3 — Puntaje y colores (≈1 semana)
-- [ ] Función SQL `recalc_segment_score(segment_id)` + trigger.
-- [ ] Estilo data-driven verde/amarillo/rojo/gris.
-- [ ] Votos "sigue ahí" / "arreglado".
+### Fase 3 — Mapa y zonas
+- [ ] Mapa con cuadras coloreadas por estado + capa de empedrado.
+- [ ] Páginas de zona y ranking de cuadrantes.
 
-### Fase 4 — Tiempo real + zonas (≈1 semana)
-- [ ] Suscripción Realtime.
-- [ ] Agregación H3 y capa de hexágonos para zoom bajo.
+### Fase 4 — Tiempo real y evolución
+- [ ] Realtime: los KPIs y el mapa se actualizan solos.
+- [ ] `pg_cron` de snapshots; variación mensual, arreglados vs. nuevos, tiempo de arreglo y pozo más viejo.
 
-### Fase 5 — Dashboard viral (≈1 semana)
-- [ ] Rankings, contadores, gráfico de evolución.
-- [ ] Imágenes OG compartibles por cuadra/zona.
-- [ ] Endpoint de datos abiertos.
+### Fase 5 — Viralidad
+- [ ] Imágenes OG compartibles por casco/zona/cuadra.
+- [ ] Datos abiertos (GeoJSON/CSV) + página de metodología.
 
 ### Fase 6 — Extras
-- Notificar al municipio (export semanal / integración con canal oficial de reclamos).
-- Detección automática de pozos con ML sobre imágenes de Mapillary.
-- Subir correcciones de `surface` a OpenStreetMap.
-- Extender a otras zonas (City Bell, Gonnet, Los Hornos…).
+- Enviar resumen mensual al municipio y a concejales.
+- Detección de pozos con ML sobre Mapillary.
+- Subir correcciones de `surface` a OSM.
+- Extender a otras localidades del partido.
 
 ---
 
-## 11. Riesgos / preguntas abiertas
-
-- **Arranque en frío**: sin reportes todo queda gris. Mitigación: lanzar con un relevamiento propio de algunas zonas + difusión en redes de La Plata.
-- **Sesgo de reportes**: las zonas con más usuarios parecen "peores". Mostrar también "cantidad de reportantes" y aclararlo en la metodología.
-- **Diagonales y plazas**: la grilla de La Plata con diagonales complica el partido en cuadras → validar el script de importación visualmente.
-- **Costos**: free tier de Supabase alcanza para el MVP; vigilar Storage (fotos comprimidas a ~200 KB).
-- ¿Nombre de dominio? (`positoslp.com.ar` vía NIC Argentina).
+## 11. Riesgos y preguntas abiertas
+- **Arranque en frío**: casi todo va a estar "Sin relevar". Mitigación: relevar algunas zonas uno mismo antes del lanzamiento
+  y lanzar mostrando el % relevado como meta ("ayudanos a llegar al 50%").
+- **Sesgo de reporte**: mostrar cuántos vecinos aportaron datos por zona y exigir un % mínimo relevado para entrar al ranking.
+- **Calibración**: los umbrales del puntaje (regular/rota) se ajustan con datos reales; quedan en `config`.
+- **Abuso anónimo**: si los límites no alcanzan, exigir login para que un aporte cuente sin verificación.
+- Dominio: ¿`positoslp.com.ar`?

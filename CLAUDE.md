@@ -1,10 +1,12 @@
 # Positos LP
 
-Mapa colaborativo en tiempo real del estado de las calles del casco urbano de La Plata
-(reportes de pozos → puntaje por cuadra y por zona H3 → colores verde/amarillo/rojo, azul = empedrado).
+Tablero público en tiempo real del estado de las calles del casco urbano de La Plata.
+Prioridad: KPIs claros (% de calles rotas/nuevas/bien/regular/sin relevar por km y por cuadras, pozos abiertos,
+tiempo de arreglo) arriba y mapa debajo. Zonas = cuadrantes entre avenidas. El empedrado es una categoría aparte.
 
 - Plan completo y decisiones: `docs/PLAN.md` (leerlo antes de empezar cualquier tarea).
-- Stack: Next.js (App Router) + TypeScript + Tailwind, MapLibre GL, Supabase (Postgres + PostGIS, Auth, Storage, Realtime), H3.
+- Stack: Next.js (App Router) + TypeScript + Tailwind, MapLibre GL, Supabase (Postgres + PostGIS, Auth anónima, Storage, Realtime, pg_cron).
+- Solo cuentan en los KPIs los aportes verificados (con foto, confirmados por otro dispositivo o de un usuario con cuenta).
 - Idioma: UI y docs en español rioplatense; código e identificadores en inglés.
 - Alcance geográfico: solo dentro de `data/casco_urbano.geojson`. Validar en cliente y en base.
 - Datos de calles: OpenStreetMap (ODbL) — mantener la atribución visible. No usar datos de Google Maps.
