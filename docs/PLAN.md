@@ -55,7 +55,8 @@ Lo que cae afuera se rechaza en el cliente y en la base. Otras localidades (Los 
 | Foto | **Opcional**: un pozo con foto queda verificado |
 | Backend | **Supabase** (Postgres + PostGIS, sesión anónima, Storage, Realtime, pg_cron) |
 | Evolución | Variación mensual · arreglados vs. nuevos · tiempo promedio de arreglo · pozo más viejo |
-| Licencias (propuesta) | Código **AGPL-3.0**, datos **ODbL** (igual que OSM) |
+| Seguridad | Ver **[`SEGURIDAD.md`](SEGURIDAD.md)**: único camino de escritura, anti-abuso en capas y reversión |
+| Código abierto | No es obligatorio. Recomendación: repo privado durante el desarrollo y **abrirlo al lanzar** (AGPL-3.0). Datos siempre abiertos (ODbL). Ver `SEGURIDAD.md` §7 |
 
 ---
 
@@ -103,12 +104,16 @@ Por cuadra y por zona se calcula la **densidad**: pozos abiertos por km, pondera
 │  🕐 El pozo más viejo: 7 y 50, abierto hace 412 días      │
 │                                                          │
 │  [ 🕳️ Reportar pozo ]     [ 🛣️ Calificar una cuadra ]     │
+│  🔒 100% anónimo · no guardamos datos tuyos · ¿Cómo?  ›   │
 ├──────────────────────────────────────────────────────────┤
 │  MAPA: líneas = estado del asfalto · puntos = pozos      │
 ├──────────────────────────────────────────────────────────┤
 │  Rankings de zonas: % muy deteriorada · pozos por km     │
 │  Pozos más viejos sin arreglar                           │
 │  Gráficos: evolución mensual · arreglados vs. nuevos     │
+├──────────────────────────────────────────────────────────┤
+│  🔒 TU ANONIMATO (ver §3.5)                               │
+│  🛡️ Moderación: última acción y link a la bitácora        │
 └──────────────────────────────────────────────────────────┘
 ```
 
@@ -131,6 +136,33 @@ Por cuadra y por zona se calcula la **densidad**: pozos abiertos por km, pondera
 Cada zona es el rectángulo entre dos pares de avenidas, con nombre del tipo **"7–13 / 44–51"**. Se dibuja una vez en
 `data/zonas.geojson`. A validar: la franja 51–53, los cortes de las diagonales y el Bosque.
 La zona se **deduce de la ubicación**; nunca se le pregunta al vecino.
+
+### 3.5 Bloque "Tu anonimato" (en el tablero y en `/privacidad`)
+
+Va en el tablero: una línea fija bajo los botones de aporte ("🔒 100% anónimo · ¿Cómo?") y un bloque completo al final.
+El objetivo es que cualquier vecino lo entienda en 20 segundos. Texto propuesto:
+
+> **🔒 Tu anonimato**
+>
+> - **No te pedimos nada.** Ni nombre, ni mail, ni teléfono, ni que crees una cuenta.
+> - **No sabemos dónde estás.** Guardamos dónde está el *pozo* o qué *cuadra* calificaste, nunca tu ubicación.
+> - **No guardamos tu IP.**
+> - **Tus aportes no se pueden juntar.** No hay forma de saber qué cuadras calificó un mismo celular,
+>   así que tampoco se puede deducir dónde vivís.
+> - **Tus fotos se limpian en tu celular** antes de subirse: sin ubicación, sin fecha, sin modelo de teléfono.
+> - **Sin publicidad, sin rastreadores, sin venta de datos.** Nunca.
+>
+> **¿Y si nos hackean?** Se llevarían lo mismo que ya ves en este mapa: pozos y calificaciones de calles.
+> No hay datos personales para robar.
+>
+> *Letra chica, para ser honestos:* los servicios donde está alojada la app (Cloudflare, Vercel, Supabase) registran
+> datos técnicos, como la IP, en sus propios sistemas por seguridad y por tiempo limitado. Nosotros no los usamos para identificar a nadie.
+>
+> [Ver exactamente qué se guarda ›]   [Cómo cuidamos los datos de ataques ›]
+
+- **"Ver exactamente qué se guarda"**: la tabla de `SEGURIDAD.md` §6, en lenguaje simple, campo por campo.
+- **"Cómo cuidamos los datos de ataques"**: explica la verificación cruzada, los límites, la revisión de anomalías y la bitácora pública de moderación.
+- Si el código es abierto, se agrega un link: "Podés revisar el código vos mismo".
 
 ---
 
@@ -400,17 +432,20 @@ Ninguna pantalla pide datos personales. No hay registro ni login.
 - [ ] `data/casco_urbano.geojson` y `data/zonas.geojson`.
 - [ ] `scripts/import_osm.ts`: Overpass → partir en cuadras por intersección → `segments` con `zone_id`.
 - [ ] Validar visualmente las diagonales y el total de km.
-- [ ] `LICENSE` (AGPL-3.0) y un aviso de datos ODbL.
+- [ ] 2FA en GitHub, Supabase, Vercel y Cloudflare. Límites de gasto. Secretos solo en variables de entorno (`.env` en `.gitignore`).
 
 ### Fase 1 — Tablero con datos de prueba ⭐
 - [ ] Vistas `v_kpis_casco` / `v_kpis_zona`.
 - [ ] Bloque "Estado del asfalto" (barra al 100%) + bloque "Pozos" (tarjetas).
 - [ ] Seed con datos falsos para diseñar los números.
 
-### Fase 2 — Los dos formularios
-- [ ] Sesión anónima + Turnstile + rate limit.
-- [ ] RPC `submit_rating`, `submit_segment_event`, `submit_pothole` y `vote_pothole`, con HMAC, validación de casco y snap.
-- [ ] UI de "Calificar una cuadra" y "Reportar pozo" (foto sin EXIF).
+### Fase 2 — Los dos formularios + seguridad base
+- [ ] Sesión anónima con Turnstile. Edge Function `submit` como único punto de escritura.
+- [ ] RPC `submit_rating`, `submit_segment_event`, `submit_pothole` y `vote_pothole`, con `revoke` para anon, validación de casco y snap.
+- [ ] Rate limits (dispositivo, cuadra, zona, global) y estados `pendiente` / `en_revision`.
+- [ ] RLS en todo + vistas públicas sin hashes + test de RLS en CI.
+- [ ] UI de "Calificar una cuadra" y "Reportar pozo" (foto sin EXIF, subida con URL firmada).
+- [ ] Bloque "Tu anonimato" + página `/privacidad`.
 
 ### Fase 3 — Mapa y zonas
 - [ ] Líneas coloreadas por estado + puntos de pozos (clusters) + capa de empedrado.
@@ -419,6 +454,11 @@ Ninguna pantalla pide datos personales. No hay registro ni login.
 ### Fase 4 — Tiempo real y evolución
 - [ ] Realtime en el tablero y el mapa.
 - [ ] Snapshots diarios → variación mensual, arreglados vs. nuevos, tiempo de arreglo, pozo más viejo.
+
+### Fase 4.5 — Blindaje antes del lanzamiento
+- [ ] Detector de anomalías + alertas + panel de admin con MFA y reversión.
+- [ ] Bitácora pública de moderación.
+- [ ] Completar el checklist de `SEGURIDAD.md` §8, incluida una prueba de ataque propia.
 
 ### Fase 5 — Viralidad y transparencia
 - [ ] Tarjetas OG compartibles.

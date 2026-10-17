@@ -10,8 +10,11 @@ Prioridad: KPIs claros arriba (por km y por cuadras) y mapa debajo. Zonas = cuad
   Votos y reportes se identifican solo por HMAC(secreto, dispositivo || objeto). Sin analytics de terceros ni publicidad.
 - Stack: Next.js (App Router) + TypeScript + Tailwind, MapLibre GL, Supabase (Postgres + PostGIS, sesión anónima,
   Storage, Realtime, pg_cron, pgcrypto).
-- El cliente escribe solo vía RPC (funciones SQL); la lógica de estados y KPIs vive en SQL (`supabase/migrations/`).
+- Seguridad: leer `docs/SEGURIDAD.md`. Toda escritura pasa por la Edge Function `submit` (Turnstile, Zod, rate limit, HMAC);
+  `anon` no puede escribir ni ejecutar las RPC de escritura y solo lee vistas públicas sin hashes. RLS en todas las tablas.
+  El secreto HMAC nunca va en la base, el cliente ni el repo.
+- La lógica de estados y KPIs vive en SQL (`supabase/migrations/`).
 - Solo cuentan en los KPIs los aportes verificados.
 - Idioma: UI y docs en español rioplatense; código e identificadores en inglés.
 - Datos de calles: OpenStreetMap (ODbL), con atribución visible. No usar datos de Google Maps.
-- Licencias: código AGPL-3.0, datos ODbL.
+- Licencias: datos ODbL. Código: privado durante el desarrollo, con la propuesta de abrirlo (AGPL-3.0) al lanzar.
