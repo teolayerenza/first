@@ -1,13 +1,17 @@
 # Positos LP
 
-Tablero público en tiempo real del estado de las calles del casco urbano de La Plata.
-Prioridad: KPIs claros (% de calles rotas/nuevas/bien/regular/sin relevar por km y por cuadras, pozos abiertos,
-tiempo de arreglo) arriba y mapa debajo. Zonas = cuadrantes entre avenidas. El empedrado es una categoría aparte.
+Tablero público en tiempo real del estado de las calles del casco urbano de La Plata (solo el casco: Av. 31, 32, 72 y 122).
+Prioridad: KPIs claros arriba (por km y por cuadras) y mapa debajo. Zonas = cuadrantes entre avenidas, deducidos de la ubicación.
 
 - Plan completo y decisiones: `docs/PLAN.md` (leerlo antes de empezar cualquier tarea).
-- Stack: Next.js (App Router) + TypeScript + Tailwind, MapLibre GL, Supabase (Postgres + PostGIS, Auth anónima, Storage, Realtime, pg_cron).
-- Solo cuentan en los KPIs los aportes verificados (con foto, confirmados por otro dispositivo o de un usuario con cuenta).
+- **Dos mediciones separadas, que nunca se mezclan**: estado del asfalto por cuadra (calificación: buena / gastada /
+  muy deteriorada; nueva = repavimentada ≤ 12 meses) y pozos puntuales (los reporta cualquiera que pase).
+- **Privacidad / bien común**: 100% anónimo, sin cuentas. Nunca guardar datos personales, IP ni la ubicación del dispositivo.
+  Votos y reportes se identifican solo por HMAC(secreto, dispositivo || objeto). Sin analytics de terceros ni publicidad.
+- Stack: Next.js (App Router) + TypeScript + Tailwind, MapLibre GL, Supabase (Postgres + PostGIS, sesión anónima,
+  Storage, Realtime, pg_cron, pgcrypto).
+- El cliente escribe solo vía RPC (funciones SQL); la lógica de estados y KPIs vive en SQL (`supabase/migrations/`).
+- Solo cuentan en los KPIs los aportes verificados.
 - Idioma: UI y docs en español rioplatense; código e identificadores en inglés.
-- Alcance geográfico: solo dentro de `data/casco_urbano.geojson`. Validar en cliente y en base.
-- Datos de calles: OpenStreetMap (ODbL) — mantener la atribución visible. No usar datos de Google Maps.
-- Lógica geoespacial y de puntaje en SQL (migraciones en `supabase/migrations/`), no en el cliente.
+- Datos de calles: OpenStreetMap (ODbL), con atribución visible. No usar datos de Google Maps.
+- Licencias: código AGPL-3.0, datos ODbL.
