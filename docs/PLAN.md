@@ -228,13 +228,17 @@ Principio: **si un dato no hace falta para calcular un indicador o para frenar a
  │  MapLibre GL       ← cuadras (estado) + puntos (pozos)   │
  │  Form "Reportar pozo" · Form "Calificar cuadra"          │
  └───────────────┬─────────────────────────▲───────────────┘
-                 │ RPC (funciones SQL)     │ Realtime
+                 │ Cloudflare (WAF + rate limit + Turnstile)
+                 ▼                         ▲ Realtime
+   Edge Function "submit": único punto de escritura
+   (captcha, validación Zod, rate limit, HMAC con secreto)
  ┌───────────────▼─────────────────────────┴───────────────┐
  │                       Supabase                          │
  │  Postgres + PostGIS · sesión anónima · Storage          │
  │  RPC: submit_pothole / submit_rating / vote_pothole     │
- │       (calculan los HMAC; el cliente nunca escribe      │
- │        directo en las tablas)                           │
+ │       (solo las ejecuta la Edge Function; anon solo     │
+ │        lee vistas públicas sin hashes)                  │
+ │  Aportes entran "pendientes" → detector de anomalías    │
  │  pg_cron: snapshot diario de KPIs + borrado de          │
  │           contadores de rate limit                      │
  └─────────────────────────────────────────────────────────┘
