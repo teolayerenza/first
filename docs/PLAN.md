@@ -294,6 +294,64 @@ create table config (key text primary key, value jsonb);  -- umbrales, pesos y l
 
 ---
 
+### 9.1 Formulario del vecino (un solo flujo: "¿Cómo está esta cuadra?")
+
+Calificar la cuadra y reportar pozos son **un mismo flujo**: el vecino no tiene que elegir el formulario correcto.
+El objetivo es tardar **menos de 10 s** solo con la calificación y **menos de 30 s** si se agrega un pozo con foto.
+
+```
+① ¿DÓNDE?                       ② ¿CÓMO ESTÁ?                   ③ POZOS (si es 🟡/🔴)
+┌───────────────────────┐       ┌───────────────────────┐       ┌───────────────────────┐
+│ [mapa, cuadra         │       │ Calle 7 e/ 45 y 46    │       │ Tocá dónde está el    │
+│  resaltada]           │       │                       │       │ pozo  [mapa cuadra]   │
+│                       │       │  ┌─────────────────┐  │       │                       │
+│ 📍 Calle 7            │       │  │ 🟢  Bien         │  │       │ ¿Qué tan grave?       │
+│    entre 45 y 46      │       │  ├─────────────────┤  │       │ ○ Leve: se esquiva    │
+│                       │       │  │ 🟡  Regular      │  │       │ ○ Medio: hay que      │
+│ [ Sí, es esta ✓ ]     │       │  ├─────────────────┤  │       │   frenar              │
+│ Mover pin · Buscar    │       │  │ 🔴  Rota         │  │       │ ○ Peligroso: rompe    │
+│ "Calle _ e/ _ y _"    │       │  └─────────────────┘  │       │   ruedas / tira motos │
+│                       │       │ ☐ La repavimentaron   │       │ 📷 Sumar foto         │
+│                       │       │ ☐ Es empedrado        │       │ (con foto cuenta ya)  │
+│                       │       │                       │       │ [+ Otro pozo] [Enviar]│
+└───────────────────────┘       └───────────────────────┘       └───────────────────────┘
+                                                                         │
+                                                                         ▼
+                        ④ ¡Gracias! · estado de la cuadra · "¿Y la de al lado?" · Compartir
+```
+
+**① Ubicación**
+- Se usa el GPS automáticamente y se muestra la cuadra detectada en lenguaje platense: "Calle 7 entre 45 y 46".
+- Si la precisión del GPS es peor que 30 m, o el vecino no está en la calle, puede **mover el pin** o
+  **buscar con tres selectores: "Calle ___ entre ___ y ___"** (las opciones salen de `segments`).
+- Si el punto cae fuera del casco: "Por ahora Positos LP funciona solo dentro del casco urbano".
+
+**② Calificación** (obligatoria, un toque) → se guarda en `segment_ratings`
+- 🟢 Bien / 🟡 Regular / 🔴 Rota, con botones grandes que se tocan con una mano.
+- Casillas opcionales:
+  - "La repavimentaron": pregunta cuándo (este mes / hace 1–3 meses / hace más de 3 meses) y se guarda en `reports` con `type='repavimentada'`.
+  - "Es empedrado": se guarda en `reports` con `type='es_empedrado'`.
+- Si elige 🟢, se envía directamente sin pasar al paso ③.
+
+**③ Pozos** (aparece con 🟡/🔴, y es opcional) → se guarda en `reports` con `type='pozo'`
+- El vecino toca el mapa de la cuadra para ubicar el pozo, que queda pegado a la línea de la calle.
+- Gravedad con descripciones concretas en lugar de números.
+- Foto opcional: se comprime a ~200 KB y se le quita el EXIF en el navegador. Con foto, el reporte queda verificado.
+- **Dedupe en vivo**: si hay un pozo abierto a menos de 8 m, se pregunta "¿Es este? (reportado hace 40 días)".
+  "Sí, sigue ahí" lo registra como voto; "No, es otro" crea un reporte nuevo.
+- "+ Otro pozo" permite cargar varios pozos en la misma cuadra.
+
+**④ Confirmación**
+- Se muestra el estado actualizado de la cuadra y aclara "pendiente de verificación" si no tiene foto.
+- "**¿Y la cuadra de al lado?**" ofrece calificar una cuadra vecina sin relevar en un toque, para bajar el % sin relevar.
+- Botón de compartir (tarjeta con la cuadra o la zona).
+
+**Detalles técnicos**
+- No hay texto libre en el MVP: evita moderar insultos y que se carguen datos personales.
+- Sin señal: el envío queda en cola en IndexedDB y se manda cuando vuelve la conexión.
+- Turnstile invisible y rate limit en el envío. Una calificación vigente por dispositivo y cuadra: si el vecino vuelve a calificar, se reemplaza.
+- Se guarda si el aporte se hizo **en el lugar** (GPS a menos de 50 m de la cuadra) o **a distancia**. Los aportes en el lugar pueden pesar más (configurable).
+
 ## 10. Roadmap por fases
 
 ### Fase 0 — Setup y datos base
