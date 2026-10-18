@@ -33,10 +33,13 @@ async function main() {
   // Si dibujaste el casco y las zonas reales en geojson.io, se usan esos; si no, los de la grilla.
   const casco = readRing("data/casco_urbano.geojson") ?? buildCasco();
   const zones = readZones("data/zonas.geojson") ?? buildZones();
-  const poly = casco.map(([lng, lat]) => `${lat} ${lng}`).join(" ");
+  // Se agranda el casco un 3% para traer también la mano de afuera de la Circunvalación.
+  const cx = casco.reduce((t, p) => t + p[0], 0) / casco.length;
+  const cy = casco.reduce((t, p) => t + p[1], 0) / casco.length;
+  const poly = casco.map(([lng, lat]) => `${cy + (lat - cy) * 1.03} ${cx + (lng - cx) * 1.03}`).join(" ");
   const query = `
     [out:json][timeout:120];
-    way["highway"~"^(trunk|primary|secondary|tertiary|unclassified|residential|living_street)$"](poly:"${poly}");
+    way["highway"~"^((trunk|primary|secondary|tertiary)(_link)?|unclassified|residential|living_street|construction)$"](poly:"${poly}");
     out body geom;`;
 
   console.log("Consultando Overpass…");

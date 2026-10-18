@@ -310,6 +310,28 @@ for (let changed = true; changed; ) {
   }
 }
 
+// Avenidas doble mano que OSM dibuja en parte con una sola vía: ahí se arma una cuadra por mano,
+// corrida unos metros hacia la derecha del sentido del tránsito.
+const DOUBLE_HAND = new Set(["25"]);
+function offsetRight(coords: LngLat[], m: number): LngLat[] {
+  return coords.map((p, i) => {
+    const [a, b] = [coords[Math.max(0, i - 1)], coords[Math.min(coords.length - 1, i + 1)]];
+    const kx = 111_320 * Math.cos((p[1] * Math.PI) / 180);
+    const [dx, dy] = [(b[0] - a[0]) * kx, (b[1] - a[1]) * 110_574];
+    const len = Math.hypot(dx, dy) || 1;
+    return [p[0] + ((dy / len) * m) / kx, p[1] + ((-dx / len) * m) / 110_574];
+  });
+}
+for (const pc of split.filter((x) => DOUBLE_HAND.has(x.key) && !x.oneway)) {
+  const back = [...pc.coords].reverse();
+  split.splice(
+    split.indexOf(pc),
+    1,
+    { ...pc, oneway: true, coords: offsetRight(pc.coords, 5) },
+    { ...pc, oneway: true, coords: offsetRight(back, 5), startNames: pc.endNames, endNames: pc.startNames },
+  );
+}
+
 // En un boulevard, cada mano puede cruzarse con una calle distinta en la misma esquina (una mano con
 // la 28 y la otra con la 35). Las esquinas a menos de 30 m de la otra mano comparten los nombres.
 const endsByStreet = Map.groupBy(
@@ -321,6 +343,7 @@ const endsByStreet = Map.groupBy(
 );
 const nearNames = (pc: Piece, p: LngLat, names: string[]) =>
   union(names, ...endsByStreet.get(pc.key)!.filter((x) => x.pc !== pc && haversineM(x.p, p) < 30).map((x) => x.names));
+const BORDER = new Set(["31", "32", "72", "122"]);
 const numeric = (x: string) => parseInt(x.replace(/\D/g, "")) || 0;
 const candidates = split.flatMap((pc) => {
   let [a, b] = [
@@ -330,9 +353,15 @@ const candidates = split.flatMap((pc) => {
   if (a === b) [a, b] = [cornerName(pc.key, pc.startNames), cornerName(pc.key, pc.endNames)];
   const lengthM = lineLengthM(pc.coords);
   const mid = midpoint(pc.coords);
-  if (!a || !b || a === b || lengthM < 20 || !pointInRing(mid, casco)) return [];
-  const zone = zones.find((z) => pointInRing(mid, z.ring));
-  if (!zone) return [];
+  if (!a || !b || a === b || lengthM < 20) return [];
+  // La mano de afuera de la Circunvalación (31, 32, 72 y 122) queda fuera del límite del casco.
+  const border = BORDER.has(pc.key) && projectOnLine(mid, casco).distanceM < 150;
+  if (!pointInRing(mid, casco) && !border) return [];
+  // Las zonas del borde están agrandadas y dejan una franja sin zona sobre la avenida que las separa
+  // de las de adentro: ahí va la zona más cercana.
+  const zone =
+    zones.find((z) => pointInRing(mid, z.ring)) ??
+    zones.reduce((best, z) => (projectOnLine(mid, z.ring).distanceM < projectOnLine(mid, best.ring).distanceM ? z : best));
   const [lo, hi] = [a, b].sort((x, y) => numeric(x) - numeric(y));
   const { streetName, isAvenue } = label(pc.name, pc.key);
   const segment: Segment = {
@@ -346,7 +375,7 @@ const candidates = split.flatMap((pc) => {
     coords: pc.coords.map(([x, y]) => [Math.round(x * 1e6) / 1e6, Math.round(y * 1e6) / 1e6]),
     lengthM: Math.round(lengthM * 10) / 10,
   };
-  return [{ segment, toward: pc.oneway ? b : null, mid }];
+  return [{ key: pc.key, segment, toward: pc.oneway ? b : null, mid }];
 });
 
 // Misma calle y mismas esquinas en lugares distintos: las dos manos de un boulevard se nombran por el
@@ -366,6 +395,13 @@ function sides(group: { mid: LngLat }[]): string[] {
 const segments: Segment[] = [];
 for (const group of Map.groupBy(candidates, (c) => `${c.segment.streetName}|${c.segment.betweenA}|${c.segment.betweenB}`).values()) {
   const places = group.filter((c, i) => group.slice(0, i).every((o) => haversineM(o.mid, c.mid) > 8));
+  // Si una avenida doble mano tiene una sola mano en OSM en esta cuadra, se agrega la otra al lado.
+  const [only] = places;
+  if (places.length === 1 && DOUBLE_HAND.has(only.key) && only.toward) {
+    const coords = offsetRight([...only.segment.coords].reverse(), 10).map(([x, y]): LngLat => [Math.round(x * 1e6) / 1e6, Math.round(y * 1e6) / 1e6]);
+    const other = only.toward === only.segment.betweenA ? only.segment.betweenB : only.segment.betweenA;
+    places.push({ ...only, segment: { ...only.segment, coords }, toward: other, mid: midpoint(coords) });
+  }
   const byMano = places.every((c) => c.toward) && new Set(places.map((c) => c.toward)).size > 1;
   for (const same of Map.groupBy(places, (c) => (byMano ? c.toward : "")).values()) {
     const side = same.length > 1 ? sides(same) : [];
