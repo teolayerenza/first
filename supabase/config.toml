@@ -1,0 +1,26 @@
+# Configuración mínima para `supabase start` / `supabase db push`.
+project_id = "pocitos-lp"
+
+[api]
+schemas = ["public"]
+max_rows = 1000
+
+[auth]
+# Solo sesiones anónimas: no hay email, teléfono ni OAuth.
+enable_signup = true
+enable_anonymous_sign_ins = true
+
+[auth.email]
+enable_signup = false
+
+[auth.sms]
+enable_signup = false
+
+[auth.captcha]
+enabled = true
+provider = "turnstile"
+secret = "env(TURNSTILE_SECRET)"
+
+[functions.submit]
+# El JWT se verifica dentro de la función (necesitamos created_at de la sesión).
+verify_jwt = true
