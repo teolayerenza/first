@@ -520,6 +520,12 @@ saltándose la app (ver `SEGURIDAD.md`). Una foto que pasó por la app nunca lle
 
 ## 10. Roadmap por fases
 
+> **Estado (octubre 2026):** Fases 0 a 5 implementadas y testeadas en **modo demo** (datos simulados).
+> El backend de Supabase (migraciones, RLS, RPC, detector de anomalías, Edge Function) está escrito y testeado
+> contra Postgres+PostGIS en memoria. Falta: importar las calles reales de OSM, redibujar las zonas,
+> crear el proyecto de Supabase y desplegar (ver `docs/SETUP.md`). Pendiente de Fase 4.5: panel de admin con UI
+> (por ahora se modera desde SQL), re-codificación de fotos en el servidor y blur de caras y patentes.
+
 ### Fase 0 — Setup y datos base
 - [ ] Next.js + TS + Tailwind. Supabase con `postgis`, `pg_cron` y `pgcrypto` (HMAC).
 - [ ] `data/casco_urbano.geojson` y `data/zonas.geojson`.

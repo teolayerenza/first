@@ -3,7 +3,13 @@
 Tablero público en tiempo real del estado de las calles del casco urbano de La Plata (solo el casco: Av. 31, 32, 72 y 122).
 Prioridad: KPIs claros arriba (por km y por cuadras) y mapa debajo. Zonas = cuadrantes entre avenidas, deducidos de la ubicación.
 
-- Plan completo y decisiones: `docs/PLAN.md` (leerlo antes de empezar cualquier tarea).
+- Plan completo y decisiones: `docs/PLAN.md` (leerlo antes de empezar cualquier tarea). Puesta en marcha: `docs/SETUP.md`.
+- Next.js 16 con `cacheComponents`: leer `AGENTS.md` y `node_modules/next/dist/docs/` antes de usar APIs de Next.
+  Páginas con datos: `await connection()` dentro de un componente envuelto en `<Suspense>` (no usar `export const dynamic`).
+- Comandos: `npm run dev`, `npm test` (incluye paridad TS↔SQL con PGlite+PostGIS), `npm run typecheck`, `npm run lint`.
+- Sin variables de Supabase la app corre en **modo demo** (`src/lib/data/demo.ts`, datos de `src/lib/demo/simulate.ts`).
+- Las reglas están dos veces: `src/lib/domain/*.ts` y `supabase/migrations/*_logic.sql`. Si cambiás una, cambiá la otra;
+  `tests/sql-parity.test.ts` lo verifica.
 - **Dos mediciones separadas, que nunca se mezclan**: estado del asfalto por cuadra (calificación: buena / gastada /
   muy deteriorada; nueva = repavimentada ≤ 12 meses) y problemas puntuales
   (`issues`: pozos y parches mal hechos —elevado/hundido/desarmado—, los reporta cualquiera que pase). Al marcar un pozo
