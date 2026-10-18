@@ -19,9 +19,9 @@ describe("cuadras reales del casco (OpenStreetMap)", () => {
   it("la 7 tiene sus 39 cuadras de 32 a 72 por mano y existen las diagonales", () => {
     const labels = new Set(base.segments.map(segmentLabel));
     expect(base.segments.filter((s) => s.streetName === "Av. 7" && !/\((por|cruce)/.test(s.betweenB)).length).toBe(78);
-    expect(labels.has("Av. 7 e/ 37 y 39 (por Plaza General Olazábal, mano hacia 39)")).toBe(true);
-    expect(labels.has("Av. 7 e/ 49 y 50 (mano hacia 49)")).toBe(true);
-    expect(labels.has("Av. 7 e/ 49 y 50 (mano hacia 50)")).toBe(true);
+    expect(labels.has("Av. 7 e/ 37 y 39 (por Plaza General Olazábal, mano hacia 8)")).toBe(true);
+    expect(labels.has("Av. 7 e/ 49 y 50 (mano hacia 6)")).toBe(true);
+    expect(labels.has("Av. 7 e/ 49 y 50 (mano hacia 8)")).toBe(true);
     expect(new Set(base.segments.map(segmentLabel)).size).toBe(base.segments.length);
     expect(base.segments.some((s) => s.streetName === "Diagonal 74")).toBe(true);
     expect(base.segments.some((s) => s.streetName === "Diagonal 73")).toBe(true);

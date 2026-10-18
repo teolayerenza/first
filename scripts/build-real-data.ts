@@ -465,9 +465,29 @@ const candidates = split.flatMap((pc) => {
   return [{ key: pc.key, segment, toward: pc.oneway ? b : null, mid, via, rambla }];
 });
 
-// Misma calle y mismas esquinas en lugares distintos: las dos manos de un boulevard se nombran por el
-// sentido del tránsito ("mano hacia 7"); los tramos de una plaza que se repiten de un lado y del
-// otro, por su lado en el mapa ("lado norte"). Vías repetidas en el mismo lugar: queda una.
+// Misma calle y mismas esquinas en lugares distintos: las dos manos de una avenida numerada se nombran
+// por la calle que tienen al costado (la 7 entre 49 y 50: "mano hacia 6" y "mano hacia 8"; la
+// Circunvalación: "mano de adentro" y "mano de afuera"); diagonales, plazas y cruces de rambla, por su
+// lado en el mapa ("lado norte"). Vías repetidas en el mismo lugar: queda una.
+const PARALLELS = ["122", "121", "120", "119", "118", "117", "116", "115", ...Array.from({ length: 31 }, (_, i) => String(i + 1))];
+const candByKey = Map.groupBy(candidates, (c) => c.key);
+const distToStreet = (p: LngLat, key: string) =>
+  Math.min(...(candByKey.get(key) ?? []).map((c) => projectOnLine(p, c.segment.coords).distanceM));
+const cascoCenter: LngLat = [casco.slice(0, -1).reduce((t, p) => t + p[0], 0) / 4, casco.slice(0, -1).reduce((t, p) => t + p[1], 0) / 4];
+function hands(key: string, pair: { mid: LngLat }[]): string[] | null {
+  if (BORDER.has(key)) {
+    const inner = haversineM(pair[0].mid, cascoCenter) < haversineM(pair[1].mid, cascoCenter) ? 0 : 1;
+    return pair.map((_, i) => (i === inner ? "mano de adentro" : "mano de afuera"));
+  }
+  const i = PARALLELS.indexOf(key);
+  const n = parseInt(key);
+  const [lo, hi] = i >= 0 ? [PARALLELS[i - 1], PARALLELS[i + 1]] : /^\d+$/.test(key) && n > 32 && n < 72 ? [String(n - 1), String(n + 1)] : [];
+  const ref = [lo, hi].find((k) => k && candByKey.has(k));
+  if (!ref) return null;
+  const other = ref === lo ? hi : lo;
+  const closer = distToStreet(pair[0].mid, ref) < distToStreet(pair[1].mid, ref) ? 0 : 1;
+  return pair.map((_, j) => `mano hacia ${j === closer ? ref : other}`);
+}
 const COMPASS = ["este", "noreste", "norte", "noroeste", "oeste", "suroeste", "sur", "sureste"];
 function sides(group: { mid: LngLat }[]): string[] {
   const cx = group.reduce((t, c) => t + c.mid[0], 0) / group.length;
@@ -490,13 +510,11 @@ for (const group of Map.groupBy(candidates, (c) => `${c.segment.streetName}|${c.
     places.push({ ...only, segment: { ...only.segment, coords }, toward: other, mid: midpoint(coords) });
   }
   const byMano = places.every((c) => c.toward) && new Set(places.map((c) => c.toward)).size > 1 && !only.rambla;
-  for (const same of Map.groupBy(places, (c) => (byMano ? c.toward : "")).values()) {
-    const side = same.length > 1 ? sides(same) : [];
-    same.forEach((c, i) => {
-      const tags = [c.rambla ? "cruce de la rambla" : "", c.via ? `por ${c.via}` : "", byMano ? `mano hacia ${c.toward}` : "", side[i] ?? ""].filter(Boolean);
-      segments.push(tags.length ? { ...c.segment, betweenB: `${c.segment.betweenB} (${tags.join(", ")})` } : c.segment);
-    });
-  }
+  const side = places.length < 2 ? [] : ((byMano && places.length === 2 && hands(only.key, places)) || sides(places));
+  places.forEach((c, i) => {
+    const tags = [c.rambla ? "cruce de la rambla" : "", c.via ? `por ${c.via}` : "", side[i] ?? ""].filter(Boolean);
+    segments.push(tags.length ? { ...c.segment, betweenB: `${c.segment.betweenB} (${tags.join(", ")})` } : c.segment);
+  });
 }
 
 // Ids estables: misma calle y mismas esquinas que en la versión anterior → mismo id. Si antes había
@@ -506,7 +524,7 @@ const oldId = new Map(previous.map((p) => [`${p.streetName}|${p.betweenA}|${p.be
 let nextId = previous.reduce((m, p) => Math.max(m, p.id), 0);
 const taken = new Set<number>();
 const keyOf = (x: Segment) => `${x.streetName}|${x.betweenA}|${x.betweenB}`;
-const withoutMano = (x: Segment) => keyOf(x).replace(/ \((cruce de la rambla|por|mano hacia|lado|tramo).*\)$/, "");
+const withoutMano = (x: Segment) => keyOf(x).replace(/ \((cruce de la rambla|por|mano|lado|tramo).*\)$/, "");
 let kept = 0;
 for (const sgm of segments) {
   const id = [oldId.get(keyOf(sgm)), oldId.get(withoutMano(sgm))].find((x) => x !== undefined && !taken.has(x));

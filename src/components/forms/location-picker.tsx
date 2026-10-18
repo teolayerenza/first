@@ -33,6 +33,7 @@ export function LocationPicker({ onChange, initial, hint }: { onChange: (l: Pick
   const gps = useRef<LngLat | null>(null);
   const theme = useResolvedTheme();
   const [seg, setSeg] = useState<SegmentRef | null | undefined>(undefined);
+  const [inCasco, setInCasco] = useState(true);
   const [gpsState, setGpsState] = useState<"idle" | "loading" | "ok" | "denied">("idle");
   const [searching, setSearching] = useState(false);
   const cb = useRef(onChange);
@@ -49,10 +50,14 @@ export function LocationPicker({ onChange, initial, hint }: { onChange: (l: Pick
       const c = m.getCenter();
       const point: LngLat = [c.lng, c.lat];
       let s: SegmentRef | null = null;
+      let inside = true;
       try {
         const res = await fetch(`/api/geo/cercana?lng=${c.lng}&lat=${c.lat}`);
-        if (res.ok) s = (await res.json()) as SegmentRef | null;
+        if (res.ok) ({ segment: s, inCasco: inside } = (await res.json()) as { segment: SegmentRef | null; inCasco: boolean });
       } catch {}
+      // Fuera del casco no hay cuadra que elegir, aunque la más cercana esté a pocos metros.
+      if (!inside) s = null;
+      setInCasco(inside);
       setSeg(s);
       const onSite = gps.current ? haversineM(gps.current, point) < 50 : false;
       cb.current({ point, segment: s, onSite });
@@ -122,7 +127,13 @@ export function LocationPicker({ onChange, initial, hint }: { onChange: (l: Pick
       <p className="mt-3 text-small text-ink-2">{hint}</p>
       {gpsState === "denied" && <p className="mt-1 text-small text-ink-2">No pudimos usar el GPS. Mové el mapa o buscá la cuadra por nombre.</p>}
       <p className="mt-3 bg-asphalt px-4 py-3 text-lead font-semibold leading-tight text-asphalt-ink" aria-live="polite">
-        {seg === undefined ? "Ubicando…" : seg ? seg.label : "No hay una calle del casco cerca de este punto."}
+        {seg === undefined
+          ? "Ubicando…"
+          : seg
+            ? seg.label
+            : inCasco
+              ? "No hay una calle del casco cerca de este punto."
+              : "Por ahora tu zona no está incluida. Pocitos LP empieza por el casco urbano y vamos a ir sumando barrios."}
       </p>
       <button type="button" className="mt-3 text-small font-semibold text-ink underline" onClick={() => setSearching((v) => !v)}>
         {searching ? "Cerrar búsqueda" : "Buscar por nombre: \"Calle __ entre __ y __\""}
