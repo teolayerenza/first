@@ -5,7 +5,9 @@ Prioridad: KPIs claros arriba (por km y por cuadras) y mapa debajo. Zonas = cuad
 
 - Plan completo y decisiones: `docs/PLAN.md` (leerlo antes de empezar cualquier tarea).
 - **Dos mediciones separadas, que nunca se mezclan**: estado del asfalto por cuadra (calificación: buena / gastada /
-  muy deteriorada; nueva = repavimentada ≤ 12 meses) y pozos puntuales (los reporta cualquiera que pase).
+  muy deteriorada; nueva = repavimentada ≤ 12 meses) y problemas puntuales
+  (`issues`: pozos y parches mal hechos —elevado/hundido/desarmado—, los reporta cualquiera que pase). Al marcar un pozo
+  "arreglado" se pregunta si quedó bien o quedó un parche malo (KPI de calidad del arreglo). Parcheo de la cuadra = dato opcional aparte.
 - **Privacidad / bien común**: 100% anónimo, sin cuentas. Nunca guardar datos personales, IP ni la ubicación del dispositivo.
   Votos y reportes se identifican solo por HMAC(secreto, dispositivo || objeto). Sin analytics de terceros ni publicidad.
 - Stack: Next.js (App Router) + TypeScript + Tailwind, MapLibre GL, Supabase (Postgres + PostGIS, sesión anónima,

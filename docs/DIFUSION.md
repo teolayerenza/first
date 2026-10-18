@@ -48,7 +48,7 @@ Formato carrusel (4–6 placas cada uno). Se publican en orden inverso (del 6 al
 - Placa 4: captura del tablero con el % y el mapa.
 - Placa 5: "Positos LP: el estado real de las calles, en tiempo real. Link en la bio."
 
-**2. Cómo reportar un pozo (15 segundos)**
+**2. Cómo reportar un pozo o un parche mal hecho (15 segundos)**
 - Paso a paso con capturas: abrís → marcás el pozo → elegís la gravedad → foto opcional → listo.
 - "Lo puede reportar cualquiera que pase. Si otro vecino lo confirma, cuenta."
 
@@ -80,6 +80,7 @@ Formato carrusel (4–6 placas cada uno). Se publican en orden inverso (del 6 al
 | **Pozo más viejo** | Semanal | "🎂 El pozo de 7 y 50 cumple 412 días" |
 | **Ranking de zonas** | Semanal | "Las 5 zonas con más calles muy deterioradas" |
 | **Arreglados ✅** | Cada vez que pasa | Antes/después con fotos de vecinos |
+| **"Arreglado... o no tanto 🩹"** | Semanal | El parche que quedó como lomo de burro · "1 de cada 3 arreglos queda mal" · La cuadra más parcheada del casco |
 | **Desafío de zonas** | Semanal | "¿Qué zona llega primero al 50% relevado? Va ganando 1–7 / 44–51" |
 | **Informe mensual** | Mensual, fecha fija | El número grande del mes y la variación |
 | **Reels** | 1–2 por semana | POV caminando una cuadra y reportando en 15 s · "Esta es la calle 25 entre 60 y 66" · Mapa animado llenándose de puntos |

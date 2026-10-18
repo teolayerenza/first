@@ -77,10 +77,23 @@ Aparte: 🔵 **Empedrado**, con su propio indicador ("X% del casco es empedrado"
 El estado vigente es la **moda de las calificaciones de los últimos 12 meses**. Hacen falta al menos **2 dispositivos
 coincidentes**, o 1 calificación hecha *en el lugar* (configurable). Una repavimentación confirmada → **Nueva**.
 
-### 3.2 Pozos
-Puntos sobre el mapa con gravedad (leve / medio / peligroso) y estado (abierto / resuelto).
+### 3.2 Problemas puntuales: pozos y parches mal hechos
+Hay dos tipos de problema puntual, que se reportan desde el mismo formulario:
+- 🕳️ **Pozo**: falta asfalto, hay un agujero.
+- 🩹 **Parche mal hecho**: el arreglo quedó **elevado como un lomo de burro**, **hundido**, o se volvió a desarmar.
+
+Los dos son puntos sobre el mapa con gravedad (leve / medio / peligroso) y estado (abierto / resuelto).
 Solo cuentan los **verificados**: con foto o confirmados por otro dispositivo.
-Por cuadra y por zona se calcula la **densidad**: pozos abiertos por km, ponderados por gravedad.
+Por cuadra y por zona se calcula la **densidad** de cada tipo por km, ponderada por gravedad.
+
+**Calidad del arreglo.** Cuando un vecino vota que un pozo fue "arreglado", la app le pregunta *"¿Quedó bien o quedó un parche mal hecho?"*.
+- **Quedó bien** → el pozo se resuelve. ✅
+- **Parche mal hecho** → el pozo se resuelve, pero en el mismo punto se crea automáticamente un 🩹 parche abierto, vinculado al pozo original.
+
+Así se puede medir **qué porcentaje de los arreglos queda mal**, que en La Plata es justamente el problema.
+
+**Parche sobre parche (a nivel cuadra).** Al calificar una cuadra hay una pregunta opcional: *"¿Cuánto parche tiene?"* (pocos / bastantes / es todo parche).
+Es otra dimensión, distinta del estado del asfalto: una cuadra puede estar "gastada" y además ser "todo parche".
 
 ### 3.3 Tablero
 
@@ -104,6 +117,8 @@ Por cuadra y por zona se calcula la **densidad**: pozos abiertos por km, pondera
 │  │        │ │        │ │arr./nue│ │arreglo │             │
 │  └────────┘ └────────┘ └────────┘ └────────┘             │
 │  🕐 El pozo más viejo: 7 y 50, abierto hace 412 días      │
+│  🩹 312 parches mal hechos · 1 de cada 3 arreglos queda mal│
+│     · 14% de las cuadras es parche sobre parche          │
 │                                                          │
 │  [ 🕳️ Reportar pozo ]     [ 🛣️ Calificar una cuadra ]     │
 │  🔒 100% anónimo · no guardamos datos tuyos · ¿Cómo?  ›   │
@@ -128,6 +143,9 @@ Por cuadra y por zona se calcula la **densidad**: pozos abiertos por km, pondera
 | **Arreglados vs. nuevos (mes)** | resueltos en el mes vs. creados en el mes |
 | **Tiempo de arreglo** | promedio y mediana de `resolved_at - created_at` (últimos 90 días) |
 | **Pozo más viejo** | el abierto más antiguo, con su dirección |
+| **🩹 Parches mal hechos abiertos** | parches verificados en estado `abierto` (+ densidad por km) |
+| **🩹 Arreglos que quedaron mal** | votos "arreglado → parche mal hecho" / total de votos "arreglado" (últimos 90 días) |
+| **🩹 Cuadras "parche sobre parche"** | % de km cuya calificación vigente de parcheo es `todo_parche` |
 | **Variación mensual** | KPI actual - snapshot de hace 30 días, en puntos porcentuales |
 
 #### Contador de vecinos
@@ -144,7 +162,7 @@ los celulares comparten IP por CGNAT (muchos usuarios bajo la misma IP) y una fa
 
 Cómo se cuenta sin identificar a nadie:
 - Tabla `contributors` con **una fila por dispositivo**: `HMAC(secreto, dispositivo)`, el mes del primer aporte y
-  tres booleanos (`rated`, `rated_on_site`, `reported_pothole`). **No dice qué cuadras ni qué pozos**: solo sirve para contar.
+  tres booleanos (`rated`, `rated_on_site`, `reported_issue`). **No dice qué cuadras ni qué pozos**: solo sirve para contar.
 - Al enviar un aporte, la Edge Function guarda en la fila del aporte un `contributor_hash` **temporal**. Cuando el
   detector lo promueve de `pendiente` a `activo` (≈ 10 min), se actualiza `contributors` y ese campo **se pone en null**.
   El vínculo entre el aporte y el dispositivo dura solo esos minutos.
@@ -258,7 +276,7 @@ Principio: **si un dato no hace falta para calcular un indicador o para frenar a
  ┌───────────────▼─────────────────────────┴───────────────┐
  │                       Supabase                          │
  │  Postgres + PostGIS · sesión anónima · Storage          │
- │  RPC: submit_pothole / submit_rating / vote_pothole     │
+ │  RPC: submit_issue / submit_rating / vote_issue     │
  │       (solo las ejecuta la Edge Function; anon solo     │
  │        lee vistas públicas sin hashes)                  │
  │  Aportes entran "pendientes" → detector de anomalías    │
@@ -301,8 +319,8 @@ create table segments (                        -- una cuadra
   length_m    double precision not null,
   condition   text default 'sin_relevar',      -- nueva | buena | gastada | muy_deteriorada | sin_relevar
   repaved_at  date,
-  potholes_open int default 0,                 -- denormalizado para el mapa
-  pothole_score double precision default 0,
+  issues_open int default 0,                 -- denormalizado para el mapa
+  issue_score double precision default 0,
   updated_at  timestamptz default now()
 );
 create index on segments using gist (geom);
@@ -312,6 +330,7 @@ create table segment_ratings (
   segment_id  bigint references segments,
   voter_hash  bytea not null,                  -- HMAC(secreto, device || segment_id)
   rating      text check (rating in ('buena','gastada','muy_deteriorada')),
+  patching    text check (patching in ('pocos','bastantes','todo_parche')), -- opcional
   on_site     boolean default false,
   created_at  timestamptz default now(),
   primary key (segment_id, voter_hash)         -- un voto vigente por dispositivo y cuadra
@@ -328,11 +347,14 @@ create table segment_events (                  -- "la repavimentaron" / "es empe
 );
 
 -- Pozos (formulario "Reportar pozo")
-create table potholes (
+create table issues (
   id            uuid primary key default gen_random_uuid(),
-  reporter_hash bytea not null,                -- HMAC(secreto, device || pothole_id)
+  reporter_hash bytea not null,                -- HMAC(secreto, device || issue_id)
+  kind          text not null check (kind in ('pozo','parche')),
+  parche_type   text check (parche_type in ('elevado','hundido','desarmado')), -- solo si kind = 'parche'
+  origin_issue_id uuid references issues,       -- parche creado al "arreglar mal" un pozo
   severity      smallint check (severity between 1 and 3),
-  geom          geometry(Point, 4326) not null, -- ubicación del POZO, no de la persona
+  geom          geometry(Point, 4326) not null, -- ubicación del PROBLEMA, no de la persona
   segment_id    bigint references segments,     -- snap automático
   photo_path    text,
   verified      boolean default false,
@@ -340,14 +362,15 @@ create table potholes (
   created_at    timestamptz default now(),
   resolved_at   timestamptz
 );
-create index on potholes using gist (geom);
+create index on issues using gist (geom);
 
-create table pothole_votes (
-  pothole_id  uuid references potholes on delete cascade,
-  voter_hash  bytea not null,                  -- HMAC(secreto, device || pothole_id)
+create table issue_votes (
+  issue_id  uuid references issues on delete cascade,
+  voter_hash  bytea not null,                  -- HMAC(secreto, device || issue_id)
   vote        text check (vote in ('sigue','arreglado','falso')),
+  fix_quality text check (fix_quality in ('bien','parche_malo')), -- solo si vote = 'arreglado'
   created_at  timestamptz default now(),
-  primary key (pothole_id, voter_hash)
+  primary key (issue_id, voter_hash)
 );
 
 create table rate_limits (                     -- se vacía todos los días (pg_cron)
@@ -361,9 +384,9 @@ create table contributors (
   first_month      date not null,              -- truncado al mes
   rated            boolean default false,
   rated_on_site    boolean default false,
-  reported_pothole boolean default false
+  reported_issue boolean default false
 );
--- Además, segment_ratings, segment_events, potholes y pothole_votes tienen
+-- Además, segment_ratings, segment_events, issues y issue_votes tienen
 -- `contributor_hash bytea null`, que se completa al enviar y se pone en NULL al promover el aporte a 'activo'.
 
 create table stats_snapshots (                 -- una fila por día y por ámbito
@@ -379,7 +402,7 @@ create table stats_snapshots (                 -- una fila por día y por ámbit
 create table config (key text primary key, value jsonb);  -- umbrales, pesos y límites
 ```
 
-Como el pozo y el voto usan el mismo HMAC (`device || pothole_id`), se puede detectar que **quien confirma es
+Como el pozo y el voto usan el mismo HMAC (`device || issue_id`), se puede detectar que **quien confirma es
 la misma persona que reportó** (y no contarlo como verificación) sin guardar quién es.
 
 ### Lógica clave (RPC / triggers SQL)
@@ -428,6 +451,11 @@ Ninguna pantalla pide datos personales. No hay registro ni login.
 - **Dedupe**: si hay un pozo abierto a < 8 m → "¿Es este? (reportado hace 40 días)" → "Sí, sigue ahí" / "No, es otro".
   Que **otras personas que pasan** confirmen el mismo pozo es lo que lo valida.
 - Foto opcional, con el aviso "no incluyas personas ni patentes". El vecino saca o elige cualquier foto y la app la achica sola (ver §9.3).
+- **Primer paso: ¿qué es?** Dos botones grandes: 🕳️ **Pozo** / 🩹 **Parche mal hecho**. Si es un parche, se elige el tipo:
+  ⬆️ elevado (lomo de burro) · ⬇️ hundido · 💥 se desarmó. La gravedad se describe igual que la de un pozo:
+  leve (se nota), medio (hay que frenar), peligroso (el auto salta o la moto se desestabiliza).
+- El botón del tablero pasa a llamarse **"🕳️ Reportar pozo o parche"**.
+- Al confirmar "arreglado" en un pozo existente: *"¿Quedó bien o quedó un parche mal hecho?"* (ver §3.2).
 
 ### 9.2 Formulario "Calificar una cuadra": estado general del asfalto (≤ 10 s)
 
@@ -450,6 +478,7 @@ Ninguna pantalla pide datos personales. No hay registro ni login.
 │                       │       │ ☐ Es empedrado        │       │                       │
 └───────────────────────┘       └───────────────────────┘       └───────────────────────┘
 ```
+- Pregunta opcional debajo del estado: **"¿Cuánto parche tiene?"** → pocos / bastantes / es todo parche (un toque, se puede saltear).
 - Califica la **condición general**, no los pozos. El vecino puede reportar pozos de la misma cuadra
   aparte, desde el otro formulario o desde la pantalla de confirmación.
 - Se puede calificar cualquier cuadra, pero si el GPS indica que el vecino está en ella (`on_site`), la calificación pesa más.
@@ -505,7 +534,7 @@ saltándose la app (ver `SEGURIDAD.md`). Una foto que pasó por la app nunca lle
 
 ### Fase 2 — Los dos formularios + seguridad base
 - [ ] Sesión anónima con Turnstile. Edge Function `submit` como único punto de escritura.
-- [ ] RPC `submit_rating`, `submit_segment_event`, `submit_pothole` y `vote_pothole`, con `revoke` para anon, validación de casco y snap.
+- [ ] RPC `submit_rating`, `submit_segment_event`, `submit_issue` y `vote_issue`, con `revoke` para anon, validación de casco y snap.
 - [ ] Rate limits (dispositivo, cuadra, zona, global) y estados `pendiente` / `en_revision`.
 - [ ] RLS en todo + vistas públicas sin hashes + test de RLS en CI.
 - [ ] UI de "Calificar una cuadra" y "Reportar pozo" (foto sin EXIF, subida con URL firmada).
