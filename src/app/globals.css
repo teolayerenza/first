@@ -155,6 +155,16 @@
 
 html {
   background: var(--bg);
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+/* Celular: sin el destello gris al tocar, y sin zoom automático de iOS en los campos (≥16px). */
+a, button, label, select {
+  -webkit-tap-highlight-color: transparent;
+}
+input, select, textarea {
+  font-size: max(16px, 1em);
 }
 
 body {

@@ -44,7 +44,8 @@ export default function Casco3D({ data, casco, height = 520, mode, fill = false,
     const h = fill ? host.clientHeight : height;
 
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    const coarse = window.matchMedia("(pointer: coarse)").matches;
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, coarse ? 1.5 : 2));
     renderer.setSize(w, h);
     renderer.setClearColor(new THREE.Color(cssVar(fill ? "--asphalt" : "--surface-2")));
     host.appendChild(renderer.domElement);
@@ -110,7 +111,13 @@ export default function Casco3D({ data, casco, height = 520, mode, fill = false,
     controls.autoRotate = autoRotate && !reduceMotion;
     controls.autoRotateSpeed = 0.35;
     controls.target.set(0, 0, fill ? -300 : 0);
-    renderer.domElement.addEventListener("pointerdown", () => (controls.autoRotate = false), { once: true });
+    if (coarse && fill) {
+      // En el celular el casco del inicio solo gira solo: el dedo tiene que poder scrollear la página.
+      controls.enabled = false;
+      renderer.domElement.style.touchAction = "pan-y";
+    } else {
+      renderer.domElement.addEventListener("pointerdown", () => (controls.autoRotate = false), { once: true });
+    }
 
     // Hover: qué cuadra es.
     const ray = new THREE.Raycaster();

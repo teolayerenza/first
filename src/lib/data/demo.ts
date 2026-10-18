@@ -3,7 +3,8 @@
 
 import "server-only";
 import { createHmac, randomUUID } from "node:crypto";
-import { buildCasco, segmentLabel } from "../domain/grid";
+import { loadBaseData } from "../domain/base-data";
+import { segmentLabel } from "../domain/grid";
 import { haversineM, midpoint, pointInRing, projectOnLine } from "../domain/geo";
 import { evaluate, monthlySeries, type Evaluation } from "../domain/kpis";
 import type { SubmitDeps, SubmitStore } from "../domain/submit";
@@ -33,7 +34,7 @@ const g = globalThis as unknown as { __pocitosDemo?: DemoState };
 
 function state(): DemoState {
   if (!g.__pocitosDemo) {
-    g.__pocitosDemo = { data: simulate(new Date()), version: 0, counters: new Map(), cache: new Map() };
+    g.__pocitosDemo = { data: simulate(new Date(), 221, loadBaseData()), version: 0, counters: new Map(), cache: new Map() };
   }
   return g.__pocitosDemo;
 }
@@ -51,7 +52,7 @@ function memo<T>(key: string, compute: () => T): T {
 
 const nowEval = (): Evaluation => memo("eval:now", () => evaluate(state().data, new Date()));
 
-const casco = buildCasco();
+const casco = loadBaseData().casco;
 
 const MODERATION: ModerationEntry[] = [
   {

@@ -80,7 +80,7 @@ async function Content({ params }: { params: Promise<{ id: string }> }) {
               </li>
             ))}
           </ul>
-          <Link href="/reportar" className="mt-6 inline-block font-semibold text-ink underline">Reportar otro problema en esta cuadra</Link>
+          <p className="mt-6 flex flex-wrap gap-x-6 gap-y-2 font-semibold text-ink"><Link href="/reportar/pozo" className="underline">Reportar un pozo</Link><Link href="/reportar/parche" className="underline">Reportar un parche</Link></p>
         </section>
         {fixed.length > 0 && (
           <section className="bg-surface p-6 sm:p-8">

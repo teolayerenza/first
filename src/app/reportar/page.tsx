@@ -1,13 +1,13 @@
 import type { Metadata } from "next";
 import { FormPage } from "@/components/form-page";
-import { ReportIssueForm } from "@/components/forms/report-issue";
+import { ReportChoices } from "@/components/report-choices";
 
-export const metadata: Metadata = { title: "Reportar pozo o parche" };
+export const metadata: Metadata = { title: "Reportar" };
 
 export default function ReportarPage() {
   return (
-    <FormPage title="Reportá un pozo" lead="O un parche mal hecho. Lo puede reportar cualquiera que pase, y tarda unos 15 segundos.">
-      <ReportIssueForm />
+    <FormPage title="¿Qué querés reportar?" lead="Cada cosa tiene su formulario. Es anónimo y tarda menos de un minuto.">
+      <ReportChoices />
     </FormPage>
   );
 }

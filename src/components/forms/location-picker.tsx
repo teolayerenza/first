@@ -9,7 +9,8 @@ import { haversineM } from "@/lib/domain/geo";
 import type { LngLat } from "@/lib/domain/types";
 import { Pin } from "./glyphs";
 
-const CENTER: LngLat = [-57.9545, -34.9214];
+// Av. 7 entre 49 y 50: un punto sobre la calle, para que el pin arranque en una cuadra.
+const CENTER: LngLat = [-57.95009, -34.91462];
 const STYLE = {
   light: process.env.NEXT_PUBLIC_MAP_STYLE_LIGHT ?? "https://tiles.openfreemap.org/styles/positron",
   dark: process.env.NEXT_PUBLIC_MAP_STYLE_DARK ?? "https://tiles.openfreemap.org/styles/dark",

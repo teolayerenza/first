@@ -84,6 +84,13 @@ export default function StreetMap({ casco, segmentsUrl, issuesUrl, focus, view, 
         attributionControl: { compact: true, customAttribution: "Calles © colaboradores de OpenStreetMap" },
         dragRotate: false,
         pitchWithRotate: false,
+        // En el celular, el mapa se mueve con dos dedos: con uno se sigue scrolleando la página.
+        cooperativeGestures: window.matchMedia("(pointer: coarse)").matches,
+        locale: {
+          "CooperativeGesturesHandler.MobileHelpText": "Usá dos dedos para mover el mapa",
+          "CooperativeGesturesHandler.WindowsHelpText": "Usá Ctrl + rueda para acercar el mapa",
+          "CooperativeGesturesHandler.MacHelpText": "Usá ⌘ + rueda para acercar el mapa",
+        },
       });
       map.current = m;
       m.addControl(new maplibregl.NavigationControl({ showCompass: false }), "top-right");

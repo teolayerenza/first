@@ -1,12 +1,13 @@
-# Pocitos LP 🕳️
+# Pocitos LP
 
 Tablero público, anónimo y en tiempo real del estado de las calles del **casco urbano de La Plata**:
 estado del asfalto por cuadra, pozos y parches mal hechos, medidos por los vecinos.
 
-- 📊 Indicadores primero: % de calles muy deterioradas, nuevas, sin relevar; pozos abiertos, tiempo y calidad de arreglo.
-- 🗺️ Mapa cuadra por cuadra (MapLibre) y vista **3D** del casco (Three.js). Modo claro y oscuro.
-- 🔒 100% anónimo y con datos mínimos. Ver [`docs/SEGURIDAD.md`](docs/SEGURIDAD.md).
-- 📂 Datos abiertos (GeoJSON/CSV, ODbL).
+- Indicadores primero: % de calles muy deterioradas, nuevas, sin relevar; pozos abiertos, tiempo y calidad de arreglo.
+- Mapa con las **3.237 cuadras reales** del casco (OpenStreetMap) y vista **3D** (Three.js). Modo claro y oscuro.
+- Pensado para el celular (Safari y Chrome): barra fija con *Reportar pozo*, *Reportar parche* y *Calificar mi cuadra*.
+- 100% anónimo y con datos mínimos. Ver [`docs/SEGURIDAD.md`](docs/SEGURIDAD.md).
+- Datos abiertos (GeoJSON/CSV, ODbL).
 
 ## Arrancar en 1 minuto (modo demo)
 

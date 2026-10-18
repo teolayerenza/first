@@ -13,6 +13,7 @@ import type {
   Patching,
   Rating,
   Segment,
+  Zone,
   SegmentEvent,
   SegmentRating,
   Severity,
@@ -32,11 +33,12 @@ export function mulberry32(seed: number) {
   };
 }
 
-export function simulate(now: Date, seed = 221): Dataset {
+export function simulate(now: Date, seed = 221, base?: { zones: Zone[]; segments: Segment[] }): Dataset {
   const rnd = mulberry32(seed);
   const pick = <T,>(arr: T[]) => arr[Math.floor(rnd() * arr.length)];
-  const zones = buildZones();
-  const segments = buildSegments();
+  const zones = base?.zones ?? buildZones();
+  // Copia: la simulación marca empedrados y no debe tocar los datos base.
+  const segments = (base?.segments ?? buildSegments()).map((s) => ({ ...s }));
   const nowMs = now.getTime();
   const daysAgo = (d: number) => new Date(nowMs - d * DAY - Math.floor(rnd() * DAY));
 

@@ -10,12 +10,21 @@ Abrí http://localhost:3000. Todo funciona con datos simulados: tablero, mapa, 3
 
 ## 1. Calles reales del casco (OpenStreetMap)
 
-La demo usa una **grilla sintética** (sin diagonales). Para las calles reales:
+**Ya están en el repo:** `data/cuadras.json` (3.237 cuadras reales con su nombre "Calle X e/ Y y Z"),
+`data/casco_urbano.geojson` y `data/zonas.geojson`. Salen de OpenStreetMap (extracto público de junio de 2018,
+[alephcero/bsas_urban_area_streets](https://github.com/alephcero/bsas_urban_area_streets)) con
+`scripts/extract_osmnx_laplata.py` + `scripts/build-real-data.ts`. El casco y las zonas se calculan cruzando las rectas
+de las avenidas reales (31, 32, 72, 122 y las avenidas cada 6 cuadras).
 
-1. (Opcional, recomendado) Abrí `data/casco_urbano.geojson` y `data/zonas.geojson` en [geojson.io](https://geojson.io) y ajustalos a las avenidas reales. La grilla sintética está rotada 45° exactos y la real no: **las zonas hay que redibujarlas** siguiendo las avenidas.
-2. `npm run data:osm` → descarga las calles desde Overpass y las parte en cuadras (`data/osm-segments.geojson`).
-3. Revisá el resultado en geojson.io, sobre todo las **diagonales** y las cuadras que cortan plazas. El script descarta tramos de menos de 15 m.
-4. `npm run data:grid` → regenera `supabase/seed.sql` con las cuadras reales.
+Para actualizarlas con OSM de hoy (desde tu compu, con internet):
+
+1. `npm run data:osm` → descarga las calles actuales desde Overpass (`data/osm-segments.geojson`).
+2. Revisá el resultado en [geojson.io](https://geojson.io), sobre todo plazas y diagonales.
+3. `npm run data:grid` → regenera `supabase/seed.sql`.
+
+Detalles conocidos: las cuadras que dan a una plaza a veces se llaman "Calle 7 e/ Plaza Rocha y 61", porque en OSM
+la calle de la plaza lleva el nombre de la plaza. El empedrado no viene en ese extracto: lo marcan los vecinos
+(o el import nuevo de Overpass, que sí trae `surface`).
 
 ## 2. Supabase
 

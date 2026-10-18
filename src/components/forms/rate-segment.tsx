@@ -92,7 +92,7 @@ export function RateSegmentForm({ preset }: { preset?: { id: number; label: stri
           <button className="h-[52px] bg-asphalt px-5 font-semibold text-asphalt-ink" onClick={() => { setResult(null); setRating(null); setPatching(null); setRepavedOn(false); setRepaved(null); setCobbled(false); setNeighbors([]); }}>
             Calificar otra cuadra
           </button>
-          <Link href="/reportar" className="inline-flex h-[52px] items-center justify-center bg-surface px-5 font-semibold text-ink">Reportar un pozo</Link>
+          <Link href="/reportar/pozo" className="inline-flex h-[52px] items-center justify-center bg-surface px-5 font-semibold text-ink">Reportar un pozo</Link>
           <Link href="/" className="inline-flex h-[52px] items-center justify-center px-5 font-semibold text-ink underline">Ver el tablero</Link>
         </div>
       </div>

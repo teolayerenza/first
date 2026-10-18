@@ -188,8 +188,8 @@ export function Dashboard({ data, casco, zone }: Props) {
 
       {/* Sumate: el campo verde, con el primer paso ya abierto. */}
       <Chapter id="sumate" label="Sumate" className="bg-green text-green-ink">
-        <div className="grid items-end gap-12 lg:min-h-[60svh] lg:grid-cols-12">
-          <div className="lg:col-span-6">
+        <div className="grid items-end gap-12 lg:min-h-[60svh]">
+          <div>
             <h2 className="text-[clamp(3.5rem,1rem+6vw,7rem)] leading-[0.92]">Sumá tu cuadra</h2>
             <p className="mt-6 max-w-[40ch] text-lead leading-snug">
               Ya se sumaron <span className="tabular font-semibold">{fmtInt(contributors.total)}</span> vecinos,{" "}
@@ -197,9 +197,7 @@ export function Dashboard({ data, casco, zone }: Props) {
             </p>
             <p className="mt-3"><LiveNow /></p>
           </div>
-          <div className="flex lg:col-span-5 lg:col-start-8 lg:justify-end">
-            <StartFragment />
-          </div>
+          <StartFragment />
         </div>
       </Chapter>
 

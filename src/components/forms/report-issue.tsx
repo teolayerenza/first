@@ -16,9 +16,9 @@ const SEVERITY: { v: Severity; t: string; d: string }[] = [
   { v: 3, t: "Peligroso", d: "Rompe ruedas, el auto salta o tira motos" },
 ];
 
-export function ReportIssueForm() {
+/** Un formulario por tipo: `pozo` o `parche` (bacheo mal hecho). Así cada botón lleva directo a lo suyo. */
+export function ReportIssueForm({ kind }: { kind: IssueKind }) {
   const [loc, setLoc] = useState<PickedLocation | null>(null);
-  const [kind, setKind] = useState<IssueKind | null>(null);
   const [parche, setParche] = useState<ParcheType | null>(null);
   const [sev, setSev] = useState<Severity | null>(null);
   const [photo, setPhoto] = useState<CompressedPhoto | null>(null);
@@ -26,13 +26,13 @@ export function ReportIssueForm() {
   const [result, setResult] = useState<ClientResult | null>(null);
   const [dup, setDup] = useState<string | null>(null);
 
-  const ready = loc?.segment && kind && sev && (kind === "pozo" || parche);
+  const ready = loc?.segment && sev && (kind === "pozo" || parche);
 
   async function send(forceNew = false) {
     if (!ready || !loc) return;
     setBusy(true);
     const r = await submit(
-      { kind: "issue", issueKind: kind!, parcheType: kind === "parche" ? parche : null, severity: sev!, location: loc.point, onSite: loc.onSite, forceNew },
+      { kind: "issue", issueKind: kind, parcheType: kind === "parche" ? parche : null, severity: sev!, location: loc.point, onSite: loc.onSite, forceNew },
       photo ? { blob: photo.blob, type: photo.type } : null,
     );
     setBusy(false);
@@ -68,9 +68,12 @@ export function ReportIssueForm() {
                 : "Queda pendiente hasta que otro vecino lo confirme. Si pasás de nuevo, sacale una foto."}
         </p>
         <div className="flex flex-col gap-2 sm:flex-row">
-          <button className="h-[52px] bg-asphalt px-5 font-semibold text-asphalt-ink" onClick={() => { setResult(null); setKind(null); setParche(null); setSev(null); setPhoto(null); }}>
+          <button className="h-[52px] bg-asphalt px-5 font-semibold text-asphalt-ink" onClick={() => { setResult(null); setParche(null); setSev(null); setPhoto(null); }}>
             Reportar otro
           </button>
+          <Link href={kind === "pozo" ? "/reportar/parche" : "/reportar/pozo"} className="inline-flex h-[52px] items-center justify-center bg-surface px-5 font-semibold text-ink">
+            {kind === "pozo" ? "Reportar un parche" : "Reportar un pozo"}
+          </Link>
           {loc?.segment && <Link href={`/calificar?cuadra=${loc.segment.id}`} className="inline-flex h-[52px] items-center justify-center bg-surface px-5 font-semibold text-ink">Calificar esta cuadra</Link>}
           <Link href="/" className="inline-flex h-[52px] items-center justify-center px-5 font-semibold underline">Ver el tablero</Link>
         </div>
@@ -82,24 +85,20 @@ export function ReportIssueForm() {
     <form className="flex flex-col gap-2" onSubmit={(e) => { e.preventDefault(); send(); }}>
       <QueueFlusher />
       <Step n={1} title="¿Dónde está?">
-        <LocationPicker onChange={setLoc} hint="Mové el mapa hasta que el pin quede justo sobre el pozo o el parche." />
+        <LocationPicker onChange={setLoc} hint={`Mové el mapa hasta que el pin quede justo sobre el ${kind}.`} />
       </Step>
 
-      <Step n={2} title="¿Qué es?">
-        <div role="radiogroup" className="grid gap-2 sm:grid-cols-2">
-          <Choice name="kind" value="pozo" checked={kind === "pozo"} onChange={() => setKind("pozo")} glyph={<Glyph kind="pozo" />} title="Pozo" desc="Falta asfalto, hay un agujero" />
-          <Choice name="kind" value="parche" checked={kind === "parche"} onChange={() => setKind("parche")} glyph={<Glyph kind="parche" />} title="Parche mal hecho" desc="Lo arreglaron, pero quedó mal" />
-        </div>
-        {kind === "parche" && (
-          <div role="radiogroup" aria-label="Tipo de parche" className="mt-3 grid gap-2 sm:grid-cols-3">
+      {kind === "parche" && (
+        <Step n={2} title="¿Cómo quedó el parche?">
+          <div role="radiogroup" aria-label="Tipo de parche" className="grid gap-2 sm:grid-cols-3">
             <Choice name="parche" value="elevado" checked={parche === "elevado"} onChange={() => setParche("elevado")} glyph={<Glyph kind="elevado" />} title="Elevado" desc="Quedó como un lomo de burro" />
             <Choice name="parche" value="hundido" checked={parche === "hundido"} onChange={() => setParche("hundido")} glyph={<Glyph kind="hundido" />} title="Hundido" desc="Quedó un pozo sobre el parche" />
             <Choice name="parche" value="desarmado" checked={parche === "desarmado"} onChange={() => setParche("desarmado")} glyph={<Glyph kind="desarmado" />} title="Se desarmó" desc="Volvió a romperse" />
           </div>
-        )}
-      </Step>
+        </Step>
+      )}
 
-      <Step n={3} title="¿Qué tan grave?">
+      <Step n={3} title="¿Qué tan grave es?">
         <div role="radiogroup" className="grid gap-2 sm:grid-cols-3">
           {SEVERITY.map((s) => (
             <Choice key={s.v} name="sev" value={String(s.v)} checked={sev === s.v} onChange={() => setSev(s.v)} title={s.t} desc={s.d} />

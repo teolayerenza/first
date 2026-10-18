@@ -1,6 +1,7 @@
 import "@fontsource-variable/hanken-grotesk";
 import type { Metadata, Viewport } from "next";
 import Link from "next/link";
+import { MobileActions } from "@/components/mobile-actions";
 import { ThemeToggle, themeInitScript } from "@/components/theme";
 import { isDemo } from "@/lib/data";
 import "./globals.css";
@@ -16,7 +17,7 @@ export const metadata: Metadata = {
   manifest: "/manifest.webmanifest",
 };
 
-export const viewport: Viewport = { themeColor: "#141414" };
+export const viewport: Viewport = { themeColor: "#141414", viewportFit: "cover", width: "device-width", initialScale: 1 };
 
 const NAV = [
   { href: "/datos", label: "Datos abiertos" },
@@ -31,7 +32,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
       </head>
-      <body className="flex min-h-dvh flex-col">
+      <body className="flex min-h-dvh flex-col pb-[calc(3.5rem+env(safe-area-inset-bottom))] md:pb-0">
         <a href="#contenido" className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:bg-paint focus:px-3 focus:py-2 focus:text-paint-ink">
           Saltar al contenido
         </a>
@@ -62,6 +63,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           {children}
         </main>
         <Footer />
+        <MobileActions />
       </body>
     </html>
   );
@@ -96,7 +98,7 @@ function Footer() {
         <div className="col-span-2 flex min-h-40 items-center justify-center bg-asphalt-ink text-asphalt lg:col-span-8 lg:min-h-80">
           <p aria-hidden className="text-[clamp(3.5rem,9vw,9rem)] font-semibold leading-none tracking-[-0.05em]">Pocitos LP</p>
         </div>
-        <Link href="/reportar" className="group col-span-2 flex min-h-40 flex-col justify-between bg-paint p-5 text-paint-ink hover:bg-paint-2 lg:col-span-4 lg:min-h-80">
+        <Link href="/reportar/pozo" className="group col-span-2 flex min-h-40 flex-col justify-between bg-paint p-5 text-paint-ink hover:bg-paint-2 lg:col-span-4 lg:min-h-80">
           <span className="text-head font-semibold leading-none tracking-[-0.04em]">Reportá un pozo</span>
           <svg aria-hidden viewBox="0 0 48 48" className="ml-auto h-12 w-12 transition-transform group-hover:translate-x-1" fill="none" stroke="currentColor" strokeWidth="4">
             <path d="M6 24h34M28 11l13 13-13 13" />
