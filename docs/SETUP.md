@@ -10,10 +10,10 @@ Abrí http://localhost:3000. Todo funciona con datos simulados: tablero, mapa, 3
 
 ## 1. Calles reales del casco (OpenStreetMap)
 
-**Ya están en el repo:** `data/cuadras.json` (3.237 cuadras reales con su nombre "Calle X e/ Y y Z"),
-`data/casco_urbano.geojson` y `data/zonas.geojson`. Salen de OpenStreetMap (extracto público de junio de 2018,
-[alephcero/bsas_urban_area_streets](https://github.com/alephcero/bsas_urban_area_streets)) con
-`scripts/extract_osmnx_laplata.py` + `scripts/build-real-data.ts`. El casco y las zonas se calculan cruzando las rectas
+**Ya están en el repo:** `data/cuadras.json` (3.187 cuadras reales con su nombre "Calle X e/ Y y Z"),
+`data/casco_urbano.geojson` y `data/zonas.geojson`. Salen de OpenStreetMap (Overpass, octubre de 2026):
+`npm run data:osm` baja `data/osm-raw.json` y `npx tsx scripts/build-real-data.ts data/osm-raw.json` arma las cuadras,
+conservando el id de las que ya existían. El casco y las zonas se calculan cruzando las rectas
 de las avenidas reales (31, 32, 72, 122 y las avenidas cada 6 cuadras).
 
 Para actualizarlas con OSM de hoy (desde tu compu, con internet):

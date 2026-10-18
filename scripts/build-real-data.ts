@@ -1,15 +1,19 @@
 // Arma las cuadras REALES del casco a partir de las calles de OpenStreetMap del partido de La Plata.
 //
-//   python3 -I scripts/extract_osmnx_laplata.py <callejero.zip> data/osm-laplata-2018.json
-//   npx tsx scripts/build-real-data.ts data/osm-laplata-2018.json
+//   npm run data:osm                                   → data/osm-raw.json (Overpass, actual)
+//   npx tsx scripts/build-real-data.ts data/osm-raw.json
+//
+// También acepta el extracto de 2018 (scripts/extract_osmnx_laplata.py).
+// Las cuadras que ya existían en data/cuadras.json conservan su id (misma calle y esquinas),
+// así los aportes guardados siguen apuntando a la cuadra correcta; las nuevas toman ids nuevos.
 //
 // Escribe data/cuadras.json, data/casco_urbano.geojson y data/zonas.geojson.
 // El casco y las zonas se calculan de las avenidas reales: el casco es el cuadrilátero de la
 // Circunvalación (31, 32, 72 y 122) y cada zona, el cuadrante entre dos pares de avenidas.
 // Datos © colaboradores de OpenStreetMap (ODbL).
 
-import { readFileSync, writeFileSync } from "node:fs";
-import { haversineM, lineLengthM, midpoint, pointInRing } from "../src/lib/domain/geo";
+import { existsSync, readFileSync, writeFileSync } from "node:fs";
+import { haversineM, lineLengthM, midpoint, pointInRing, projectOnLine } from "../src/lib/domain/geo";
 import type { LngLat, Segment, Zone } from "../src/lib/domain/types";
 
 interface Edge {
@@ -17,8 +21,42 @@ interface Edge {
   v: string;
   name: string;
   highway: string;
+  surface?: string;
   coords: LngLat[];
 }
+
+interface OverpassWay {
+  type: string;
+  nodes: number[];
+  geometry: { lat: number; lon: number }[];
+  tags: Record<string, string>;
+}
+
+/** Overpass trae vías enteras: se parten en cada nodo que comparten con otra vía (esquinas). */
+function overpassToEdges(ways: OverpassWay[]): Edge[] {
+  const uses = new Map<number, number>();
+  for (const w of ways) for (const n of new Set(w.nodes)) uses.set(n, (uses.get(n) ?? 0) + 1);
+  const out: Edge[] = [];
+  for (const w of ways) {
+    if (w.type !== "way" || !w.tags.name || w.nodes.length !== w.geometry.length) continue;
+    let from = 0;
+    for (let i = 1; i < w.nodes.length; i++) {
+      if (i < w.nodes.length - 1 && (uses.get(w.nodes[i]) ?? 0) < 2) continue;
+      out.push({
+        u: String(w.nodes[from]),
+        v: String(w.nodes[i]),
+        name: w.tags.name,
+        highway: w.tags.highway,
+        surface: w.tags.surface,
+        coords: w.geometry.slice(from, i + 1).map((g) => [g.lon, g.lat]),
+      });
+      from = i;
+    }
+  }
+  return out;
+}
+
+const COBBLED = /^(sett|cobblestone|unhewn_cobblestone)$/;
 
 /** "Avenida 7 - Ing. Monteverde" → "7"; "Diagonal 74 - Bolívar" → "Diag. 74"; "Avenida de Circunvalación 72" → "72". */
 export function streetKey(name: string): string | null {
@@ -39,7 +77,10 @@ function label(name: string, key: string): { streetName: string; isAvenue: boole
 }
 
 // ── 1. Leer y limpiar ────────────────────────────────────────────────────────────────────
-const raw = (JSON.parse(readFileSync(process.argv[2] ?? "data/osm-laplata-2018.json", "utf8")) as Edge[]).map((e) => {
+const input = process.argv[2] ?? "data/osm-raw.json";
+const parsed = JSON.parse(readFileSync(input, "utf8")) as Edge[] | { elements: OverpassWay[] };
+const fromOverpass = !Array.isArray(parsed);
+const raw = (Array.isArray(parsed) ? parsed : overpassToEdges(parsed.elements)).map((e) => {
   // Algunos tramos traen varios nombres como texto de lista de Python: "[u'Calle 41', u'Calle 41 Bis']".
   const m = e.name.match(/^\[u?'([^']+)'/);
   return m ? { ...e, name: m[1] } : e;
@@ -173,7 +214,7 @@ edges.forEach((e, i) => {
     betweenA: lo,
     betweenB: hi,
     isAvenue,
-    isCobbled: false,
+    isCobbled: COBBLED.test(e.surface ?? ""),
     zoneId: zone.id,
     coords: coords.map(([x, y]) => [Math.round(x * 1e6) / 1e6, Math.round(y * 1e6) / 1e6]),
     lengthM: Math.round(lengthM * 10) / 10,
@@ -186,14 +227,36 @@ for (const sgm of segments) {
   const k = `${sgm.streetName}|${sgm.betweenA}|${sgm.betweenB}`;
   if (!byKey.has(k)) byKey.set(k, sgm);
 }
+// Y si una mano no comparte el nodo de alguna esquina, queda una cuadra más larga encimada a otra
+// (la 7 "entre 50 y 53" sobre "50 y 51" + "51 y 53"): se descarta la que tiene el medio sobre el
+// interior de otra más corta de la misma calle.
+const sameStreet = Map.groupBy(byKey.values(), (x) => x.streetName);
+for (const [k, sgm] of byKey) {
+  const mid = midpoint(sgm.coords);
+  const covered = sameStreet.get(sgm.streetName)!.some(
+    (o) =>
+      o !== sgm &&
+      (o.lengthM < sgm.lengthM || (o.lengthM === sgm.lengthM && o.id < sgm.id)) &&
+      projectOnLine(mid, o.coords).distanceM < 15 &&
+      Math.min(haversineM(mid, o.coords[0]), haversineM(mid, o.coords.at(-1)!)) > 15,
+  );
+  if (covered) byKey.delete(k);
+}
 segments.length = 0;
-[...byKey.values()].forEach((sgm, i) => segments.push({ ...sgm, id: i + 1 }));
+// Ids estables: misma calle y mismas esquinas que en la versión anterior → mismo id.
+const previous: Segment[] = existsSync("data/cuadras.json") ? JSON.parse(readFileSync("data/cuadras.json", "utf8")) : [];
+const oldId = new Map(previous.map((p) => [`${p.streetName}|${p.betweenA}|${p.betweenB}`, p.id]));
+let nextId = previous.reduce((m, p) => Math.max(m, p.id), 0);
+for (const [k, sgm] of byKey) segments.push({ ...sgm, id: oldId.get(k) ?? ++nextId });
+segments.sort((x, y) => x.id - y.id);
+const kept = segments.filter((x) => oldId.has(`${x.streetName}|${x.betweenA}|${x.betweenB}`)).length;
 
 const km = segments.reduce((s, x) => s + x.lengthM, 0) / 1000;
-const fc = (features: unknown[]) => ({ type: "FeatureCollection", attribution: "© colaboradores de OpenStreetMap (ODbL), 2018", features });
+const fc = (features: unknown[]) => ({ type: "FeatureCollection", attribution: `© colaboradores de OpenStreetMap (ODbL), ${fromOverpass ? new Date().getFullYear() : 2018}`, features });
 writeFileSync("data/cuadras.json", JSON.stringify(segments));
 writeFileSync("data/casco_urbano.geojson", JSON.stringify(fc([{ type: "Feature", properties: { name: "Casco urbano de La Plata" }, geometry: { type: "Polygon", coordinates: [casco] } }])));
 writeFileSync("data/zonas.geojson", JSON.stringify(fc(zones.map(({ ring, ...p }) => ({ type: "Feature", properties: p, geometry: { type: "Polygon", coordinates: [ring] } })))));
 const side = (a: LngLat, b: LngLat) => (haversineM(a, b) / 1000).toFixed(2);
 console.log(`casco: lados ${side(corners[0], corners[1])} × ${side(corners[1], corners[2])} km`);
 console.log(`${segments.length} cuadras · ${km.toFixed(1)} km · ${zones.length} zonas`);
+console.log(`ids: ${kept} conservadas de ${previous.length} anteriores, ${segments.length - kept} nuevas, ${segments.filter((x) => x.isCobbled).length} empedradas`);
