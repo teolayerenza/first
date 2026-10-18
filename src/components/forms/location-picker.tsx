@@ -34,7 +34,7 @@ export function LocationPicker({ onChange, initial, hint }: { onChange: (l: Pick
   const theme = useResolvedTheme();
   const [seg, setSeg] = useState<SegmentRef | null | undefined>(undefined);
   const [inCasco, setInCasco] = useState(true);
-  const [gpsState, setGpsState] = useState<"idle" | "loading" | "ok" | "denied">("idle");
+  const [gpsState, setGpsState] = useState<"idle" | "loading" | "ok" | "denied" | "rough">("idle");
   const [searching, setSearching] = useState(false);
   const cb = useRef(onChange);
   useEffect(() => {
@@ -105,6 +105,9 @@ export function LocationPicker({ onChange, initial, hint }: { onChange: (l: Pick
     setGpsState("loading");
     navigator.geolocation.getCurrentPosition(
       (pos) => {
+        // Sin GPS (una compu), el navegador estima la ubicación por la conexión a internet: puede errar
+        // por kilómetros (te ubica en el proveedor). Ahí no se mueve el mapa.
+        if (pos.coords.accuracy > 500) return setGpsState("rough");
         gps.current = [pos.coords.longitude, pos.coords.latitude];
         setGpsState("ok");
         map.current?.flyTo({ center: gps.current, zoom: 18 });
@@ -126,6 +129,11 @@ export function LocationPicker({ onChange, initial, hint }: { onChange: (l: Pick
       </div>
       <p className="mt-3 text-small text-ink-2">{hint}</p>
       {gpsState === "denied" && <p className="mt-1 text-small text-ink-2">No pudimos usar el GPS. Mové el mapa o buscá la cuadra por nombre.</p>}
+      {gpsState === "rough" && (
+        <p className="mt-1 text-small text-ink-2">
+          Este dispositivo no tiene GPS y solo da una ubicación aproximada, que puede errar por kilómetros. Mové el mapa a mano o buscá la cuadra por nombre.
+        </p>
+      )}
       <p className="mt-3 bg-asphalt px-4 py-3 text-lead font-semibold leading-tight text-asphalt-ink" aria-live="polite">
         {seg === undefined
           ? "Ubicando…"
