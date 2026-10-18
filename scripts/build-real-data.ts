@@ -37,8 +37,16 @@ interface OverpassWay {
 
 // Vías que OSM tiene sin nombre y son parte de calles del casco.
 const UNNAMED = new Map<number, string>([
-  // Contorno de Plaza Moreno (lados de 12 y 14 y sus curvas)
-  ...[23406181, 51126237, 51126236, 51126238, 389619321, 389621308].map((id): [number, string] => [id, "Plaza Moreno"]),
+  // Plaza Moreno: los lados de 14 y 12, y cada curva del contorno con la calle que continúa
+  [23406181, "Calle 14"],
+  [51126237, "Calle 12"],
+  [389621308, "Calle 14"],
+  [51126238, "Calle 50"],
+  [389619321, "Calle 50"],
+  [51126236, "Calle 54"],
+  // Rotondas de 52 y 122 y de 60 y 122
+  ...[25975245, 154252380, 156366596, 278863455, 311592429, 346953669, 362077391, 482520731].map((id): [number, string] => [id, "Rotonda 52 y 122"]),
+  ...[278863462, 482662530, 482662531, 482662532, 482662533, 482662534, 482662535, 482662536].map((id): [number, string] => [id, "Rotonda 60 y 122"]),
   // Curvas del óvalo del Parque San Martín
   ...[23409169, 23409171, 283708239, 653864554, 1324681499].map((id): [number, string] => [id, "Parque San Martín"]),
   // La 1 sigue de largo junto a Plaza Alsina (1 y 38)
@@ -77,6 +85,8 @@ function overpassToEdges(ways: OverpassWay[]): Edge[] {
 }
 
 const COBBLED = /^(sett|cobblestone|unhewn_cobblestone)$/;
+// Avenidas de Circunvalación: boulevard con rambla en el medio.
+const BORDER = new Set(["31", "32", "72", "122"]);
 
 /** "Avenida 7 - Ing. Monteverde" → "7"; "Diagonal 74 - Bolívar" → "Diag. 74"; "Avenida de Circunvalación 72" → "72". */
 export function streetKey(name: string): string | null {
@@ -85,12 +95,14 @@ export function streetKey(name: string): string | null {
   const diag = n.match(/^diagonal\s+(\d+)/i);
   if (diag) return `Diag. ${diag[1]}`;
   const num = n.match(/^(?:calle|avenida(?: de circunvalaci[oó]n)?|av\.?|boulevard|bv\.?)\s+(\d+(?:\s+(?:bis|[a-d])\b)?)/i);
+  // La mano de afuera de la 31 está en OSM como "Calle 131".
+  if (num?.[1] === "131") return "31";
   if (num) return num[1].replace(/\s+(bis|[a-d])$/i, (_m, x: string) => ` ${x.length > 1 ? "bis" : x.toUpperCase()}`);
   return n.split(" - ")[0];
 }
 
 function label(name: string, key: string): { streetName: string; isAvenue: boolean } {
-  const isAvenue = /^avenida/i.test(name);
+  const isAvenue = /^avenida/i.test(name) || BORDER.has(key);
   if (key.startsWith("Diag.")) return { streetName: key.replace("Diag.", "Diagonal"), isAvenue: true };
   if (/^\d+$/.test(key)) return { streetName: isAvenue ? `Av. ${key}` : `Calle ${key}`, isAvenue };
   return { streetName: key, isAvenue };
@@ -305,6 +317,7 @@ for (let changed = true; changed; ) {
   changed = false;
   for (const t of split) {
     if (lineLengthM(t.coords) >= 25 || !t.startNames.length || !t.endNames.length) continue;
+    if (t.startNames.some((n) => BORDER.has(n) && t.endNames.includes(n))) continue; // cruce de la rambla
     const [ts, te] = [ptKey(t.coords[0]), ptKey(t.coords.at(-1)!)];
     const same = split.filter((n) => n !== t && n.key === t.key);
     const after = same.find((n) => ptKey(n.coords[0]) === te);
@@ -322,13 +335,31 @@ for (let changed = true; changed; ) {
   }
 }
 
+// Donde las dos manos se juntan a pocos metros de una esquina (la 1 llegando a 45), ese nodo toma el
+// nombre de la esquina.
+for (const pc of split) {
+  for (const [p, names] of [[pc.coords[0], pc.startNames], [pc.coords.at(-1)!, pc.endNames]] as const) {
+    if (names.length) continue;
+    const near = split.flatMap((o) => (o.key === pc.key ? [{ p: o.coords[0], n: o.startNames }, { p: o.coords.at(-1)!, n: o.endNames }] : []));
+    const named = near.find((x) => x.n.length && haversineM(x.p, p) < 15);
+    if (named) names.push(...named.n);
+  }
+}
+
 // Si una calle se bifurca a mitad de cuadra (la 1 entre 44 y 45), el nodo no tiene nombre de esquina:
 // el tramo se une con el que sigue y la cuadra va de esquina a esquina.
 for (let changed = true; changed; ) {
   changed = false;
   for (const t of split) {
     if (t.endNames.length) continue;
-    const next = split.find((n) => n !== t && n.key === t.key && ptKey(n.coords[0]) === ptKey(t.coords.at(-1)!));
+    const end = ptKey(t.coords.at(-1)!);
+    // Un tramo doble mano puede estar dibujado al revés: se da vuelta para seguir.
+    const flip = split.find((n) => n !== t && n.key === t.key && !n.oneway && ptKey(n.coords.at(-1)!) === end);
+    if (flip) [flip.coords, flip.startNames, flip.endNames] = [[...flip.coords].reverse(), flip.endNames, flip.startNames];
+    // Sin cerrar un rulo que vuelve a la misma esquina (entrada y salida de una rotonda).
+    const next = split.find(
+      (n) => n !== t && n.key === t.key && ptKey(n.coords[0]) === end && !n.endNames.some((x) => t.startNames.includes(x)),
+    );
     if (!next) continue;
     next.coords = [...t.coords, ...next.coords.slice(1)];
     next.startNames = t.startNames;
@@ -342,8 +373,14 @@ for (let changed = true; changed; ) {
 // corrida unos metros hacia la derecha del sentido del tránsito.
 // La 25 de 32 a 72 y la 1 de 45 a 72 (sin rambla, pero doble mano).
 const between = (x: string | null, lo: number, hi: number) => !!x && /^\d+$/.test(x) && +x >= lo && +x <= hi;
+const pastAvenues = (x: string | null) => !!x && (!/^\d+$/.test(x) || +x <= 1 || +x >= 115) && x !== "Plaza Moreno";
 const doubleHand = (key: string, a: string | null, b: string | null) =>
-  key === "25" || (key === "1" && between(a, 45, 72) && between(b, 45, 72));
+  key === "25" ||
+  key === "122" ||
+  (key === "1" && between(a, 45, 72) && between(b, 45, 72)) ||
+  (key === "53" && between(a, 8, 10) && between(b, 8, 10)) ||
+  (key === "60" && [a, b].every((x) => between(x, 118, 122) || !!x?.startsWith("Rotonda"))) ||
+  (key === "52" && pastAvenues(a) && pastAvenues(b));
 function offsetRight(coords: LngLat[], m: number): LngLat[] {
   return coords.map((p, i) => {
     const [a, b] = [coords[Math.max(0, i - 1)], coords[Math.min(coords.length - 1, i + 1)]];
@@ -374,7 +411,8 @@ const endsByStreet = Map.groupBy(
 );
 const nearNames = (pc: Piece, p: LngLat, names: string[]) =>
   union(names, ...endsByStreet.get(pc.key)!.filter((x) => x.pc !== pc && haversineM(x.p, p) < 30).map((x) => x.names));
-const BORDER = new Set(["31", "32", "72", "122"]);
+// Calles que siguen unos metros fuera del casco hasta su rotonda.
+const PAST_BORDER = new Set([...BORDER, "52", "60", "Rotonda 52 y 122", "Rotonda 60 y 122"]);
 function farName(pc: Piece, p: LngLat): string | null {
   for (const o of split) {
     if (o === pc || o.key !== pc.key) continue;
@@ -400,9 +438,11 @@ const candidates = split.flatMap((pc) => {
   }
   const lengthM = lineLengthM(pc.coords);
   const mid = midpoint(pc.coords);
-  if (!a || !b || a === b || lengthM < 20) return [];
+  // Los metros en que una calle cruza la rambla entre las dos manos de la Circunvalación.
+  const rambla = !!a && a === b && BORDER.has(a) && family(pc.key) < 4 && !BORDER.has(pc.key) && lengthM >= 5 && lengthM < 80;
+  if (!a || !b || (a === b && !rambla) || (lengthM < 20 && !rambla)) return [];
   // La mano de afuera de la Circunvalación (31, 32, 72 y 122) queda fuera del límite del casco.
-  const border = BORDER.has(pc.key) && projectOnLine(mid, casco).distanceM < 150;
+  const border = PAST_BORDER.has(pc.key) && projectOnLine(mid, casco).distanceM < 150;
   if (!pointInRing(mid, casco) && !border) return [];
   // Las zonas del borde están agrandadas y dejan una franja sin zona sobre la avenida que las separa
   // de las de adentro: ahí va la zona más cercana.
@@ -422,7 +462,7 @@ const candidates = split.flatMap((pc) => {
     coords: pc.coords.map(([x, y]) => [Math.round(x * 1e6) / 1e6, Math.round(y * 1e6) / 1e6]),
     lengthM: Math.round(lengthM * 10) / 10,
   };
-  return [{ key: pc.key, segment, toward: pc.oneway ? b : null, mid, via }];
+  return [{ key: pc.key, segment, toward: pc.oneway ? b : null, mid, via, rambla }];
 });
 
 // Misma calle y mismas esquinas en lugares distintos: las dos manos de un boulevard se nombran por el
@@ -440,7 +480,7 @@ function sides(group: { mid: LngLat }[]): string[] {
   return group.map((_, i) => `tramo ${i + 1}`);
 }
 const segments: Segment[] = [];
-for (const group of Map.groupBy(candidates, (c) => `${c.segment.streetName}|${c.segment.betweenA}|${c.segment.betweenB}|${c.via}`).values()) {
+for (const group of Map.groupBy(candidates, (c) => `${c.segment.streetName}|${c.segment.betweenA}|${c.segment.betweenB}|${c.via}|${c.rambla}`).values()) {
   const places = group.filter((c, i) => group.slice(0, i).every((o) => haversineM(o.mid, c.mid) > 8));
   // Si una avenida doble mano tiene una sola mano en OSM en esta cuadra, se agrega la otra al lado.
   const [only] = places;
@@ -449,11 +489,11 @@ for (const group of Map.groupBy(candidates, (c) => `${c.segment.streetName}|${c.
     const other = only.toward === only.segment.betweenA ? only.segment.betweenB : only.segment.betweenA;
     places.push({ ...only, segment: { ...only.segment, coords }, toward: other, mid: midpoint(coords) });
   }
-  const byMano = places.every((c) => c.toward) && new Set(places.map((c) => c.toward)).size > 1;
+  const byMano = places.every((c) => c.toward) && new Set(places.map((c) => c.toward)).size > 1 && !only.rambla;
   for (const same of Map.groupBy(places, (c) => (byMano ? c.toward : "")).values()) {
     const side = same.length > 1 ? sides(same) : [];
     same.forEach((c, i) => {
-      const tags = [c.via ? `por ${c.via}` : "", byMano ? `mano hacia ${c.toward}` : "", side[i] ?? ""].filter(Boolean);
+      const tags = [c.rambla ? "cruce de la rambla" : "", c.via ? `por ${c.via}` : "", byMano ? `mano hacia ${c.toward}` : "", side[i] ?? ""].filter(Boolean);
       segments.push(tags.length ? { ...c.segment, betweenB: `${c.segment.betweenB} (${tags.join(", ")})` } : c.segment);
     });
   }
@@ -466,7 +506,7 @@ const oldId = new Map(previous.map((p) => [`${p.streetName}|${p.betweenA}|${p.be
 let nextId = previous.reduce((m, p) => Math.max(m, p.id), 0);
 const taken = new Set<number>();
 const keyOf = (x: Segment) => `${x.streetName}|${x.betweenA}|${x.betweenB}`;
-const withoutMano = (x: Segment) => keyOf(x).replace(/ \((por|mano hacia|lado|tramo) .*\)$/, "");
+const withoutMano = (x: Segment) => keyOf(x).replace(/ \((cruce de la rambla|por|mano hacia|lado|tramo).*\)$/, "");
 let kept = 0;
 for (const sgm of segments) {
   const id = [oldId.get(keyOf(sgm)), oldId.get(withoutMano(sgm))].find((x) => x !== undefined && !taken.has(x));
