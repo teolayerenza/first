@@ -87,6 +87,8 @@ Por cuadra y por zona se calcula la **densidad**: pozos abiertos por km, pondera
 ```
 ┌──────────────────────────────────────────────────────────┐
 │  POSITOS LP · Casco urbano · actualizado hace 2 min      │
+│  👥 3.412 vecinos ya se sumaron · +214 esta semana        │
+│     🟢 18 aportando ahora                                 │
 │                                                          │
 │  ESTADO DEL ASFALTO                                      │
 │   23%  de las calles está MUY DETERIORADA ▲ +2 pp        │
@@ -127,6 +129,27 @@ Por cuadra y por zona se calcula la **densidad**: pozos abiertos por km, pondera
 | **Tiempo de arreglo** | promedio y mediana de `resolved_at - created_at` (últimos 90 días) |
 | **Pozo más viejo** | el abierto más antiguo, con su dirección |
 | **Variación mensual** | KPI actual - snapshot de hace 30 días, en puntos porcentuales |
+
+#### Contador de vecinos
+| Contador | Definición |
+|---|---|
+| **👥 Vecinos que se sumaron** | Dispositivos distintos con ≥ 1 aporte que pasó el detector de anomalías |
+| **+N esta semana** | Dispositivos cuyo primer aporte fue en los últimos 7 días |
+| **🛣️ Calificaron la cuadra donde estaban** | Dispositivos con ≥ 1 calificación `on_site` (aproxima "vecinos que calificaron su cuadra") |
+| **🕳️ Reportaron pozos** | Dispositivos con ≥ 1 pozo reportado |
+| **🟢 Aportando / mirando ahora** | Conexiones abiertas en este momento (Supabase Realtime **Presence**: vive en memoria, no se guarda) |
+
+**No se usa la IP** para contar. Además de ir contra la regla de datos mínimos, sería un número falso: en Argentina
+los celulares comparten IP por CGNAT (muchos usuarios bajo la misma IP) y una familia comparte el wifi (varios vecinos, una sola IP).
+
+Cómo se cuenta sin identificar a nadie:
+- Tabla `contributors` con **una fila por dispositivo**: `HMAC(secreto, dispositivo)`, el mes del primer aporte y
+  tres booleanos (`rated`, `rated_on_site`, `reported_pothole`). **No dice qué cuadras ni qué pozos**: solo sirve para contar.
+- Al enviar un aporte, la Edge Function guarda en la fila del aporte un `contributor_hash` **temporal**. Cuando el
+  detector lo promueve de `pendiente` a `activo` (≈ 10 min), se actualiza `contributors` y ese campo **se pone en null**.
+  El vínculo entre el aporte y el dispositivo dura solo esos minutos.
+- Los bots no inflan el contador, porque solo cuentan los aportes que pasaron las defensas anti-abuso.
+- Es una **estimación**, y el tablero lo aclara: si alguien borra los datos del navegador o cambia de celular, cuenta como vecino nuevo.
 
 **Para que los números sean honestos:**
 - "Sin relevar" siempre visible y link a "¿Cómo se calcula?" en cada número.
@@ -332,6 +355,17 @@ create table rate_limits (                     -- se vacía todos los días (pg_
   count       int default 0
 );
 
+-- Contador de vecinos: una fila por dispositivo, sin referencias a cuadras ni pozos
+create table contributors (
+  device_hash      bytea primary key,          -- HMAC(secreto, device)
+  first_month      date not null,              -- truncado al mes
+  rated            boolean default false,
+  rated_on_site    boolean default false,
+  reported_pothole boolean default false
+);
+-- Además, segment_ratings, segment_events, potholes y pothole_votes tienen
+-- `contributor_hash bytea null`, que se completa al enviar y se pone en NULL al promover el aporte a 'activo'.
+
 create table stats_snapshots (                 -- una fila por día y por ámbito
   day date, zone_id int,                       -- zone_id null = casco completo
   km_total numeric, km_nueva numeric, km_buena numeric, km_gastada numeric,
@@ -393,7 +427,7 @@ Ninguna pantalla pide datos personales. No hay registro ni login.
   También se puede buscar con "Calle __ entre __ y __". **No se pide barrio**: la zona se deduce.
 - **Dedupe**: si hay un pozo abierto a < 8 m → "¿Es este? (reportado hace 40 días)" → "Sí, sigue ahí" / "No, es otro".
   Que **otras personas que pasan** confirmen el mismo pozo es lo que lo valida.
-- Foto opcional, comprimida y sin EXIF, con el aviso "no incluyas personas ni patentes".
+- Foto opcional, con el aviso "no incluyas personas ni patentes". El vecino saca o elige cualquier foto y la app la achica sola (ver §9.3).
 
 ### 9.2 Formulario "Calificar una cuadra": estado general del asfalto (≤ 10 s)
 
@@ -421,6 +455,32 @@ Ninguna pantalla pide datos personales. No hay registro ni login.
 - Se puede calificar cualquier cuadra, pero si el GPS indica que el vecino está en ella (`on_site`), la calificación pesa más.
 - Si vuelve a calificar la misma cuadra, la nueva calificación reemplaza a la anterior.
 - "¿Y la cuadra de al lado?" sirve para bajar el "% sin relevar" con un toque.
+
+### 9.3 Fotos sin fricción
+El vecino **nunca ve un límite de tamaño**. Puede sacar o elegir cualquier foto, incluidas las de iPhone de 3–5 MB
+en HEIC o las de Android de 8 MB, y la app la achica sola **en el celular** antes de subirla.
+
+Pipeline en el navegador (en un Web Worker, para no trabar la pantalla):
+1. `<input type="file" accept="image/*" capture="environment">`: abre la cámara trasera directamente, o deja elegir de la galería.
+2. **iPhone / HEIC**: con `accept="image/*"`, Safari en iOS normalmente entrega la imagen ya convertida a JPEG. Si llega
+   en HEIC, Safari igual la decodifica con `createImageBitmap`. En otros navegadores, como respaldo, se usa una
+   librería de decodificación HEIC (`heic2any` o similar) que se carga solo en ese caso.
+3. **Orientación**: se respeta la orientación EXIF al decodificar (`imageOrientation: 'from-image'`) para que la foto no quede rotada.
+4. **Redimensionar**: el lado largo queda en **1280 px** como máximo. Alcanza y sobra para ver un pozo.
+5. **Re-codificar** con `canvas.toBlob` en **WebP** (o JPEG si el navegador no soporta WebP), calidad 0,75.
+   Si pesa más de 300 KB, se baja la calidad en pasos hasta llegar. Resultado típico: **120–250 KB**.
+6. Al re-codificar en un canvas, **el EXIF desaparece por completo** (GPS, fecha, modelo de teléfono) sin pasos extra.
+7. Opción a evaluar: `browser-image-compression`, que ya resuelve los pasos 3–5 con un worker.
+
+UX:
+- La compresión y la subida arrancan **en segundo plano** apenas se elige la foto, mientras el vecino marca la gravedad.
+  Para cuando toca "Enviar", la foto suele estar lista.
+- Se muestra una miniatura con una barra de progreso. Si falla, el reporte se envía igual sin foto y se ofrece reintentar.
+- Sin señal: la foto ya comprimida queda en la cola de IndexedDB junto con el reporte.
+- Bonus: los datos móviles del vecino rinden más (sube ~200 KB en lugar de 5 MB) y el Storage del proyecto alcanza para muchísimas más fotos.
+
+El límite de **1 MB en el servidor** no es para el usuario: es una red de seguridad contra quien llame a la API
+saltándose la app (ver `SEGURIDAD.md`). Una foto que pasó por la app nunca llega a ese límite.
 
 ### Comunes a los dos formularios
 - No hay texto libre en el MVP (nada que moderar y ningún dato personal que se pueda filtrar).
@@ -450,6 +510,8 @@ Ninguna pantalla pide datos personales. No hay registro ni login.
 - [ ] RLS en todo + vistas públicas sin hashes + test de RLS en CI.
 - [ ] UI de "Calificar una cuadra" y "Reportar pozo" (foto sin EXIF, subida con URL firmada).
 - [ ] Bloque "Tu anonimato" + página `/privacidad`.
+- [ ] Pipeline de fotos en el navegador (HEIC, resize, WebP, sin EXIF, subida en segundo plano).
+- [ ] Tabla `contributors` + contador de vecinos + Presence "aportando ahora".
 
 ### Fase 3 — Mapa y zonas
 - [ ] Líneas coloreadas por estado + puntos de pozos (clusters) + capa de empedrado.

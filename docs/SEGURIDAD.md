@@ -117,8 +117,10 @@ Es lo más difícil de frenar sin identificar a la gente, así que la respuesta 
 - El GPS falso (**A5**) es posible, pero el peso extra es chico y el resto de las capas sigue activo.
 
 ### Fotos (A6, A7)
-- En el celular: compresión a un máximo de ~200 KB y quitar el EXIF.
+- En el celular, de forma automática e invisible para el usuario: cualquier foto (HEIC de iPhone incluido) se redimensiona a
+  1280 px, se re-codifica a WebP/JPEG de ~200 KB y pierde el EXIF (ver `PLAN.md` §9.3). **El vecino nunca ve un límite.**
 - En el servidor: subida solo con **URL firmada** que emite la Edge Function (máx. 1 MB, solo `image/jpeg` o `image/webp`).
+  Ese límite es solo contra quien llame a la API sin pasar por la app.
   La imagen **se re-codifica** en el servidor, lo que elimina metadatos residuales y archivos "políglotas".
 - **Una foto no es pública hasta que el pozo está verificado por otra persona.** Antes de eso solo se usa como evidencia.
 - Botón **"Denunciar foto"**: con 2 denuncias se oculta automáticamente hasta que la revise un admin.
@@ -169,6 +171,8 @@ Es lo más difícil de frenar sin identificar a la gente, así que la respuesta 
 | Votos de pozos | No | Solo hashes |
 | Usuarios anónimos (`auth.users`) | Pseudónimo aleatorio | Sin email ni nombre. Se borran a los 30 días de inactividad |
 | Contadores de rate limit | No | Se borran todos los días |
+| Contador de vecinos (`contributors`) | No | Solo un hash por dispositivo, el mes y 3 sí/no. No dice qué aportó ni dónde. El vínculo temporal con el aporte se borra en ≈ 10 min |
+| "Aportando ahora" (Presence) | No | Vive solo en memoria mientras la app está abierta; no se guarda |
 | IP, ubicación del celular, modelo de teléfono, nombre, email, teléfono, barrio | — | **No se guardan** |
 
 Conclusión honesta: **un atacante que robe la base se lleva básicamente lo mismo que ya es público** (el mapa de pozos
