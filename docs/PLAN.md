@@ -529,6 +529,7 @@ saltándose la app (ver `SEGURIDAD.md`). Una foto que pasó por la app nunca lle
 ### Fase 5 — Viralidad y transparencia
 - [ ] Tarjetas OG compartibles.
 - [ ] Datos abiertos (GeoJSON/CSV) + páginas de metodología y privacidad.
+- [ ] Página `/prensa` (kit de prensa con números en vivo). Estrategia completa en `docs/DIFUSION.md`.
 
 ### Fase 6 — Extras
 - Resumen mensual público para el municipio y los concejales.
