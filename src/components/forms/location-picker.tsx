@@ -139,6 +139,18 @@ export function LocationPicker({ onChange, initial, hint }: { onChange: (l: Pick
   );
 }
 
+/** Calles y avenidas por número, después las diagonales, después plazas y calles con nombre (alfabético). */
+function byStreet(x: string, y: string): number {
+  const rank = (s: string): [number, number] => {
+    const n = s.match(/^(?:Av\.|Calle)?\s*(\d+)/);
+    if (n) return [0, +n[1]];
+    const d = s.match(/^Diag(?:onal|\.)\s*(\d+)/);
+    return d ? [1, +d[1]] : [2, 0];
+  };
+  const [[gx, nx], [gy, ny]] = [rank(x), rank(y)];
+  return gx - gy || nx - ny || x.localeCompare(y, "es");
+}
+
 export function StreetSearch({ onPick, dark = false }: { onPick: (e: StreetIndexEntry) => void; dark?: boolean }) {
   const [idx, setIdx] = useState<StreetIndexEntry[] | null>(null);
   const [street, setStreet] = useState("");
@@ -146,8 +158,11 @@ export function StreetSearch({ onPick, dark = false }: { onPick: (e: StreetIndex
   useEffect(() => {
     fetch("/api/geo/calles").then((r) => r.json()).then(setIdx);
   }, []);
-  const streets = useMemo(() => [...new Set(idx?.map((e) => e.street))].sort((x, y) => (parseInt(x.replace(/\D/g, "")) || 0) - (parseInt(y.replace(/\D/g, "")) || 0)), [idx]);
-  const options = useMemo(() => idx?.filter((e) => e.street === street) ?? [], [idx, street]);
+  const streets = useMemo(() => [...new Set(idx?.map((e) => e.street))].sort(byStreet), [idx]);
+  const options = useMemo(
+    () => (idx?.filter((e) => e.street === street) ?? []).sort((x, y) => byStreet(x.a, y.a) || byStreet(x.b, y.b)),
+    [idx, street],
+  );
   const sel = dark ? "h-12 w-full bg-asphalt-ink px-3 text-asphalt" : "h-12 w-full border border-line bg-surface px-3 text-ink";
   if (!idx) return <p className={`mt-2 text-small ${dark ? "text-asphalt-ink-2" : "text-ink-3"}`}>Cargando calles…</p>;
   return (
