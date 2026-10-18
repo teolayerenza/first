@@ -3,8 +3,8 @@
 
 import "server-only";
 import { createHmac, randomUUID } from "node:crypto";
-import { buildCasco } from "../domain/grid";
-import { pointInRing, projectOnLine } from "../domain/geo";
+import { buildCasco, segmentLabel } from "../domain/grid";
+import { haversineM, midpoint, pointInRing, projectOnLine } from "../domain/geo";
 import { evaluate, monthlySeries, type Evaluation } from "../domain/kpis";
 import type { SubmitDeps, SubmitStore } from "../domain/submit";
 import type { Dataset, LngLat } from "../domain/types";
@@ -111,9 +111,33 @@ export const demoSource: DataSource = {
     return casco;
   },
 
+  async nearestSegment(p) {
+    if (!pointInRing(p, casco)) return null;
+    const ev = nowEval();
+    let best: { s: (typeof ev.segments)[number]; d: number } | null = null;
+    for (const s of ev.segments) {
+      const d = projectOnLine(p, s.segment.coords).distanceM;
+      if (d <= 60 && (!best || d < best.d)) best = { s, d };
+    }
+    return best ? { id: best.s.segment.id, label: segmentLabel(best.s.segment), condition: best.s.condition, distanceM: best.d } : null;
+  },
+
+  async adjacentSegments(id) {
+    const ev = nowEval();
+    const me = ev.segments.find((s) => s.segment.id === id);
+    if (!me) return [];
+    const ends = [me.segment.coords[0], me.segment.coords[me.segment.coords.length - 1]];
+    return ev.segments
+      .filter((s) => s.segment.id !== id && !s.segment.isCobbled)
+      .filter((s) => ends.some((e) => s.segment.coords.some((c) => haversineM(c, e) < 2)))
+      .sort((a, b) => Number(b.condition === "sin_relevar") - Number(a.condition === "sin_relevar"))
+      .slice(0, 6)
+      .map((s) => ({ id: s.segment.id, label: segmentLabel(s.segment), condition: s.condition }));
+  },
+
   async getStreetIndex() {
     return memo("streets", () =>
-      state().data.segments.map((s) => ({ id: s.id, street: s.streetName, a: s.betweenA, b: s.betweenB })),
+      state().data.segments.map((s) => ({ id: s.id, street: s.streetName, a: s.betweenA, b: s.betweenB, mid: midpoint(s.coords) })),
     );
   },
 };

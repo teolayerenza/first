@@ -85,6 +85,21 @@ export interface SegmentDetail extends SegmentFeatureProps {
   issues: (IssueFeatureProps & { location: LngLat; status: "abierto" | "resuelto" })[];
 }
 
+export interface StreetIndexEntry {
+  id: number;
+  street: string;
+  a: string;
+  b: string;
+  mid: LngLat;
+}
+
+export interface SegmentRef {
+  id: number;
+  label: string;
+  condition: Condition;
+  distanceM?: number;
+}
+
 export interface DataSource {
   mode: "demo" | "supabase";
   getDashboard(zoneId?: number | null): Promise<Dashboard>;
@@ -93,6 +108,8 @@ export interface DataSource {
   getIssues(zoneId?: number | null): Promise<IssuesFC>;
   getSegment(id: number): Promise<SegmentDetail | null>;
   getCasco(): Promise<LngLat[]>;
+  nearestSegment(p: LngLat): Promise<SegmentRef | null>;
+  adjacentSegments(id: number): Promise<SegmentRef[]>;
   /** Para el selector "Calle __ entre __ y __". */
-  getStreetIndex(): Promise<{ id: number; street: string; a: string; b: string }[]>;
+  getStreetIndex(): Promise<StreetIndexEntry[]>;
 }

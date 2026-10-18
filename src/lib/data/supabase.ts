@@ -2,6 +2,7 @@
 
 import "server-only";
 import { createClient } from "@supabase/supabase-js";
+import { midpoint } from "../domain/geo";
 import type { Kpis, MonthPoint } from "../domain/kpis";
 import type { Condition, LngLat, Patching, Zone } from "../domain/types";
 import type { Dashboard, DataSource, IssuesFC, SegmentDetail, SegmentsFC, ZoneRow } from "./types";
@@ -220,11 +221,22 @@ export const supabaseSource: DataSource = {
     return row.geometry.coordinates[0];
   },
 
+  async nearestSegment([lng, lat]) {
+    const rows = (await must(client().rpc("public_nearest_segment", { p_lng: lng, p_lat: lat }))) as
+      { id: number; label: string; condition: Condition; distance_m: number }[];
+    const r = rows[0];
+    return r ? { id: r.id, label: r.label, condition: r.condition, distanceM: r.distance_m } : null;
+  },
+
+  async adjacentSegments(id) {
+    return (await must(client().rpc("public_adjacent_segments", { p_id: id }))) as { id: number; label: string; condition: Condition }[];
+  },
+
   async getStreetIndex() {
     const sb = client();
-    const rows = await all<{ id: number; street_name: string; between_a: string; between_b: string }>((from, to) =>
-      sb.from("v_segments").select("id, street_name, between_a, between_b").order("id").range(from, to),
+    const rows = await all<{ id: number; street_name: string; between_a: string; between_b: string; geometry: { coordinates: LngLat[] } }>((from, to) =>
+      sb.from("v_segments").select("id, street_name, between_a, between_b, geometry").order("id").range(from, to),
     );
-    return rows.map((r) => ({ id: r.id, street: r.street_name, a: r.between_a, b: r.between_b }));
+    return rows.map((r) => ({ id: r.id, street: r.street_name, a: r.between_a, b: r.between_b, mid: midpoint(r.geometry.coordinates) }));
   },
 };

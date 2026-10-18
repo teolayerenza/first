@@ -314,6 +314,13 @@ begin
   return n;
 end $$;
 
+-- Aviso de "hay datos nuevos" para el tiempo real. En Supabase lo redefine la migración _ops
+-- para emitir un broadcast en el canal público "pocitos" (sin datos de nadie, solo la hora).
+create or replace function notify_update() returns void
+language plpgsql set search_path = '' as $$
+begin
+end $$;
+
 create or replace function promote_pending() returns int
 language plpgsql set search_path = '' as $$
 declare
@@ -411,6 +418,10 @@ begin
   update public.segment_events set contributor_hash = null where state <> 'pendiente' and contributor_hash is not null;
   update public.issues set contributor_hash = null where state <> 'pendiente' and contributor_hash is not null;
   update public.issue_votes set contributor_hash = null where state <> 'pendiente' and contributor_hash is not null;
+
+  if v_segs is not null or v_issues is not null then
+    perform public.notify_update();
+  end if;
 
   return coalesce(array_length(v_segs, 1), 0) + coalesce(array_length(v_issues, 1), 0);
 end $$;

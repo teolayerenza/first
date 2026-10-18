@@ -17,3 +17,10 @@ $$);
 insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
 values ('photos', 'photos', true, 1000000, array['image/webp', 'image/jpeg'])
 on conflict (id) do nothing;
+
+-- Tiempo real: avisa a los navegadores abiertos que hay datos nuevos (broadcast público, sin datos personales).
+create or replace function public.notify_update() returns void
+language plpgsql security definer set search_path = '' as $$
+begin
+  perform realtime.send(jsonb_build_object('at', now()), 'update', 'pocitos', false);
+end $$;

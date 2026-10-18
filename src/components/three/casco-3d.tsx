@@ -34,7 +34,7 @@ export default function Casco3D({ data, casco, height = 520, mode }: { data: Seg
     const w = host.clientWidth;
     const h = height;
 
-    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false, preserveDrawingBuffer: true });
+    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     renderer.setSize(w, h);
     renderer.setClearColor(new THREE.Color(cssVar("--surface-2")));

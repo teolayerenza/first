@@ -85,6 +85,32 @@ language sql set search_path = public, extensions, pg_temp as $$
     contributor_hash = excluded.contributor_hash, state = 'pendiente', created_at = now()
 $$;
 
+-- ─── Consultas públicas de solo lectura (para los formularios) ─────────────────────────
+
+create or replace function public_nearest_segment(p_lng float8, p_lat float8)
+returns table (id bigint, label text, condition text, distance_m float8)
+language sql stable security definer set search_path = public, extensions, pg_temp as $$
+  with pt as (select st_setsrid(st_makepoint(p_lng, p_lat), 4326) as g),
+  near as (
+    select s.id, s.street_name || ' e/ ' || s.between_a || ' y ' || s.between_b as label, s.condition,
+           st_distance(s.geom::geography, pt.g::geography) as d
+      from segments s, pt
+     where (select st_within(pt.g, c.geom) from casco c)
+     order by s.geom <-> pt.g limit 8
+  )
+  select id, label, condition, d from near where d <= 60 order by d limit 1
+$$;
+
+create or replace function public_adjacent_segments(p_id bigint)
+returns table (id bigint, label text, condition text)
+language sql stable security definer set search_path = public, extensions, pg_temp as $$
+  select n.id, n.street_name || ' e/ ' || n.between_a || ' y ' || n.between_b, n.condition
+    from segments s join segments n on n.id <> s.id and st_dwithin(s.geom::geography, n.geom::geography, 2)
+   where s.id = p_id and not n.is_cobbled
+   order by (n.condition = 'sin_relevar') desc, n.id
+   limit 6
+$$;
+
 -- ─── Serie mensual ──────────────────────────────────────────────────────────────────────
 
 create or replace function series_json(p_zone int default 0) returns jsonb
@@ -175,6 +201,7 @@ grant execute on all functions in schema public to service_role;
 alter function kpis_json(int) security definer;
 alter function series_json(int) security definer;
 grant execute on function kpis_json(int), series_json(int) to anon, authenticated;
+grant execute on function public_nearest_segment(float8, float8), public_adjacent_segments(bigint) to anon, authenticated;
 grant select on v_casco, v_zones, v_segments, v_issues, v_kpis, v_kpis_previous, v_series,
                 v_contributors, v_moderation_log to anon, authenticated;
 
