@@ -1,0 +1,256 @@
+@import "tailwindcss";
+
+/* Dirección de diseño: "capítulos de color" (docs/DISENO.md). Cada sección del tablero es un campo plano a
+   todo el ancho cuyo color ES el dato: asfalto, rojo "muy deteriorada", amarillo pintura vial, verde "nueva".
+   Una sola familia tipográfica, esquinas rectas, sin líneas finas, sin sombras en reposo, sin degradés.
+   Las paletas de datos se validaron con el validador de dataviz (CVD y contraste) en ambos modos. */
+
+:root {
+  color-scheme: light;
+  --bg: #ebe9e4;          /* hormigón */
+  --surface: #f4f4f2;
+  --surface-2: #dfddd7;
+  --border: #d4d2cc;      /* solo para controles de formulario y gráficos */
+  --ink: #141414;
+  --ink-2: #47453f;
+  --ink-3: #5f5d57;
+  --accent: #141414;
+  --accent-ink: #f4f4f2;
+  --focus: #1f63c4;
+
+  /* Campos de capítulo (iguales en claro y oscuro: son la identidad) */
+  --asphalt: #141414;
+  --asphalt-2: #1f1f1d;
+  --asphalt-3: #2a2a27;
+  --asphalt-ink: #f1f1ef;
+  --asphalt-ink-2: #c9c7bf;
+  --paint: #f2c200;       /* pintura vial */
+  --paint-2: #e3b500;
+  --paint-ink: #141414;
+  --red: #c8342f;
+  --red-2: #b42c28;
+  --red-ink: #ffffff;
+  --green: #0b6e3a;
+  --green-ink: #ffffff;
+
+  /* Datos (validados) */
+  --c-nueva: #0b7d3e;
+  --c-buena: #4fb38a;
+  --c-gastada: #eda100;
+  --c-muy: #d03b3b;
+  --c-sin: #cfcdc6;
+  --c-empedrado: #2a78d6;
+  --c-pozo: #141414;
+  --c-parche: #6250d6;
+  --hatch: #a9a79f;
+  --good-ink: #006300;
+  --bad-ink: #a32020;
+  --s1: #2a78d6;
+  --s2: #eb6834;
+  --grid: #d9d7d1;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:where(:not([data-theme="light"])) {
+    color-scheme: dark;
+    --bg: #121211;
+    --surface: #1a1a19;
+    --surface-2: #262624;
+    --border: #3a3a37;
+    --ink: #f1f1ef;
+    --ink-2: #cfcdc5;
+    --ink-3: #aeaca4;
+    --accent: #f1f1ef;
+    --accent-ink: #121211;
+    --focus: #6aa8f0;
+    --c-nueva: #127a3b;
+    --c-buena: #14a58e;
+    --c-gastada: #c98500;
+    --c-muy: #e5484d;
+    --c-sin: #383835;
+    --c-empedrado: #3987e5;
+    --c-pozo: #f1f1ef;
+    --c-parche: #9085e9;
+    --hatch: #55554f;
+    --good-ink: #5fd35f;
+    --bad-ink: #ff8a8a;
+    --s1: #3987e5;
+    --s2: #d95926;
+    --grid: #2a2a28;
+  }
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #121211;
+  --surface: #1a1a19;
+  --surface-2: #262624;
+  --border: #3a3a37;
+  --ink: #f1f1ef;
+  --ink-2: #cfcdc5;
+  --ink-3: #aeaca4;
+  --accent: #f1f1ef;
+  --accent-ink: #121211;
+  --focus: #6aa8f0;
+  --c-nueva: #127a3b;
+  --c-buena: #14a58e;
+  --c-gastada: #c98500;
+  --c-muy: #e5484d;
+  --c-sin: #383835;
+  --c-empedrado: #3987e5;
+  --c-pozo: #f1f1ef;
+  --c-parche: #9085e9;
+  --hatch: #55554f;
+  --good-ink: #5fd35f;
+  --bad-ink: #ff8a8a;
+  --s1: #3987e5;
+  --s2: #d95926;
+  --grid: #2a2a28;
+}
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-line: var(--border);
+  --color-ink: var(--ink);
+  --color-ink-2: var(--ink-2);
+  --color-ink-3: var(--ink-3);
+  --color-accent: var(--accent);
+  --color-accent-ink: var(--accent-ink);
+  --color-asphalt: var(--asphalt);
+  --color-asphalt-2: var(--asphalt-2);
+  --color-asphalt-3: var(--asphalt-3);
+  --color-asphalt-ink: var(--asphalt-ink);
+  --color-asphalt-ink-2: var(--asphalt-ink-2);
+  --color-paint: var(--paint);
+  --color-paint-2: var(--paint-2);
+  --color-paint-ink: var(--paint-ink);
+  --color-red: var(--red);
+  --color-red-2: var(--red-2);
+  --color-red-ink: var(--red-ink);
+  --color-green: var(--green);
+  --color-green-ink: var(--green-ink);
+  --color-nueva: var(--c-nueva);
+  --color-buena: var(--c-buena);
+  --color-gastada: var(--c-gastada);
+  --color-muy: var(--c-muy);
+  --color-sin: var(--c-sin);
+  --color-empedrado: var(--c-empedrado);
+  --color-pozo: var(--c-pozo);
+  --color-parche: var(--c-parche);
+  --color-good: var(--good-ink);
+  --color-bad: var(--bad-ink);
+  --color-s1: var(--s1);
+  --color-s2: var(--s2);
+  --font-sans: "Hanken Grotesk Variable", ui-sans-serif, system-ui, sans-serif;
+
+  /* Cinco escalones tipográficos, bien separados */
+  --text-small: clamp(0.9375rem, 0.9rem + 0.1vw, 1rem);
+  --text-body: clamp(1.0625rem, 1rem + 0.25vw, 1.1875rem);
+  --text-lead: clamp(1.25rem, 1.1rem + 0.7vw, 1.625rem);
+  --text-head: clamp(2rem, 1.3rem + 3.2vw, 4rem);
+  --text-display: clamp(4.5rem, 2rem + 11vw, 12.5rem);
+}
+
+html {
+  background: var(--bg);
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+/* Celular: sin el destello gris al tocar, y sin zoom automático de iOS en los campos (≥16px). */
+a, button, label, select {
+  -webkit-tap-highlight-color: transparent;
+}
+input, select, textarea {
+  font-size: max(16px, 1em);
+}
+
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  font-size: var(--text-body);
+  line-height: 1.5;
+  letter-spacing: -0.005em;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, h3, .display {
+  letter-spacing: -0.04em;
+  line-height: 0.95;
+  font-weight: 600;
+}
+
+:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
+
+.tabular {
+  font-variant-numeric: tabular-nums;
+}
+
+/* "Sin relevar": gris + rayado a 45°, para que no dependa solo del color. */
+.hatch {
+  background-color: var(--c-sin);
+  background-image: repeating-linear-gradient(45deg, var(--hatch) 0 1.5px, transparent 1.5px 6px); /* taste-skill-ignore: rayado de accesibilidad, no un degradé */
+}
+
+/* Resaltador para palabras clave (capítulo de anonimato). */
+.mark {
+  padding: 0 0.1em;
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+}
+
+/* Entradas: título, texto y figura escalonados; nunca dejan contenido oculto si falla el script.
+   [data-reveal] arranca visible; el script de Reveal lo pasa a "pending" y, al entrar en pantalla, a "in". */
+@media (prefers-reduced-motion: no-preference) {
+  [data-reveal="pending"] > * {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+  [data-reveal="in"] > * {
+    animation: rise 700ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
+  }
+  [data-reveal="in"] > *:nth-child(2) { animation-delay: 80ms; }
+  [data-reveal="in"] > *:nth-child(3) { animation-delay: 160ms; }
+  [data-reveal="in"] > *:nth-child(4) { animation-delay: 240ms; }
+  [data-reveal="in"] > *:nth-child(5) { animation-delay: 320ms; }
+  .rise > * {
+    animation: rise 700ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
+  }
+  .rise > *:nth-child(2) { animation-delay: 80ms; }
+  .rise > *:nth-child(3) { animation-delay: 160ms; }
+  .rise > *:nth-child(4) { animation-delay: 240ms; }
+  @keyframes rise {
+    from { opacity: 0; transform: translateY(24px); }
+    to { opacity: 1; transform: none; }
+  }
+}
+
+@media (forced-colors: active) {
+  .swatch {
+    forced-color-adjust: none;
+  }
+}
+
+.maplibregl-ctrl-attrib {
+  font-size: 12px;
+}
+.maplibregl-popup-content {
+  border-radius: 0 !important;
+  font-family: var(--font-sans);
+}
+
+/* Respuesta al toque en todos los controles. */
+@media (prefers-reduced-motion: no-preference) {
+  a, button, select, label {
+    transition: background-color 150ms, color 150ms, transform 150ms;
+  }
+  button:active, a:active {
+    transform: translateY(1px);
+  }
+}
