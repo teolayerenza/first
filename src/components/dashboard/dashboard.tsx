@@ -29,7 +29,7 @@ function oneIn(pct: number): string {
 /** Un capítulo: campo plano a todo el ancho; todos comparten margen izquierdo y grilla. */
 function Chapter({ id, className, children, label }: { id: string; className: string; children: ReactNode; label: string }) {
   return (
-    <section id={id} aria-label={label} className={`scroll-mt-4 px-5 py-20 sm:px-8 lg:py-32 ${className}`}>
+    <section id={id} aria-label={label} className={`scroll-mt-4 px-5 py-14 sm:px-8 sm:py-20 lg:py-32 ${className}`}>
       <div className="mx-auto max-w-[1400px]" data-reveal="">{children}</div>
     </section>
   );
@@ -83,7 +83,7 @@ export function Dashboard({ data, casco, zone }: Props) {
             )}
           </p>
         </div>
-        <ul className="mt-16 grid gap-8 sm:grid-cols-3">
+        <ul className="mt-10 grid gap-6 sm:mt-16 sm:grid-cols-3 sm:gap-8">
           {[
             [fmtPct(kpis.pctCobbled), "es empedrado (se cuenta aparte)"],
             [fmtPct(kpis.pctTodoParche), "es parche sobre parche"],
@@ -94,10 +94,10 @@ export function Dashboard({ data, casco, zone }: Props) {
             </li>
           ))}
         </ul>
-        <div className="mt-16">
+        <div className="mt-10 sm:mt-16">
           <ConditionBar kpis={kpis} />
         </div>
-        <p className="mt-10 max-w-[60ch] text-ink-2">
+        <p className="mt-8 max-w-[60ch] text-ink-2 sm:mt-10">
           Actualizado a las {updated}. Falta relevar el {fmtPct(kpis.pct.sin_relevar)} del asfalto: cuantos más vecinos califiquen su cuadra,
           más preciso es el número. <a href="/metodologia" className="font-semibold text-ink underline">Cómo se calcula</a>.
         </p>
@@ -106,32 +106,32 @@ export function Dashboard({ data, casco, zone }: Props) {
       {/* Pozos y parches: el campo rojo. Corte de una calle + dos cifras. */}
       <Chapter id="pozos" label="Pozos y parches" className="bg-red text-red-ink">
         <h2 className="max-w-[16ch] text-head">Pozos y parches mal hechos</h2>
-        <div className="mt-12 grid lg:grid-cols-3">
+        <div className="mt-8 grid sm:mt-12 lg:grid-cols-3">
           <div className="bg-red-2 lg:col-span-2">
             <RoadProfile className="h-full w-full" />
           </div>
           <div className="grid grid-cols-2 lg:grid-cols-1">
-            <div className="flex min-h-56 flex-col bg-asphalt p-6 text-asphalt-ink sm:p-7">
+            <div className="flex flex-col bg-asphalt p-5 text-asphalt-ink sm:min-h-56 sm:p-7">
               <p className={BIG}>{fmtInt(i.openPozos)}</p>
               <p className="mt-3">pozos abiertos, {fmt1(i.pozosPerKm)} por km de calle</p>
             </div>
-            <div className="flex min-h-56 flex-col bg-paint p-6 text-paint-ink sm:p-7">
+            <div className="flex flex-col bg-paint p-5 text-paint-ink sm:min-h-56 sm:p-7">
               <p className={BIG}>{fmtInt(i.openParches)}</p>
               <p className="mt-3">parches mal hechos: elevados, hundidos o desarmados</p>
             </div>
           </div>
         </div>
-        <div className="mt-20 grid gap-12 lg:grid-cols-2">
+        <div className="mt-10 grid gap-10 sm:mt-20 sm:gap-12 lg:grid-cols-2">
           {i.badFixRatePct !== null ? (
             <div>
               <p className="text-head font-semibold leading-[0.95] tracking-[-0.04em]">{oneIn(i.badFixRatePct)} queda mal</p>
-              <p className="mt-5 max-w-[44ch]">
+              <p className="mt-4 max-w-[44ch]">
                 Cuando un vecino marca que arreglaron un pozo, le preguntamos si quedó bien. En los últimos 90 días, el{" "}
                 {fmtPct(i.badFixRatePct)} de {fmtInt(i.badFixSample)} arreglos quedó como un parche mal hecho.
               </p>
             </div>
           ) : <div />}
-          <dl className="grid gap-8 self-end sm:grid-cols-2">
+          <dl className="grid gap-6 self-end sm:grid-cols-2 sm:gap-8">
             <div className="flex flex-col">
               <dt className="order-2">pozos arreglados y nuevos en 30 días</dt>
               <dd className="tabular order-1 text-lead font-semibold">{fmtInt(i.resolvedPozos30d)} arreglados, {fmtInt(i.newPozos30d)} nuevos</dd>
@@ -156,7 +156,7 @@ export function Dashboard({ data, casco, zone }: Props) {
         <p className="mt-4 max-w-[52ch] text-asphalt-ink-2">
           Tocá una cuadra para ver su estado y sus pozos. En la vista 3D, cada cuadra sube según cuántos problemas abiertos tiene.
         </p>
-        <div className="mt-10">
+        <div className="mt-8 sm:mt-10">
           <MapSection casco={casco} zoneId={zone?.id} focus={zone?.ring} />
         </div>
       </Chapter>
@@ -174,7 +174,7 @@ export function Dashboard({ data, casco, zone }: Props) {
       <Chapter id="evolucion" label="Evolución" className="bg-surface text-ink">
         <h2 className="text-head">Mes a mes</h2>
         <SeriesTable series={data.series} />
-        <div className="mt-12 grid gap-12 lg:grid-cols-2">
+        <div className="mt-8 grid gap-10 sm:mt-12 sm:gap-12 lg:grid-cols-2">
           <div className="min-w-0">
             <h3 className="mb-4 text-lead tracking-[-0.02em]">Calles muy deterioradas</h3>
             <DeteriorationLine series={data.series} />
@@ -188,10 +188,10 @@ export function Dashboard({ data, casco, zone }: Props) {
 
       {/* Sumate: el campo verde, con el primer paso ya abierto. */}
       <Chapter id="sumate" label="Sumate" className="bg-green text-green-ink">
-        <div className="grid items-end gap-12 lg:min-h-[60svh]">
+        <div className="grid items-end gap-8 sm:gap-12 lg:min-h-[60svh]">
           <div>
-            <h2 className="text-[clamp(3.5rem,1rem+6vw,7rem)] leading-[0.92]">Sumá tu cuadra</h2>
-            <p className="mt-6 max-w-[40ch] text-lead leading-snug">
+            <h2 className="text-head sm:text-[clamp(3.5rem,1rem+6vw,7rem)] sm:leading-[0.92]">Sumá tu cuadra</h2>
+            <p className="mt-4 max-w-[40ch] text-lead leading-snug sm:mt-6">
               Ya se sumaron <span className="tabular font-semibold">{fmtInt(contributors.total)}</span> vecinos,{" "}
               <span className="tabular">{fmtInt(contributors.new7d)}</span> esta semana. Es anónimo y tarda menos de un minuto.
             </p>
@@ -205,7 +205,7 @@ export function Dashboard({ data, casco, zone }: Props) {
       <Chapter id="anonimato" label="Tu anonimato" className="bg-asphalt text-asphalt-ink">
         <AnonymityStatement />
         {data.moderation[0] && (
-          <p className="mt-16 text-small text-asphalt-ink-2">
+          <p className="mt-10 text-small text-asphalt-ink-2 sm:mt-16">
             Última acción de moderación: {data.moderation[0].action.toLowerCase()} ({fmtInt(data.moderation[0].count)}) en {data.moderation[0].area}.{" "}
             <a href="/moderacion" className="underline">Ver la bitácora pública</a>.
           </p>

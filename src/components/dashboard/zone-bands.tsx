@@ -30,12 +30,12 @@ export function ZoneBands({ data }: { data: Dashboard }) {
           }));
 
   return (
-    <div className="mt-12 grid gap-6 lg:grid-cols-[220px_1fr]">
+    <div className="mt-8 grid gap-6 sm:mt-12 lg:grid-cols-[220px_1fr]">
       <div role="tablist" aria-label="Ranking" className="grid grid-cols-3 gap-1.5 lg:flex lg:flex-col">
         {TABS.map((t) => (
           <button key={t.id} role="tab" aria-selected={tab === t.id} onClick={() => setTab(t.id)}
-            className={`flex min-h-16 flex-col justify-center px-4 py-2 text-left ${tab === t.id ? "bg-asphalt text-asphalt-ink" : "bg-paint-2 text-paint-ink hover:bg-asphalt/15"}`}>
-            <span className="text-body font-semibold leading-tight">{t.label}</span>
+            className={`flex min-h-14 flex-col justify-center px-3 py-2 text-left sm:min-h-16 sm:px-4 ${tab === t.id ? "bg-asphalt text-asphalt-ink" : "bg-paint-2 text-paint-ink hover:bg-asphalt/15"}`}>
+            <span className="text-small font-semibold leading-tight sm:text-body">{t.label}</span>
             <span className="hidden text-small sm:block">{t.note}</span>
           </button>
         ))}

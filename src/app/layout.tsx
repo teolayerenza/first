@@ -82,32 +82,32 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
 function Footer() {
   return (
     <footer className="bg-asphalt p-2 text-asphalt-ink sm:p-3">
-      <div className="grid grid-cols-2 gap-2 lg:grid-cols-12">
-        <div className="col-span-2 flex min-h-48 flex-col justify-between bg-asphalt-2 p-5 lg:col-span-4">
+      <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-12">
+        <div className="flex flex-col gap-4 bg-asphalt-2 p-5 sm:col-span-2 lg:col-span-4 lg:min-h-48 lg:justify-between">
           <p className="text-lead leading-snug">Un proyecto vecinal, anónimo y sin fines de lucro. Sin publicidad, sin rastreadores, sin venta de datos.</p>
-          <p className="mt-6 text-small text-asphalt-ink-2">
+          <p className="text-small text-asphalt-ink-2">
             Calles © <a className="underline" href="https://www.openstreetmap.org/copyright">colaboradores de OpenStreetMap</a>. Datos bajo licencia ODbL.
           </p>
         </div>
-        <nav aria-label="Pie" className="flex min-h-48 flex-col gap-2 bg-asphalt-2 p-5 lg:col-span-3">
+        <nav aria-label="Pie" className="flex flex-col gap-2 bg-asphalt-2 p-5 lg:col-span-3 lg:min-h-48">
           <Link href="/privacidad" className="hover:underline">Tu anonimato</Link>
           <Link href="/metodologia" className="hover:underline">Cómo se calcula cada número</Link>
           <Link href="/datos" className="hover:underline">Datos abiertos</Link>
           <Link href="/moderacion" className="hover:underline">Bitácora de moderación</Link>
           <Link href="/prensa" className="hover:underline">Prensa</Link>
         </nav>
-        <div className="flex min-h-48 flex-col justify-end bg-asphalt-2 p-5 lg:col-span-2">
+        <div className="flex flex-col bg-asphalt-2 p-5 lg:col-span-2 lg:min-h-48 lg:justify-end">
           <p className="text-lead leading-tight">La Plata</p>
           <p className="text-asphalt-ink-2">Casco urbano, de 1 a 31 y de 32 a 72</p>
         </div>
-        <div className="col-span-2 flex min-h-48 flex-col justify-end bg-asphalt-2 p-5 lg:col-span-3">
+        <div className="flex flex-col bg-asphalt-2 p-5 sm:col-span-2 lg:col-span-3 lg:min-h-48 lg:justify-end">
           <p className="text-small text-asphalt-ink-2">Contacto</p>
           <a href="mailto:hola@pocitoslp.com.ar" className="text-lead hover:underline">hola@pocitoslp.com.ar</a>
         </div>
-        <div className="col-span-2 flex min-h-40 items-center justify-center bg-asphalt-ink text-asphalt lg:col-span-8 lg:min-h-80">
+        <div className="hidden min-h-40 items-center justify-center bg-asphalt-ink text-asphalt sm:col-span-2 sm:flex lg:col-span-8 lg:min-h-80">
           <p aria-hidden className="text-[clamp(3.5rem,9vw,9rem)] font-semibold leading-none tracking-[-0.05em]">Pocitos LP</p>
         </div>
-        <Link href="/reportar/pozo" className="group col-span-2 flex min-h-40 flex-col justify-between bg-paint p-5 text-paint-ink hover:bg-paint-2 lg:col-span-4 lg:min-h-80">
+        <Link href="/reportar/pozo" className="group hidden min-h-40 flex-col justify-between bg-paint p-5 text-paint-ink hover:bg-paint-2 sm:col-span-2 sm:flex lg:col-span-4 lg:min-h-80">
           <span className="text-head font-semibold leading-none tracking-[-0.04em]">Reportá un pozo</span>
           <svg aria-hidden viewBox="0 0 48 48" className="ml-auto h-12 w-12 transition-transform group-hover:translate-x-1" fill="none" stroke="currentColor" strokeWidth="4">
             <path d="M6 24h34M28 11l13 13-13 13" />

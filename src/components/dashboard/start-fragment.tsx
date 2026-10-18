@@ -4,7 +4,7 @@ import { ReportChoices } from "../report-choices";
 export function StartFragment() {
   return (
     <div className="w-full">
-      <ReportChoices />
+      <ReportChoices onGreen />
     </div>
   );
 }

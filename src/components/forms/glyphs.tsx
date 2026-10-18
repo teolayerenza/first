@@ -1,10 +1,11 @@
 /** Mini cortes de calle, dibujados en el mismo lenguaje que el corte grande del tablero. */
-export function Glyph({ kind, className = "h-8 w-14" }: { kind: "pozo" | "parche" | "elevado" | "hundido" | "desarmado"; className?: string }) {
+export function Glyph({ kind, className = "h-8 w-14" }: { kind: "pozo" | "parche" | "elevado" | "hundido" | "desarmado" | "cuadra"; className?: string }) {
   return (
     <svg viewBox="0 0 60 32" className={className} aria-hidden fill="currentColor">
       {kind === "pozo" && <path d="M2 18 H20 C22 18 23 28 30 28 C37 28 38 18 40 18 H58 V30 H2 Z" />}
       {(kind === "parche" || kind === "elevado") && <path d="M2 18 H18 C22 18 23 8 30 8 C37 8 38 18 42 18 H58 V30 H2 Z" />}
       {kind === "hundido" && <path d="M2 18 H18 L20 23 H40 L42 18 H58 V30 H2 Z" />}
+      {kind === "cuadra" && <path d="M2 18 H58 V30 H2 Z M6 11 H18 V14 H6 Z M24 11 H36 V14 H24 Z M42 11 H54 V14 H42 Z" />}
       {kind === "desarmado" && (
         <path d="M2 18 H18 L22 14 L26 20 L30 13 L34 20 L38 15 L42 18 H58 V30 H2 Z" />
       )}
