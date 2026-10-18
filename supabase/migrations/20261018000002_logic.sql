@@ -1,6 +1,9 @@
 -- Pocitos LP · lógica de estados, KPIs, promoción de aportes y detector de anomalías.
 -- Espejo exacto de src/lib/domain/*.ts (lo verifica tests/sql-parity.test.ts).
 
+-- PostGIS vive en el esquema `extensions`: hay que incluirlo en el search_path de la migración.
+set search_path = public, extensions;
+
 create or replace function cfg(p_key text) returns numeric
 language sql stable set search_path = '' as $$
   select (value #>> '{}')::numeric from public.config where key = p_key

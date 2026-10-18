@@ -2,6 +2,9 @@
 -- Reglas: `anon` y `authenticated` NO pueden leer tablas ni ejecutar funciones; solo leen las vistas,
 -- que nunca exponen columnas de hash. Toda escritura pasa por la Edge Function `submit`.
 
+-- PostGIS vive en el esquema `extensions`: hay que incluirlo en el search_path de la migración.
+set search_path = public, extensions;
+
 -- ─── RPC para la Edge Function ──────────────────────────────────────────────────────────
 
 create or replace function rpc_inside_casco(p_lng float8, p_lat float8) returns boolean
