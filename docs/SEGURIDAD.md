@@ -1,4 +1,4 @@
-# Positos LP — Seguridad, anti-abuso y privacidad
+# Pocitos LP — Seguridad, anti-abuso y privacidad
 
 > Objetivo: que nadie con malas intenciones pueda **arruinar los datos** (reportes masivos, manipular zonas)
 > ni **tirar el servicio**, y que si alguien logra entrar a la base **no encuentre nada personal para robar**.

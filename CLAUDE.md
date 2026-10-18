@@ -1,4 +1,4 @@
-# Positos LP
+# Pocitos LP
 
 Tablero público en tiempo real del estado de las calles del casco urbano de La Plata (solo el casco: Av. 31, 32, 72 y 122).
 Prioridad: KPIs claros arriba (por km y por cuadras) y mapa debajo. Zonas = cuadrantes entre avenidas, deducidos de la ubicación.

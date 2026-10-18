@@ -1,4 +1,4 @@
-# Positos LP — Plan de proyecto
+# Pocitos LP — Plan de proyecto
 
 > Tablero público y en tiempo real del estado de las calles del **casco urbano de La Plata**.
 > Lo primero que se ve son **números claros**: qué porcentaje de las calles está deteriorado, cuánto es
@@ -99,7 +99,7 @@ Es otra dimensión, distinta del estado del asfalto: una cuadra puede estar "gas
 
 ```
 ┌──────────────────────────────────────────────────────────┐
-│  POSITOS LP · Casco urbano · actualizado hace 2 min      │
+│  POCITOS LP · Casco urbano · actualizado hace 2 min      │
 │  👥 3.412 vecinos ya se sumaron · +214 esta semana        │
 │     🟢 18 aportando ahora                                 │
 │                                                          │
@@ -576,4 +576,4 @@ saltándose la app (ver `SEGURIDAD.md`). Una foto que pasó por la app nunca lle
 - **Sesgo de reporte**: mostrar la cantidad de aportes por zona y exigir un % relevado mínimo para el ranking.
 - **Calibración** de umbrales y pesos con datos reales (tabla `config`).
 - **Fotos con personas o patentes**: aviso + moderación por votos `falso` en el MVP; blur automático después.
-- Dominio: ¿`positoslp.com.ar`?
+- Dominio: ¿`pocitoslp.com.ar`?

@@ -1,4 +1,4 @@
-# Positos LP — Estrategia de difusión
+# Pocitos LP — Estrategia de difusión
 
 > Objetivo: que miles de vecinos usen la app, que los medios de La Plata levanten los datos y que el estado de las
 > calles se convierta en un **tema público que la gestión municipal no pueda ignorar**.
@@ -24,11 +24,11 @@ Reglas de tono (para todas las redes):
 
 ## 2. Identidad
 
-- Nombre: **Positos LP**. Usuario único en todas las redes: `@positoslp` (verificar disponibilidad y reservarlo ya).
+- Nombre: **Pocitos LP**. Usuario único en todas las redes: `@pocitoslp` (verificar disponibilidad y reservarlo ya).
 - Tono: platense, cercano y con humor, pero serio con los números.
 - Visual: fondo oscuro tipo "asfalto", colores del tablero (🟢🟡🔴🔵) y tipografía grande para los números.
   Cada placa tiene **un solo número protagonista**.
-- Email del proyecto (por ejemplo, `hola@positoslp.com.ar`), separado del personal, para la prensa y el municipio.
+- Email del proyecto (por ejemplo, `hola@pocitoslp.com.ar`), separado del personal, para la prensa y el municipio.
 - Bio de Instagram:
   > 🕳️ El estado real de las calles de La Plata, medido por vecinos
   > 📍 Casco urbano · 🔒 100% anónimo · 📊 Datos abiertos
@@ -41,12 +41,12 @@ Reglas de tono (para todas las redes):
 Se publican **todos juntos el día del lanzamiento**, así quien entra al perfil ve la grilla completa y entiende todo.
 Formato carrusel (4–6 placas cada uno). Se publican en orden inverso (del 6 al 1), para que el 1 quede arriba a la izquierda.
 
-**1. ¿Qué es Positos LP? (manifiesto)**
+**1. ¿Qué es Pocitos LP? (manifiesto)**
 - Placa 1: "¿Cuántas calles de La Plata están rotas? Nadie lo sabe."
 - Placa 2: "No hay un registro público. Los reclamos se pierden."
 - Placa 3: "Entonces vamos a medirlo entre todos."
 - Placa 4: captura del tablero con el % y el mapa.
-- Placa 5: "Positos LP: el estado real de las calles, en tiempo real. Link en la bio."
+- Placa 5: "Pocitos LP: el estado real de las calles, en tiempo real. Link en la bio."
 
 **2. Cómo reportar un pozo o un parche mal hecho (15 segundos)**
 - Paso a paso con capturas: abrís → marcás el pozo → elegís la gravedad → foto opcional → listo.
@@ -96,7 +96,7 @@ Es donde están los periodistas y los políticos locales.
 - **Hilo de lanzamiento**: "Medimos el estado de las calles de La Plata entre vecinos. Esto es lo que encontramos 🧵", con el mapa,
   el número grande, el ranking, el pozo más viejo, el anonimato y el link.
 - Publicar cada informe mensual con la imagen del tablero.
-- **Responder con datos** a los tuits de vecinos que se quejan de una calle: "Esa cuadra ya tiene 4 pozos reportados en Positos LP. Sumá el tuyo: link".
+- **Responder con datos** a los tuits de vecinos que se quejan de una calle: "Esa cuadra ya tiene 4 pozos reportados en Pocitos LP. Sumá el tuyo: link".
 - Etiquetar a periodistas de ciudad cuando hay un dato fuerte (sin pedir nada, solo con el dato).
 
 ## 5. LinkedIn
@@ -171,7 +171,7 @@ Lo que más incomoda a una gestión es que los datos lleguen **por canales forma
 
 | Cuándo | Qué |
 |---|---|
-| **T−4 semanas** | Reservar `@positoslp` en todas las redes y el dominio. Diseñar los 6 posteos. Beta cerrada con 20–50 conocidos. |
+| **T−4 semanas** | Reservar `@pocitoslp` en todas las redes y el dominio. Diseñar los 6 posteos. Beta cerrada con 20–50 conocidos. |
 | **T−3 a T−1 semanas** | **Relevamiento propio** con amigos y voluntarios: llegar al 15–20% del casco relevado. Sin esto no hay número para la prensa. |
 | **T−1 semana** | Historias teaser ("algo se viene para las calles de La Plata"). Contactar al medio de la exclusiva. Armar el kit de prensa. |
 | **T−2 días** | Sale la exclusiva. |

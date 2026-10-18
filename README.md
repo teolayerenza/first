@@ -1,4 +1,4 @@
-# Positos LP 🕳️
+# Pocitos LP 🕳️
 
 Mapa colaborativo y en tiempo real del estado de las calles del **casco urbano de La Plata**.
 Reportá pozos, mirá qué cuadras y zonas están peor, y descargá los datos abiertos.
