@@ -39,6 +39,8 @@ const nextConfig: NextConfig = {
   cacheComponents: true,
   partialPrefetching: true,
   poweredByHeader: false,
+  // Las cuadras reales se leen de disco (src/lib/domain/base-data.ts): hay que incluirlas en el deploy.
+  outputFileTracingIncludes: { "/**": ["./data/**/*"] },
   async headers() {
     return [{ source: "/:path*", headers: securityHeaders }];
   },

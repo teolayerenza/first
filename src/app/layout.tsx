@@ -1,12 +1,16 @@
 import "@fontsource-variable/hanken-grotesk";
 import type { Metadata, Viewport } from "next";
 import Link from "next/link";
+import { Suspense } from "react";
 import { MobileActions } from "@/components/mobile-actions";
 import { ThemeToggle, themeInitScript } from "@/components/theme";
 import { isDemo } from "@/lib/data";
 import "./globals.css";
 
-const SITE = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
+// En Vercel, si no se configuró el dominio propio, se usa la URL de producción del proyecto.
+const SITE =
+  process.env.NEXT_PUBLIC_SITE_URL ??
+  (process.env.VERCEL_PROJECT_PRODUCTION_URL ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}` : "http://localhost:3000");
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE),
@@ -15,6 +19,8 @@ export const metadata: Metadata = {
     "Tablero público y anónimo del estado de las calles del casco urbano de La Plata: pozos, parches mal hechos y estado del asfalto, medido por vecinos.",
   applicationName: "Pocitos LP",
   manifest: "/manifest.webmanifest",
+  // En modo demo los números son simulados: que los buscadores no los indexen como si fueran reales.
+  ...(isDemo() ? { robots: { index: false, follow: false } } : {}),
 };
 
 export const viewport: Viewport = { themeColor: "#141414", viewportFit: "cover", width: "device-width", initialScale: 1 };
@@ -63,7 +69,10 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           {children}
         </main>
         <Footer />
-        <MobileActions />
+        {/* Lee la URL (usePathname): con cacheComponents tiene que ir dentro de Suspense. */}
+        <Suspense fallback={null}>
+          <MobileActions />
+        </Suspense>
       </body>
     </html>
   );
