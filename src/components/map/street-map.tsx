@@ -1,7 +1,8 @@
 "use client";
 
 import "maplibre-gl/dist/maplibre-gl.css";
-import maplibregl, { type ExpressionSpecification, type StyleSpecification } from "maplibre-gl";
+import { maplibregl } from "@/lib/client/maplibre";
+import type { ExpressionSpecification, StyleSpecification } from "maplibre-gl";
 import { useEffect, useRef, useState } from "react";
 import { cssVar, useResolvedTheme } from "@/components/theme";
 import type { LngLat } from "@/lib/domain/types";

@@ -44,3 +44,6 @@ next-env.d.ts
 # generado por scripts/build-data.ts
 /supabase/seed.sql
 /supabase/.temp
+
+# copiado de node_modules por scripts/copy-maplibre-worker.mjs
+/public/maplibre-gl-worker.mjs

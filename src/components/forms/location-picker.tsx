@@ -1,7 +1,7 @@
 "use client";
 
 import "maplibre-gl/dist/maplibre-gl.css";
-import maplibregl from "maplibre-gl";
+import { maplibregl } from "@/lib/client/maplibre";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { cssVar, useResolvedTheme } from "@/components/theme";
 import type { SegmentRef, StreetIndexEntry } from "@/lib/data/types";
