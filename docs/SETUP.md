@@ -10,7 +10,7 @@ Abrí http://localhost:3000. Todo funciona con datos simulados: tablero, mapa, 3
 
 ## 1. Calles reales del casco (OpenStreetMap)
 
-**Ya están en el repo:** `data/cuadras.json` (3.646 cuadras reales: una por mano en las avenidas con boulevard),
+**Ya están en el repo:** `data/cuadras.json` (3.850 cuadras reales: una por mano en las avenidas con boulevard),
 `data/casco_urbano.geojson` y `data/zonas.geojson`. Salen de OpenStreetMap (Overpass, octubre de 2026):
 `npm run data:osm` baja `data/osm-raw.json` y `npx tsx scripts/build-real-data.ts data/osm-raw.json` arma las cuadras,
 conservando el id de las que ya existían. El casco y las zonas se calculan cruzando las rectas
