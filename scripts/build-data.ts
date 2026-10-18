@@ -35,7 +35,7 @@ const zones: Zone[] = JSON.parse(readFileSync("data/zonas.geojson", "utf8")).fea
 let segments: Segment[];
 let source: string;
 if (existsSync("data/cuadras.json")) {
-  source = "OpenStreetMap 2018 (data/cuadras.json, scripts/build-real-data.ts)";
+  source = "OpenStreetMap (data/cuadras.json, scripts/build-real-data.ts)";
   segments = JSON.parse(readFileSync("data/cuadras.json", "utf8"));
 } else if (existsSync("data/osm-segments.geojson")) {
   source = "OpenStreetMap (data/osm-segments.geojson)";
