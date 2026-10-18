@@ -10,11 +10,22 @@ import { LocationPicker, type PickedLocation } from "./location-picker";
 import { Glyph } from "./glyphs";
 import { Choice, PhotoField, QueueFlusher, Step, SubmitButton } from "./ui";
 
-const SEVERITY: { v: Severity; t: string; d: string }[] = [
-  { v: 1, t: "Leve", d: "Se nota, pero se esquiva" },
-  { v: 2, t: "Medio", d: "Hay que frenar" },
-  { v: 3, t: "Peligroso", d: "Rompe ruedas, el auto salta o tira motos" },
+// Colores de la paleta validada (ámbar, naranja, rojo) y 1 a 3 barras: se distingue aunque no se vea el color.
+const SEVERITY: { v: Severity; t: string; d: string; color: string }[] = [
+  { v: 1, t: "Leve", d: "Se nota, pero se esquiva", color: "bg-gastada" },
+  { v: 2, t: "Medio", d: "Hay que frenar", color: "bg-s2" },
+  { v: 3, t: "Peligroso", d: "Rompe ruedas, el auto salta o tira motos", color: "bg-muy" },
 ];
+
+function SeverityBars({ level, color, checked }: { level: number; color: string; checked: boolean }) {
+  return (
+    <span aria-hidden className="swatch flex h-9 items-end gap-1">
+      {[1, 2, 3].map((i) => (
+        <span key={i} className={`w-3 ${i > level ? "bg-current opacity-20" : checked ? "bg-current" : color}`} style={{ height: `${33 * i}%` }} />
+      ))}
+    </span>
+  );
+}
 
 /** Un formulario por tipo: `pozo` o `parche` (bacheo mal hecho). Así cada botón lleva directo a lo suyo. */
 export function ReportIssueForm({ kind }: { kind: IssueKind }) {
@@ -101,7 +112,8 @@ export function ReportIssueForm({ kind }: { kind: IssueKind }) {
       <Step n={3} title="¿Qué tan grave es?">
         <div role="radiogroup" className="grid gap-2 sm:grid-cols-3">
           {SEVERITY.map((s) => (
-            <Choice key={s.v} name="sev" value={String(s.v)} checked={sev === s.v} onChange={() => setSev(s.v)} title={s.t} desc={s.d} />
+            <Choice key={s.v} name="sev" value={String(s.v)} checked={sev === s.v} onChange={() => setSev(s.v)} title={s.t} desc={s.d}
+              checkedClass={`${s.color} text-[#141414]`} glyph={<SeverityBars level={s.v} color={s.color} checked={sev === s.v} />} />
           ))}
         </div>
         <div className="mt-4">

@@ -15,16 +15,18 @@ export function Step({ n, title, children }: { n: number; title: string; childre
 }
 
 /** Opción grande (radio accesible con apariencia de botón). */
-export function Choice({ name, value, checked, onChange, glyph, title, desc, swatch }: {
+export function Choice({ name, value, checked, onChange, glyph, title, desc, swatch, checkedClass }: {
   name: string; value: string; checked: boolean; onChange: (v: string) => void; glyph?: ReactNode; title: string; desc?: string; swatch?: string;
+  /** Colores de la opción elegida, si no es la de siempre (asfalto). */
+  checkedClass?: string;
 }) {
   return (
-    <label className={`flex min-h-16 cursor-pointer items-center gap-4 p-4 transition-colors has-[:focus-visible]:outline-3 has-[:focus-visible]:outline-[var(--focus)] ${checked ? "bg-asphalt text-asphalt-ink" : "bg-surface-2 text-ink hover:bg-line"}`}>
+    <label className={`flex min-h-16 cursor-pointer items-center gap-4 p-4 transition-colors has-[:focus-visible]:outline-3 has-[:focus-visible]:outline-[var(--focus)] ${checked ? (checkedClass ?? "bg-asphalt text-asphalt-ink") : "bg-surface-2 text-ink hover:bg-line"}`}>
       <input type="radio" name={name} value={value} checked={checked} onChange={() => onChange(value)} className="sr-only" />
       {swatch ? <span aria-hidden className={`swatch h-6 w-6 shrink-0 ${swatch}`} /> : glyph ? <span className="shrink-0">{glyph}</span> : null}
       <span className="flex-1">
         <span className="block font-semibold">{title}</span>
-        {desc && <span className={`block text-small ${checked ? "text-asphalt-ink-2" : "text-ink-2"}`}>{desc}</span>}
+        {desc && <span className={`block text-small ${checked ? (checkedClass ? "" : "text-asphalt-ink-2") : "text-ink-2"}`}>{desc}</span>}
       </span>
     </label>
   );

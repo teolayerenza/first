@@ -139,13 +139,14 @@ export function LocationPicker({ onChange, initial, hint }: { onChange: (l: Pick
   );
 }
 
-/** Calles y avenidas por número, después las diagonales, después plazas y calles con nombre (alfabético). */
+/** Plazas y parques, después avenidas y calles con nombre (alfabético), después calles por número y al final las diagonales. */
 function byStreet(x: string, y: string): number {
   const rank = (s: string): [number, number] => {
+    if (/^(Plaza|Parque)/.test(s)) return [0, 0];
     const n = s.match(/^(?:Av\.|Calle)?\s*(\d+)/);
-    if (n) return [0, +n[1]];
+    if (n) return [2, +n[1]];
     const d = s.match(/^Diag(?:onal|\.)\s*(\d+)/);
-    return d ? [1, +d[1]] : [2, 0];
+    return d ? [3, +d[1]] : [1, 0];
   };
   const [[gx, nx], [gy, ny]] = [rank(x), rank(y)];
   return gx - gy || nx - ny || x.localeCompare(y, "es");
