@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { loadBaseData } from "../src/lib/domain/base-data";
-import { haversineM, midpoint, pointInRing } from "../src/lib/domain/geo";
+import { haversineM, midpoint, pointInRing, projectOnLine } from "../src/lib/domain/geo";
 import { segmentLabel } from "../src/lib/domain/grid";
 
 describe("cuadras reales del casco (OpenStreetMap)", () => {
@@ -25,10 +25,12 @@ describe("cuadras reales del casco (OpenStreetMap)", () => {
     expect(base.segments.some((s) => s.streetName === "Diagonal 74")).toBe(true);
     expect(base.segments.some((s) => s.streetName === "Diagonal 73")).toBe(true);
   });
-  it("cada cuadra está dentro del casco y en una zona existente", () => {
+  it("cada cuadra está dentro del casco (o es la mano de afuera de la Circunvalación) y en una zona", () => {
     const zoneIds = new Set(base.zones.map((z) => z.id));
+    const border = new Set(["Av. 31", "Av. 32", "Av. 72", "Av. 122"]);
     for (const s of base.segments) {
-      expect(pointInRing(midpoint(s.coords), base.casco)).toBe(true);
+      const mid = midpoint(s.coords);
+      expect(pointInRing(mid, base.casco) || (border.has(s.streetName) && projectOnLine(mid, base.casco).distanceM < 150)).toBe(true);
       expect(zoneIds.has(s.zoneId)).toBe(true);
     }
   });
