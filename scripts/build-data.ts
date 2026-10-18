@@ -54,6 +54,7 @@ const line = (c: LngLat[]) => `st_setsrid(st_geomfromgeojson(${q(JSON.stringify(
 const lines = [
   `-- Generado por scripts/build-data.ts. Cuadras: ${source}.`,
   `-- Calles © colaboradores de OpenStreetMap (ODbL) cuando la fuente es OSM.`,
+  `set search_path = public, extensions;`,
   `insert into casco (geom) values (${poly(casco)}) on conflict (id) do update set geom = excluded.geom;`,
   ...zones.map((z) => `insert into zones (id, slug, name, geom) values (${z.id}, ${q(z.slug)}, ${q(z.name)}, ${poly(z.ring)}) on conflict (id) do nothing;`),
   ...segments.map(

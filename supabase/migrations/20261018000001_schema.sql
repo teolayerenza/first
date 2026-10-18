@@ -2,9 +2,12 @@
 -- Principio: ningún dato personal. Los aportes se identifican solo por HMACs que calcula la
 -- Edge Function `submit` con un secreto que NO vive en esta base (docs/SEGURIDAD.md).
 
--- En Supabase las extensiones viven en el esquema `extensions` (que está en el search_path).
+-- En Supabase las extensiones viven en el esquema `extensions`.
 create schema if not exists extensions;
 create extension if not exists postgis with schema extensions;
+
+-- PostGIS vive en el esquema `extensions`: hay que incluirlo en el search_path de la migración.
+set search_path = public, extensions;
 
 create table config (
   key   text primary key,

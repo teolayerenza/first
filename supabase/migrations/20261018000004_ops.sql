@@ -1,5 +1,8 @@
 -- Pocitos LP · operación en Supabase (pg_cron, Storage, limpieza). No corre en los tests locales.
 
+-- PostGIS vive en el esquema `extensions`: hay que incluirlo en el search_path de la migración.
+set search_path = public, extensions;
+
 create extension if not exists pg_cron;
 
 -- Cada 10 minutos: detector de anomalías + promoción de aportes pendientes.
