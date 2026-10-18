@@ -15,7 +15,9 @@ export interface BaseData {
 
 let cache: BaseData | null = null;
 
-export function loadBaseData(dir = path.join(process.cwd(), "data")): BaseData {
+// turbopackIgnore: sin esto Turbopack rastrea todo el proyecto. data/ entra al deploy por
+// outputFileTracingIncludes (next.config.ts).
+export function loadBaseData(dir = path.join(/* turbopackIgnore: true */ process.cwd(), "data")): BaseData {
   if (cache) return cache;
   const file = (f: string) => path.join(dir, f);
   if (!existsSync(file("cuadras.json"))) {
