@@ -40,9 +40,17 @@ async function main() {
     out body geom;`;
 
   console.log("Consultando Overpass…");
-  const res = await fetch(OVERPASS, { method: "POST", body: new URLSearchParams({ data: query }) });
-  if (!res.ok) throw new Error(`Overpass respondió ${res.status}`);
-  const body = (await res.json()) as { elements: (OsmWay & { type: string })[] };
+  // Overpass rechaza (406) los pedidos sin un User-Agent que identifique a la app.
+  const res = await fetch(OVERPASS, {
+    method: "POST",
+    headers: { "User-Agent": "PocitosLP/0.1 (+mailto:hola@pocitoslp.com.ar)", Accept: "application/json" },
+    body: new URLSearchParams({ data: query }),
+  });
+  if (!res.ok) throw new Error(`Overpass respondió ${res.status}: ${(await res.text()).slice(0, 300)}`);
+  const raw = await res.text();
+  mkdirSync("data", { recursive: true });
+  writeFileSync("data/osm-raw.json", raw);
+  const body = JSON.parse(raw) as { elements: (OsmWay & { type: string })[] };
   const ways = body.elements.filter((e) => e.type === "way" && e.geometry?.length >= 2);
   console.log(`${ways.length} vías`);
 
