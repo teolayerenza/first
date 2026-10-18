@@ -41,6 +41,7 @@ export default function PrivacidadPage() {
 
       <Block title="Letra chica">
         <p>Los servicios donde está alojada la app (Cloudflare, Vercel y Supabase) registran datos técnicos como la IP en sus propios sistemas, por seguridad y por un tiempo limitado. Pocitos LP no accede a esos registros para identificar a nadie y configura la retención mínima posible.</p>
+        <p>El captcha invisible es Cloudflare Turnstile: para distinguir personas de bots analiza datos técnicos del navegador según su <a href="https://www.cloudflare.com/turnstile-privacy-policy/">Anexo de Privacidad de Turnstile</a>. No usa cookies de seguimiento ni se usa para publicidad.</p>
         <p>Las fotos se publican recién cuando otra persona confirmó el problema. Si una foto muestra a alguien o una patente, denunciala desde la cuadra y se oculta.</p>
         <p>Este tratamiento se rige por la Ley 25.326 de Protección de los Datos Personales. Como no se recolectan datos personales, no hay datos que consultar, rectificar o borrar; si igual tenés una consulta, escribinos a <a href="mailto:hola@pocitoslp.com.ar">hola@pocitoslp.com.ar</a>.</p>
       </Block>
