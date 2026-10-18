@@ -4,7 +4,7 @@ import { buildCasco, buildSegments, buildZones, segmentLabel } from "../src/lib/
 import { pointInRing, projectOnLine } from "../src/lib/domain/geo";
 import { deriveIssue } from "../src/lib/domain/issues";
 import { handleSubmit, type SubmitDeps } from "../src/lib/domain/submit";
-import { splitWays, streetLabel } from "../src/lib/osm/split";
+import { splitWays, streetLabel, type OsmWay } from "../src/lib/osm/split";
 import type { Issue, IssueVote, SegmentRating } from "../src/lib/domain/types";
 
 const now = new Date("2026-10-18T12:00:00Z");
@@ -125,7 +125,7 @@ describe("importación de OSM", () => {
   it("parte vías en cuadras entre intersecciones y las nombra", () => {
     const zones = [{ id: 1, slug: "z", name: "z", ring: [[-1, -1], [1, -1], [1, 1], [-1, 1], [-1, -1]] as [number, number][] }];
     const g = (lat: number, lon: number) => ({ lat, lon });
-    const ways = [
+    const ways: OsmWay[] = [
       { id: 1, nodes: [1, 2, 3], geometry: [g(0, -0.002), g(0, 0), g(0, 0.002)], tags: { name: "Calle 7", highway: "residential", surface: "sett" } },
       { id: 2, nodes: [4, 1, 5], geometry: [g(-0.001, -0.002), g(0, -0.002), g(0.001, -0.002)], tags: { name: "Calle 45", highway: "residential" } },
       { id: 3, nodes: [6, 2, 7], geometry: [g(-0.001, 0), g(0, 0), g(0.001, 0)], tags: { name: "Calle 46", highway: "residential" } },

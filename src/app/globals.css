@@ -1,26 +1,153 @@
 @import "tailwindcss";
 
+/* Temas: claro (por defecto), oscuro por sistema o por elección del usuario (data-theme en <html>).
+   Las paletas de estado se validaron con el validador de dataviz (CVD y contraste) en ambos modos. */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+  color-scheme: light;
+  --bg: #f6f5f2;
+  --surface: #fcfcfb;
+  --surface-2: #f0efec;
+  --border: #e3e1dc;
+  --ink: #0b0b0b;
+  --ink-2: #52514e;
+  --ink-3: #74726d;
+  --accent: #0b0b0b;
+  --accent-ink: #fcfcfb;
+  --focus: #2a78d6;
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --c-nueva: #0b7d3e;
+  --c-buena: #4fb38a;
+  --c-gastada: #eda100;
+  --c-muy: #d03b3b;
+  --c-sin: #d9d7d1;
+  --c-empedrado: #2a78d6;
+  --c-pozo: #1c1b19;
+  --c-parche: #6250d6;
+  --hatch: #b9b7b0;
+
+  --good-ink: #006300;
+  --bad-ink: #b42323;
+  --s1: #2a78d6;
+  --s2: #eb6834;
+  --grid: #e9e8e4;
 }
 
 @media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+  :root:where(:not([data-theme="light"])) {
+    color-scheme: dark;
+    --bg: #121211;
+    --surface: #1a1a19;
+    --surface-2: #232321;
+    --border: #2f2f2c;
+    --ink: #f0efec;
+    --ink-2: #c3c2b7;
+    --ink-3: #9a988f;
+    --accent: #f0efec;
+    --accent-ink: #121211;
+    --focus: #3987e5;
+    --c-nueva: #127a3b;
+    --c-buena: #14a58e;
+    --c-gastada: #c98500;
+    --c-muy: #e5484d;
+    --c-sin: #383835;
+    --c-empedrado: #3987e5;
+    --c-pozo: #f0efec;
+    --c-parche: #9085e9;
+    --hatch: #55554f;
+    --good-ink: #5fd35f;
+    --bad-ink: #ff8a8a;
+    --s1: #3987e5;
+    --s2: #d95926;
+    --grid: #2a2a28;
   }
 }
 
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #121211;
+  --surface: #1a1a19;
+  --surface-2: #232321;
+  --border: #2f2f2c;
+  --ink: #f0efec;
+  --ink-2: #c3c2b7;
+  --ink-3: #9a988f;
+  --accent: #f0efec;
+  --accent-ink: #121211;
+  --focus: #3987e5;
+  --c-nueva: #127a3b;
+  --c-buena: #14a58e;
+  --c-gastada: #c98500;
+  --c-muy: #e5484d;
+  --c-sin: #383835;
+  --c-empedrado: #3987e5;
+  --c-pozo: #f0efec;
+  --c-parche: #9085e9;
+  --hatch: #55554f;
+  --good-ink: #5fd35f;
+  --bad-ink: #ff8a8a;
+  --s1: #3987e5;
+  --s2: #d95926;
+  --grid: #2a2a28;
+}
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-line: var(--border);
+  --color-ink: var(--ink);
+  --color-ink-2: var(--ink-2);
+  --color-ink-3: var(--ink-3);
+  --color-accent: var(--accent);
+  --color-accent-ink: var(--accent-ink);
+  --color-nueva: var(--c-nueva);
+  --color-buena: var(--c-buena);
+  --color-gastada: var(--c-gastada);
+  --color-muy: var(--c-muy);
+  --color-sin: var(--c-sin);
+  --color-empedrado: var(--c-empedrado);
+  --color-pozo: var(--c-pozo);
+  --color-parche: var(--c-parche);
+  --color-good: var(--good-ink);
+  --color-bad: var(--bad-ink);
+  --color-s1: var(--s1);
+  --color-s2: var(--s2);
+  --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+
+html {
+  background: var(--bg);
+}
+
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+
+.tabular {
+  font-variant-numeric: tabular-nums;
+}
+
+/* "Sin relevar": gris + rayado a 45°, para que no dependa solo del color. */
+.hatch {
+  background-color: var(--c-sin);
+  background-image: repeating-linear-gradient(45deg, var(--hatch) 0 1.5px, transparent 1.5px 6px);
+}
+
+@media (forced-colors: active) {
+  .swatch {
+    forced-color-adjust: none;
+  }
+}
+
+.maplibregl-ctrl-attrib {
+  font-size: 11px;
 }
