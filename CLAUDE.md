@@ -23,6 +23,8 @@ Prioridad: KPIs claros arriba (por km y por cuadras) y mapa debajo. Zonas = cuad
   El secreto HMAC nunca va en la base, el cliente ni el repo.
 - La lógica de estados y KPIs vive en SQL (`supabase/migrations/`).
 - Solo cuentan en los KPIs los aportes verificados.
+- Diseño: leer `docs/DISENO.md` (capítulos de color, reglas de Taste Skill: sin emojis, sin eyebrows, sin bordes finos,
+  esquinas rectas, una sola tipografía). Los colores de datos están validados para daltonismo; no cambiarlos a ojo.
 - Idioma: UI y docs en español rioplatense; código e identificadores en inglés.
 - Datos de calles: OpenStreetMap (ODbL), con atribución visible. No usar datos de Google Maps.
 - Licencias: datos ODbL. Código: privado durante el desarrollo, con la propuesta de abrirlo (AGPL-3.0) al lanzar.

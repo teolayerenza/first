@@ -43,12 +43,11 @@ export function ThemeToggle() {
     <button
       type="button"
       onClick={() => apply(NEXT[theme])}
-      className="inline-flex h-9 items-center gap-2 rounded-full border border-line bg-surface px-3 text-sm text-ink-2 hover:text-ink"
+      className="h-10 px-3 text-small text-asphalt-ink-2 hover:bg-asphalt-3 hover:text-asphalt-ink"
       aria-label={`${LABEL[theme]}. Cambiar tema`}
       title={LABEL[theme]}
     >
-      <span aria-hidden>{theme === "light" ? "☀️" : theme === "dark" ? "🌙" : "🖥️"}</span>
-      <span className="hidden sm:inline">{theme === "light" ? "Claro" : theme === "dark" ? "Oscuro" : "Auto"}</span>
+      Tema: {theme === "light" ? "claro" : theme === "dark" ? "oscuro" : "auto"}
     </button>
   );
 }

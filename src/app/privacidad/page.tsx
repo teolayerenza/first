@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { AnonymityBlock } from "@/components/anonymity";
+import { AnonymityStatement } from "@/components/anonymity";
 import { Block, Page, Table } from "@/components/prose";
 
 export const metadata: Metadata = { title: "Privacidad y seguridad", description: "Qué datos guarda Pocitos LP (casi ninguno) y cómo se protege de ataques." };
@@ -7,7 +7,9 @@ export const metadata: Metadata = { title: "Privacidad y seguridad", description
 export default function PrivacidadPage() {
   return (
     <Page title="Tu anonimato" intro="Pocitos LP es un bien común: funciona sin cuentas y guarda solo lo mínimo indispensable para calcular los números y frenar abusos.">
-      <AnonymityBlock compact />
+      <section className="bg-asphalt p-6 text-asphalt-ink sm:p-8">
+        <AnonymityStatement columns={false} />
+      </section>
 
       <Block id="que-guardamos" title="Qué se guarda, exactamente">
         <Table

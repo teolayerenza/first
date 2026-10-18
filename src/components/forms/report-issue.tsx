@@ -7,6 +7,7 @@ import { submit, type ClientResult } from "@/lib/client/submit";
 import type { IssueKind, ParcheType, Severity } from "@/lib/domain/types";
 import { ERROR_MESSAGES, type SubmitError } from "@/lib/domain/submit";
 import { LocationPicker, type PickedLocation } from "./location-picker";
+import { Glyph } from "./glyphs";
 import { Choice, PhotoField, QueueFlusher, Step, SubmitButton } from "./ui";
 
 const SEVERITY: { v: Severity; t: string; d: string }[] = [
@@ -53,12 +54,11 @@ export function ReportIssueForm() {
     const queued = !result.ok;
     const voted = result.ok && result.kind === "vote";
     return (
-      <div className="flex flex-col gap-4 rounded-2xl border border-line bg-surface p-6 text-center">
-        <p className="text-5xl" aria-hidden>{queued ? "📦" : "✅"}</p>
-        <h2 className="text-xl font-semibold text-ink">
+      <div className={`flex flex-col gap-4 p-6 sm:p-8 ${queued ? "bg-paint text-paint-ink" : "bg-green text-green-ink"}`}>
+        <h2 className="text-head">
           {queued ? "Guardado sin señal" : voted ? "¡Gracias por confirmar!" : kind === "parche" ? "Parche reportado" : "Pozo reportado"}
         </h2>
-        <p className="text-ink-2">
+        <p className="max-w-[44ch] text-lead leading-snug">
           {queued
             ? "No hay conexión ahora. Lo vamos a mandar solo cuando vuelva la señal."
             : voted
@@ -67,19 +67,19 @@ export function ReportIssueForm() {
                 ? "Con la foto ya cuenta. En unos minutos aparece en el tablero."
                 : "Queda pendiente hasta que otro vecino lo confirme. Si pasás de nuevo, sacale una foto."}
         </p>
-        <div className="flex flex-col gap-2 sm:flex-row sm:justify-center">
-          <button className="h-11 rounded-full bg-accent px-5 font-medium text-accent-ink" onClick={() => { setResult(null); setKind(null); setParche(null); setSev(null); setPhoto(null); }}>
+        <div className="flex flex-col gap-2 sm:flex-row">
+          <button className="h-[52px] bg-asphalt px-5 font-semibold text-asphalt-ink" onClick={() => { setResult(null); setKind(null); setParche(null); setSev(null); setPhoto(null); }}>
             Reportar otro
           </button>
-          {loc?.segment && <Link href={`/calificar?cuadra=${loc.segment.id}`} className="inline-flex h-11 items-center justify-center rounded-full border border-line px-5 text-ink">Calificar esta cuadra</Link>}
-          <Link href="/" className="inline-flex h-11 items-center justify-center rounded-full border border-line px-5 text-ink">Ver el tablero</Link>
+          {loc?.segment && <Link href={`/calificar?cuadra=${loc.segment.id}`} className="inline-flex h-[52px] items-center justify-center bg-surface px-5 font-semibold text-ink">Calificar esta cuadra</Link>}
+          <Link href="/" className="inline-flex h-[52px] items-center justify-center px-5 font-semibold underline">Ver el tablero</Link>
         </div>
       </div>
     );
   }
 
   return (
-    <form className="flex flex-col gap-4" onSubmit={(e) => { e.preventDefault(); send(); }}>
+    <form className="flex flex-col gap-2" onSubmit={(e) => { e.preventDefault(); send(); }}>
       <QueueFlusher />
       <Step n={1} title="¿Dónde está?">
         <LocationPicker onChange={setLoc} hint="Mové el mapa hasta que el pin quede justo sobre el pozo o el parche." />
@@ -87,14 +87,14 @@ export function ReportIssueForm() {
 
       <Step n={2} title="¿Qué es?">
         <div role="radiogroup" className="grid gap-2 sm:grid-cols-2">
-          <Choice name="kind" value="pozo" checked={kind === "pozo"} onChange={() => setKind("pozo")} icon="🕳️" title="Pozo" desc="Falta asfalto, hay un agujero" />
-          <Choice name="kind" value="parche" checked={kind === "parche"} onChange={() => setKind("parche")} icon="🩹" title="Parche mal hecho" desc="Lo arreglaron, pero quedó mal" />
+          <Choice name="kind" value="pozo" checked={kind === "pozo"} onChange={() => setKind("pozo")} glyph={<Glyph kind="pozo" />} title="Pozo" desc="Falta asfalto, hay un agujero" />
+          <Choice name="kind" value="parche" checked={kind === "parche"} onChange={() => setKind("parche")} glyph={<Glyph kind="parche" />} title="Parche mal hecho" desc="Lo arreglaron, pero quedó mal" />
         </div>
         {kind === "parche" && (
           <div role="radiogroup" aria-label="Tipo de parche" className="mt-3 grid gap-2 sm:grid-cols-3">
-            <Choice name="parche" value="elevado" checked={parche === "elevado"} onChange={() => setParche("elevado")} icon="⬆️" title="Elevado" desc="Quedó como un lomo de burro" />
-            <Choice name="parche" value="hundido" checked={parche === "hundido"} onChange={() => setParche("hundido")} icon="⬇️" title="Hundido" desc="Quedó un pozo sobre el parche" />
-            <Choice name="parche" value="desarmado" checked={parche === "desarmado"} onChange={() => setParche("desarmado")} icon="💥" title="Se desarmó" desc="Volvió a romperse" />
+            <Choice name="parche" value="elevado" checked={parche === "elevado"} onChange={() => setParche("elevado")} glyph={<Glyph kind="elevado" />} title="Elevado" desc="Quedó como un lomo de burro" />
+            <Choice name="parche" value="hundido" checked={parche === "hundido"} onChange={() => setParche("hundido")} glyph={<Glyph kind="hundido" />} title="Hundido" desc="Quedó un pozo sobre el parche" />
+            <Choice name="parche" value="desarmado" checked={parche === "desarmado"} onChange={() => setParche("desarmado")} glyph={<Glyph kind="desarmado" />} title="Se desarmó" desc="Volvió a romperse" />
           </div>
         )}
       </Step>
@@ -111,23 +111,23 @@ export function ReportIssueForm() {
       </Step>
 
       {dup && (
-        <div role="alertdialog" aria-labelledby="dup-title" className="rounded-2xl border-2 border-gastada bg-surface p-4">
-          <p id="dup-title" className="font-semibold text-ink">¿Es este? Ya hay un reporte a pocos metros.</p>
-          <p className="mt-1 text-sm text-ink-2">Si es el mismo, confirmalo: así cuenta más rápido y no se duplica.</p>
+        <div role="alertdialog" aria-labelledby="dup-title" className="bg-paint p-5 text-paint-ink sm:p-7">
+          <p id="dup-title" className="text-lead font-semibold leading-tight">¿Es este? Ya hay un reporte a pocos metros.</p>
+          <p className="mt-2">Si es el mismo, confirmalo: así cuenta más rápido y no se duplica.</p>
           <div className="mt-3 flex flex-col gap-2 sm:flex-row">
-            <button type="button" disabled={busy} onClick={confirmExisting} className="h-11 flex-1 rounded-full bg-accent font-medium text-accent-ink">Sí, sigue ahí</button>
-            <button type="button" disabled={busy} onClick={() => send(true)} className="h-11 flex-1 rounded-full border border-line text-ink">No, es otro</button>
+            <button type="button" disabled={busy} onClick={confirmExisting} className="h-[52px] flex-1 bg-asphalt font-semibold text-asphalt-ink">Sí, sigue ahí</button>
+            <button type="button" disabled={busy} onClick={() => send(true)} className="h-[52px] flex-1 bg-paint-2 font-semibold">No, es otro</button>
           </div>
         </div>
       )}
 
       {result && !result.ok && (
-        <p role="alert" className="rounded-lg bg-muy/10 px-3 py-2 text-sm text-bad">
+        <p role="alert" className="bg-red px-4 py-3 text-red-ink">
           {ERROR_MESSAGES[result.error as SubmitError] ?? "Algo salió mal. Probá de nuevo en un rato."}
         </p>
       )}
       {!dup && <SubmitButton disabled={!ready} busy={busy}>Enviar reporte</SubmitButton>}
-      <p className="text-center text-xs text-ink-3">🔒 Anónimo. Guardamos dónde está el problema, no dónde estás vos.</p>
+      <p className="text-small text-ink-2">Es anónimo: guardamos dónde está el problema, no dónde estás vos.</p>
     </form>
   );
 }

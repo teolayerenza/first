@@ -1,3 +1,4 @@
+import "@fontsource-variable/hanken-grotesk";
 import type { Metadata, Viewport } from "next";
 import Link from "next/link";
 import { ThemeToggle, themeInitScript } from "@/components/theme";
@@ -15,15 +16,9 @@ export const metadata: Metadata = {
   manifest: "/manifest.webmanifest",
 };
 
-export const viewport: Viewport = {
-  themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#f6f5f2" },
-    { media: "(prefers-color-scheme: dark)", color: "#121211" },
-  ],
-};
+export const viewport: Viewport = { themeColor: "#141414" };
 
 const NAV = [
-  { href: "/", label: "Tablero" },
   { href: "/datos", label: "Datos abiertos" },
   { href: "/metodologia", label: "Metodología" },
   { href: "/privacidad", label: "Privacidad" },
@@ -36,66 +31,78 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
       </head>
-      <body className="min-h-dvh flex flex-col">
-        <a href="#contenido" className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:rounded focus:bg-surface focus:px-3 focus:py-2">
+      <body className="flex min-h-dvh flex-col">
+        <a href="#contenido" className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:bg-paint focus:px-3 focus:py-2 focus:text-paint-ink">
           Saltar al contenido
         </a>
         {demo && (
-          <div className="bg-gastada/20 border-b border-line px-4 py-1.5 text-center text-xs text-ink-2">
-            <strong className="text-ink">Modo demo</strong> · datos simulados para diseñar el tablero. Los números no son reales.
-          </div>
+          <p className="bg-paint px-5 py-2 text-small text-paint-ink">
+            <strong>Modo demo.</strong> Los datos son simulados para diseñar el tablero; no son reales.
+          </p>
         )}
-        <header className="border-b border-line bg-surface/80 backdrop-blur sticky top-0 z-30">
-          <div className="mx-auto flex max-w-6xl items-center gap-3 px-4 py-2.5">
-            <Link href="/" className="flex items-center gap-2 font-semibold tracking-tight text-ink">
-              <span aria-hidden className="grid h-8 w-8 place-items-center rounded-full bg-accent text-accent-ink">🕳️</span>
-              <span>
-                Pocitos <span className="text-ink-3">LP</span>
-              </span>
+        <header className="bg-asphalt text-asphalt-ink">
+          <div className="flex items-center gap-2 px-5 py-2 sm:px-8">
+            <Link href="/" className="mr-auto text-lead font-semibold tracking-[-0.03em]">
+              Pocitos LP
             </Link>
-            <nav aria-label="Principal" className="ml-auto hidden items-center gap-1 md:flex">
+            <nav aria-label="Principal" className="hidden items-center md:flex">
               {NAV.map((n) => (
-                <Link key={n.href} href={n.href} className="rounded-full px-3 py-1.5 text-sm text-ink-2 hover:bg-surface-2 hover:text-ink">
+                <Link key={n.href} href={n.href} className="px-3 py-2.5 text-small text-asphalt-ink-2 hover:bg-asphalt-3 hover:text-asphalt-ink">
                   {n.label}
                 </Link>
               ))}
             </nav>
-            <div className="ml-auto flex items-center gap-2 md:ml-2">
-              <ThemeToggle />
-            </div>
+            <ThemeToggle />
+            <Link href="/reportar" className="inline-flex h-10 items-center bg-paint px-3 text-small font-semibold text-paint-ink hover:bg-paint-2 sm:px-4">
+              Reportar<span className="hidden sm:inline">&nbsp;un pozo</span>
+            </Link>
           </div>
-          <nav aria-label="Principal móvil" className="flex gap-1 overflow-x-auto px-3 pb-2 md:hidden">
-            {NAV.map((n) => (
-              <Link key={n.href} href={n.href} className="shrink-0 rounded-full border border-line px-3 py-1 text-xs text-ink-2">
-                {n.label}
-              </Link>
-            ))}
-          </nav>
         </header>
         <main id="contenido" className="flex-1">
           {children}
         </main>
-        <footer className="border-t border-line bg-surface">
-          <div className="mx-auto grid max-w-6xl gap-4 px-4 py-6 text-sm text-ink-2 sm:grid-cols-3">
-            <div>
-              <p className="font-medium text-ink">Pocitos LP</p>
-              <p>Un proyecto vecinal, anónimo y sin fines de lucro. Sin publicidad, sin rastreadores, sin venta de datos.</p>
-            </div>
-            <div className="flex flex-col gap-1">
-              <Link href="/privacidad" className="hover:text-ink">🔒 Tu anonimato</Link>
-              <Link href="/metodologia" className="hover:text-ink">Cómo se calcula cada número</Link>
-              <Link href="/moderacion" className="hover:text-ink">Bitácora de moderación</Link>
-              <Link href="/prensa" className="hover:text-ink">Prensa</Link>
-            </div>
-            <div>
-              <p>
-                Calles © <a className="underline" href="https://www.openstreetmap.org/copyright">colaboradores de OpenStreetMap</a> (ODbL).
-              </p>
-              <p>Los aportes de los vecinos se publican como <Link className="underline" href="/datos">datos abiertos</Link> (ODbL).</p>
-            </div>
-          </div>
-        </footer>
+        <Footer />
       </body>
     </html>
+  );
+}
+
+/** Cierre en tablero de baldosas: llenas, sin bordes, todas las celdas usadas. */
+function Footer() {
+  return (
+    <footer className="bg-asphalt p-2 text-asphalt-ink sm:p-3">
+      <div className="grid grid-cols-2 gap-2 lg:grid-cols-12">
+        <div className="col-span-2 flex min-h-48 flex-col justify-between bg-asphalt-2 p-5 lg:col-span-4">
+          <p className="text-lead leading-snug">Un proyecto vecinal, anónimo y sin fines de lucro. Sin publicidad, sin rastreadores, sin venta de datos.</p>
+          <p className="mt-6 text-small text-asphalt-ink-2">
+            Calles © <a className="underline" href="https://www.openstreetmap.org/copyright">colaboradores de OpenStreetMap</a>. Datos bajo licencia ODbL.
+          </p>
+        </div>
+        <nav aria-label="Pie" className="flex min-h-48 flex-col gap-2 bg-asphalt-2 p-5 lg:col-span-3">
+          <Link href="/privacidad" className="hover:underline">Tu anonimato</Link>
+          <Link href="/metodologia" className="hover:underline">Cómo se calcula cada número</Link>
+          <Link href="/datos" className="hover:underline">Datos abiertos</Link>
+          <Link href="/moderacion" className="hover:underline">Bitácora de moderación</Link>
+          <Link href="/prensa" className="hover:underline">Prensa</Link>
+        </nav>
+        <div className="flex min-h-48 flex-col justify-end bg-asphalt-2 p-5 lg:col-span-2">
+          <p className="text-lead leading-tight">La Plata</p>
+          <p className="text-asphalt-ink-2">Casco urbano, de 1 a 31 y de 32 a 72</p>
+        </div>
+        <div className="col-span-2 flex min-h-48 flex-col justify-end bg-asphalt-2 p-5 lg:col-span-3">
+          <p className="text-small text-asphalt-ink-2">Contacto</p>
+          <a href="mailto:hola@pocitoslp.com.ar" className="text-lead hover:underline">hola@pocitoslp.com.ar</a>
+        </div>
+        <div className="col-span-2 flex min-h-40 items-center justify-center bg-asphalt-ink text-asphalt lg:col-span-8 lg:min-h-80">
+          <p aria-hidden className="text-[clamp(3.5rem,9vw,9rem)] font-semibold leading-none tracking-[-0.05em]">Pocitos LP</p>
+        </div>
+        <Link href="/reportar" className="group col-span-2 flex min-h-40 flex-col justify-between bg-paint p-5 text-paint-ink hover:bg-paint-2 lg:col-span-4 lg:min-h-80">
+          <span className="text-head font-semibold leading-none tracking-[-0.04em]">Reportá un pozo</span>
+          <svg aria-hidden viewBox="0 0 48 48" className="ml-auto h-12 w-12 transition-transform group-hover:translate-x-1" fill="none" stroke="currentColor" strokeWidth="4">
+            <path d="M6 24h34M28 11l13 13-13 13" />
+          </svg>
+        </Link>
+      </div>
+    </footer>
   );
 }

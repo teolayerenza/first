@@ -6,6 +6,7 @@ import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import { cssVar, useResolvedTheme } from "@/components/theme";
 import type { SegmentsFC } from "@/lib/data/types";
 import type { LngLat } from "@/lib/domain/types";
+import { TOOLTIP } from "@/components/tooltip";
 import { CONDITION_LABEL, CONDITION_VAR } from "@/lib/format";
 
 export type Height3D = "problemas" | "estado";
@@ -22,7 +23,15 @@ const HEIGHT_BY_CONDITION = { nueva: 6, buena: 12, gastada: 40, muy_deteriorada:
  * El casco en 3D: cada cuadra es una "pared" coloreada por su estado. En el modo "problemas"
  * la altura es la densidad de pozos y parches abiertos: el skyline de la desidia.
  */
-export default function Casco3D({ data, casco, height = 520, mode }: { data: SegmentsFC; casco: LngLat[]; height?: number; mode: Height3D }) {
+export default function Casco3D({ data, casco, height = 520, mode, fill = false, autoRotate = true }: {
+  data: SegmentsFC;
+  casco: LngLat[];
+  height?: number;
+  mode: Height3D;
+  /** Ocupa todo el alto del contenedor (para el hero) y usa el fondo asfalto en ambos temas. */
+  fill?: boolean;
+  autoRotate?: boolean;
+}) {
   const el = useRef<HTMLDivElement>(null);
   const theme = useResolvedTheme();
   const [hover, setHover] = useState<{ x: number; y: number; w: number; text: string } | null>(null);
@@ -32,12 +41,12 @@ export default function Casco3D({ data, casco, height = 520, mode }: { data: Seg
     if (!host) return;
     const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     const w = host.clientWidth;
-    const h = height;
+    const h = fill ? host.clientHeight : height;
 
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     renderer.setSize(w, h);
-    renderer.setClearColor(new THREE.Color(cssVar("--surface-2")));
+    renderer.setClearColor(new THREE.Color(cssVar(fill ? "--asphalt" : "--surface-2")));
     host.appendChild(renderer.domElement);
     renderer.domElement.setAttribute("aria-label", "Vista 3D del casco urbano");
     renderer.domElement.setAttribute("role", "img");
@@ -45,6 +54,7 @@ export default function Casco3D({ data, casco, height = 520, mode }: { data: Seg
     const scene = new THREE.Scene();
     const camera = new THREE.PerspectiveCamera(40, w / h, 10, 30_000);
     camera.position.set(-4300, 4700, 5600);
+    if (fill) camera.position.set(-4200, 4400, 5400);
 
     scene.add(new THREE.HemisphereLight(0xffffff, theme === "dark" ? 0x222222 : 0x999999, theme === "dark" ? 1.6 : 2.2));
     const sun = new THREE.DirectionalLight(0xffffff, theme === "dark" ? 1.4 : 1.8);
@@ -55,7 +65,7 @@ export default function Casco3D({ data, casco, height = 520, mode }: { data: Seg
     const shape = new THREE.Shape(casco.map((p) => new THREE.Vector2(...toXZ(p))));
     const ground = new THREE.Mesh(
       new THREE.ShapeGeometry(shape),
-      new THREE.MeshStandardMaterial({ color: new THREE.Color(cssVar("--surface")), roughness: 1, side: THREE.DoubleSide }),
+      new THREE.MeshStandardMaterial({ color: new THREE.Color(cssVar(fill ? "--asphalt-2" : "--surface")), roughness: 1, side: THREE.DoubleSide }),
     );
     ground.rotation.x = Math.PI / 2; // el shape está en XY (x, z): rotarlo +90° lo acuesta sobre XZ
     scene.add(ground);
@@ -97,9 +107,9 @@ export default function Casco3D({ data, casco, height = 520, mode }: { data: Seg
     controls.maxPolarAngle = Math.PI / 2.15;
     controls.minDistance = 600;
     controls.maxDistance = 9000;
-    controls.autoRotate = !reduceMotion;
+    controls.autoRotate = autoRotate && !reduceMotion;
     controls.autoRotateSpeed = 0.35;
-    controls.target.set(0, 0, 0);
+    controls.target.set(0, 0, fill ? -300 : 0);
     renderer.domElement.addEventListener("pointerdown", () => (controls.autoRotate = false), { once: true });
 
     // Hover: qué cuadra es.
@@ -128,8 +138,9 @@ export default function Casco3D({ data, casco, height = 520, mode }: { data: Seg
 
     const ro = new ResizeObserver(() => {
       const nw = host.clientWidth;
-      renderer.setSize(nw, h);
-      camera.aspect = nw / h;
+      const nh = fill ? host.clientHeight : h;
+      renderer.setSize(nw, nh);
+      camera.aspect = nw / nh;
       camera.updateProjectionMatrix();
     });
     ro.observe(host);
@@ -143,13 +154,13 @@ export default function Casco3D({ data, casco, height = 520, mode }: { data: Seg
       renderer.dispose();
       renderer.domElement.remove();
     };
-  }, [data, casco, height, mode, theme]);
+  }, [data, casco, height, mode, theme, fill, autoRotate]);
 
   return (
-    <div className="relative">
-      <div ref={el} style={{ height }} className="w-full overflow-hidden rounded-xl border border-line" />
+    <div className={fill ? "absolute inset-0" : "relative"}>
+      <div ref={el} style={fill ? undefined : { height }} className={fill ? "h-full w-full" : "w-full overflow-hidden"} />
       {hover && (
-        <div role="status" className="pointer-events-none absolute z-10 max-w-[260px] rounded-md border border-line bg-surface px-2.5 py-1.5 text-xs text-ink shadow"
+        <div role="status" className={`${TOOLTIP} max-w-[260px]`}
           style={{ left: Math.min(hover.x + 12, hover.w - 270), top: hover.y + 12 }}>
           {hover.text}
         </div>

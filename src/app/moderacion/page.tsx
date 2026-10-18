@@ -14,7 +14,7 @@ async function Log() {
   return (
     <ul className="flex flex-col gap-3">
       {moderation.map((m, i) => (
-        <li key={i} className="rounded-xl border border-line p-3">
+        <li key={i} className="bg-surface-2 p-4">
           <p className="text-ink"><strong>{m.action}</strong> · {fmtInt(m.count)} aportes · {m.area}</p>
           <p className="text-sm">{m.reason}</p>
           <p className="text-xs text-ink-3">{new Date(m.at).toLocaleString("es-AR", { timeZone: "America/Argentina/Buenos_Aires" })}</p>

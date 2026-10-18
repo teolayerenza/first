@@ -55,31 +55,30 @@ export function RateSegmentForm({ preset }: { preset?: { id: number; label: stri
 
   if (result?.ok || (result && !result.ok && result.error === "offline_queued")) {
     return (
-      <div className="flex flex-col gap-4 rounded-2xl border border-line bg-surface p-6">
-        <div className="text-center">
-          <p className="text-5xl" aria-hidden>{result.ok ? "✅" : "📦"}</p>
-          <h2 className="mt-2 text-xl font-semibold text-ink">{result.ok ? "¡Gracias! Calificación guardada" : "Guardado sin señal"}</h2>
-          <p className="mt-1 text-ink-2">
+      <div className="flex flex-col gap-2">
+        <div className={`p-6 sm:p-8 ${result.ok ? "bg-green text-green-ink" : "bg-paint text-paint-ink"}`}>
+          <h2 className="text-head">{result.ok ? "¡Gracias! Calificación guardada" : "Guardado sin señal"}</h2>
+          <p className="mt-4 max-w-[48ch] text-lead leading-snug">
             {segment?.label}: la calificaste como <strong>{CONDITION_LABEL[rating!]}</strong>.
             {" "}El estado de la cuadra se actualiza cuando coinciden al menos dos vecinos (o uno que estuvo en el lugar).
           </p>
         </div>
         {neighbors.length > 0 && (
-          <div className="rounded-xl bg-surface-2 p-4">
-            <p className="font-medium text-ink">¿Y las cuadras de al lado?</p>
-            <p className="text-sm text-ink-2">Un toque cada una. Así bajamos el &quot;sin relevar&quot;.</p>
-            <ul className="mt-3 flex flex-col gap-2">
+          <div className="bg-surface p-6 sm:p-8">
+            <p className="text-lead font-semibold leading-tight text-ink">¿Y las cuadras de al lado?</p>
+            <p className="mt-1 text-ink-2">Un toque cada una. Así bajamos el &quot;sin relevar&quot;.</p>
+            <ul className="mt-5 flex flex-col gap-1">
               {neighbors.map((n) => (
-                <li key={n.id} className="flex flex-wrap items-center justify-between gap-2 text-sm">
-                  <span className="text-ink">{n.label}{n.condition === "sin_relevar" && <span className="ml-1 text-xs text-ink-3">(sin relevar)</span>}</span>
+                <li key={n.id} className="flex flex-wrap items-center justify-between gap-2 bg-surface-2 p-3">
+                  <span className="font-semibold text-ink">{n.label}{n.condition === "sin_relevar" && <span className="ml-1 text-small font-normal text-ink-2">(sin relevar)</span>}</span>
                   {quickDone[n.id] ? (
-                    <span className="text-good">✓ {CONDITION_LABEL[quickDone[n.id]]}</span>
+                    <span className="font-semibold text-good">Listo: {CONDITION_LABEL[quickDone[n.id]].toLowerCase()}</span>
                   ) : (
                     <span className="flex gap-1">
                       {(["buena", "gastada", "muy_deteriorada"] as Rating[]).map((r) => (
                         <button key={r} type="button" onClick={() => quickRate(n, r)} aria-label={`${n.label}: ${CONDITION_LABEL[r]}`}
-                          className="h-9 rounded-full border border-line px-3 text-ink hover:border-ink">
-                          {r === "buena" ? "🟢" : r === "gastada" ? "🟡" : "🔴"}
+                          className={`h-11 px-3 text-small font-semibold ${r === "buena" ? "bg-buena text-asphalt" : r === "gastada" ? "bg-gastada text-asphalt" : "bg-muy text-white"}`}>
+                          {CONDITION_LABEL[r]}
                         </button>
                       ))}
                     </span>
@@ -89,35 +88,35 @@ export function RateSegmentForm({ preset }: { preset?: { id: number; label: stri
             </ul>
           </div>
         )}
-        <div className="flex flex-col gap-2 sm:flex-row sm:justify-center">
-          <button className="h-11 rounded-full bg-accent px-5 font-medium text-accent-ink" onClick={() => { setResult(null); setRating(null); setPatching(null); setRepavedOn(false); setRepaved(null); setCobbled(false); setNeighbors([]); }}>
+        <div className="flex flex-col gap-2 sm:flex-row">
+          <button className="h-[52px] bg-asphalt px-5 font-semibold text-asphalt-ink" onClick={() => { setResult(null); setRating(null); setPatching(null); setRepavedOn(false); setRepaved(null); setCobbled(false); setNeighbors([]); }}>
             Calificar otra cuadra
           </button>
-          <Link href="/reportar" className="inline-flex h-11 items-center justify-center rounded-full border border-line px-5 text-ink">Reportar un pozo</Link>
-          <Link href="/" className="inline-flex h-11 items-center justify-center rounded-full border border-line px-5 text-ink">Ver el tablero</Link>
+          <Link href="/reportar" className="inline-flex h-[52px] items-center justify-center bg-surface px-5 font-semibold text-ink">Reportar un pozo</Link>
+          <Link href="/" className="inline-flex h-[52px] items-center justify-center px-5 font-semibold text-ink underline">Ver el tablero</Link>
         </div>
       </div>
     );
   }
 
   return (
-    <form className="flex flex-col gap-4" onSubmit={(e) => { e.preventDefault(); send(); }}>
+    <form className="flex flex-col gap-2" onSubmit={(e) => { e.preventDefault(); send(); }}>
       <QueueFlusher />
       <Step n={1} title="¿Qué cuadra?">
         <LocationPicker onChange={setLoc} initial={preset?.mid} hint="Mové el mapa hasta que el pin quede sobre la cuadra. Si estás ahí, tocá “Usar mi ubicación”: tu calificación pesa más." />
       </Step>
 
       <Step n={2} title="¿Cómo está el asfalto?">
-        <p className="-mt-1 mb-3 text-sm text-ink-2">El estado general de la cuadra, no un pozo puntual (eso se reporta aparte).</p>
+        <p className="-mt-1 mb-4 text-ink-2">El estado general de la cuadra, no un pozo puntual (eso se reporta aparte).</p>
         <div role="radiogroup" className="flex flex-col gap-2">
           <Choice name="rating" value="buena" checked={rating === "buena"} onChange={() => setRating("buena")} swatch="bg-buena" title="Buena" desc="Asfalto en buen estado" />
           <Choice name="rating" value="gastada" checked={rating === "gastada"} onChange={() => setRating("gastada")} swatch="bg-gastada" title="Gastada" desc="Asfalto viejo, con grietas o algunos parches" />
           <Choice name="rating" value="muy_deteriorada" checked={rating === "muy_deteriorada"} onChange={() => setRating("muy_deteriorada")} swatch="bg-muy" title="Muy deteriorada" desc="Se desarma, todo parcheado, hace años que no la arreglan" />
         </div>
-        <p className="mb-2 mt-5 text-sm font-medium text-ink">¿Cuánto parche tiene? <span className="font-normal text-ink-3">(opcional)</span></p>
+        <p className="mb-2 mt-6 font-semibold text-ink">¿Cuánto parche tiene? <span className="font-normal text-ink-2">(opcional)</span></p>
         <Chips label="Cantidad de parches" value={patching} onChange={setPatching}
           options={[{ v: "pocos", t: "Pocos" }, { v: "bastantes", t: "Bastantes" }, { v: "todo_parche", t: "Es todo parche" }]} />
-        <div className="mt-5 flex flex-col gap-3 text-sm">
+        <div className="mt-6 flex flex-col gap-3">
           <label className="flex items-center gap-2 text-ink">
             <input type="checkbox" checked={repavedOn} onChange={(e) => setRepavedOn(e.target.checked)} className="h-5 w-5" />
             La repavimentaron hace poco
@@ -134,12 +133,12 @@ export function RateSegmentForm({ preset }: { preset?: { id: number; label: stri
       </Step>
 
       {result && !result.ok && (
-        <p role="alert" className="rounded-lg bg-muy/10 px-3 py-2 text-sm text-bad">
+        <p role="alert" className="bg-red px-4 py-3 text-red-ink">
           {ERROR_MESSAGES[result.error as SubmitError] ?? "Algo salió mal. Probá de nuevo en un rato."}
         </p>
       )}
       <SubmitButton disabled={!ready} busy={busy}>Enviar calificación</SubmitButton>
-      <p className="text-center text-xs text-ink-3">🔒 Anónimo. No guardamos dónde estás ni qué otras cuadras calificaste.</p>
+      <p className="text-small text-ink-2">Es anónimo: no guardamos dónde estás ni qué otras cuadras calificaste.</p>
     </form>
   );
 }

@@ -1,0 +1,95 @@
+"use client";
+
+import dynamic from "next/dynamic";
+import Link from "next/link";
+import { useEffect, useState } from "react";
+import { StreetSearch } from "@/components/forms/location-picker";
+import type { SegmentDetail, SegmentsFC } from "@/lib/data/types";
+import type { LngLat } from "@/lib/domain/types";
+import { CONDITION_HINT, CONDITION_LABEL } from "@/lib/format";
+
+const Casco3D = dynamic(() => import("../three/casco-3d"), { ssr: false });
+
+export interface Swatch {
+  href: string;
+  label: string;
+  value: string;
+  className: string;
+}
+
+/** Campo de color por estado: el resultado de la búsqueda se pinta del color de la cuadra. */
+const FIELD: Record<string, string> = {
+  nueva: "bg-nueva text-white",
+  buena: "bg-buena text-asphalt",
+  gastada: "bg-gastada text-asphalt",
+  muy_deteriorada: "bg-red text-red-ink",
+  sin_relevar: "bg-asphalt-3 text-asphalt-ink",
+  empedrado: "bg-empedrado text-white",
+};
+
+/**
+ * Hero: el casco en 3D ocupa la vista; a la derecha, una columna de bloques de color que es a la vez
+ * navegación y adelanto de cada capítulo. Lo único "vivo": buscar tu cuadra y ver cómo está.
+ */
+export function Hero({ title, lead, casco, segmentsUrl, swatches }: { title: string; lead: string; casco: LngLat[]; segmentsUrl: string; swatches: Swatch[] }) {
+  const [fc, setFc] = useState<SegmentsFC | null>(null);
+  const [cuadra, setCuadra] = useState<SegmentDetail | null>(null);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    fetch(segmentsUrl).then((r) => r.json()).then(setFc).catch(() => {});
+  }, [segmentsUrl]);
+
+  async function pick(id: number) {
+    setLoading(true);
+    const r = await fetch(`/api/cuadra/${id}`);
+    setCuadra(r.ok ? await r.json() : null);
+    setLoading(false);
+  }
+
+  const key = cuadra ? (cuadra.cobbled ? "empedrado" : cuadra.condition) : null;
+
+  return (
+    <section aria-labelledby="hero-title" className="bg-asphalt p-2 text-asphalt-ink sm:p-3">
+      <div className="grid gap-2 lg:min-h-[calc(100svh-76px)] lg:grid-cols-12">
+        <div className="relative flex flex-col overflow-hidden bg-asphalt lg:col-span-10 lg:block">
+          {/* En escritorio el casco ocupa la derecha del panel; en el celular, una franja entre el texto y el buscador. */}
+          <div className="relative order-2 h-[46svh] lg:absolute lg:inset-y-0 lg:left-[36%] lg:right-0 lg:h-auto">
+            {fc && <Casco3D data={fc} casco={casco} mode="problemas" fill />}
+          </div>
+          <div className="rise relative order-1 p-5 sm:p-8 lg:max-w-[38%]">
+            <h1 id="hero-title" className="text-[clamp(2.75rem,1rem+4.6vw,6.25rem)]">{title}</h1>
+            <p className="mt-5 max-w-[34ch] text-lead leading-snug text-asphalt-ink-2">{lead}</p>
+          </div>
+          <div className="relative order-3 bg-asphalt p-5 sm:p-8 lg:absolute lg:bottom-0 lg:left-0 lg:w-[36%] lg:min-w-[360px]">
+            <p className="text-lead font-semibold leading-tight">¿Cómo está tu cuadra?</p>
+            <StreetSearch dark onPick={(e) => pick(e.id)} />
+            {loading && <p className="mt-3 text-small text-asphalt-ink-2">Buscando…</p>}
+            {cuadra && key && !loading && (
+              <div className={`mt-3 p-4 ${FIELD[key]}`} aria-live="polite">
+                <p className="text-small">{cuadra.label}</p>
+                <p className="text-head font-semibold leading-none tracking-[-0.04em]">{key === "empedrado" ? "Empedrado" : CONDITION_LABEL[cuadra.condition]}</p>
+                <p className="mt-2 text-small">
+                  {key === "empedrado" ? "Categoría aparte: no entra en los porcentajes de asfalto" : CONDITION_HINT[cuadra.condition]}.{" "}
+                  {cuadra.openPozos} pozos y {cuadra.openParches} parches mal hechos abiertos.
+                </p>
+                <p className="mt-3 flex flex-wrap gap-x-4 text-small font-semibold underline">
+                  <Link href={`/cuadra/${cuadra.id}`}>Ver la cuadra</Link>
+                  <Link href={`/calificar?cuadra=${cuadra.id}`}>Calificarla</Link>
+                </p>
+              </div>
+            )}
+          </div>
+        </div>
+        <nav aria-label="Capítulos" className="grid grid-cols-1 gap-0 lg:col-span-2 lg:grid-rows-5">
+          {swatches.map((s) => (
+            <a key={s.href} href={s.href} className={`group flex min-h-[64px] flex-col justify-between p-4 lg:min-h-0 lg:p-5 ${s.className}`}>
+              <span className="text-small font-semibold">{s.label}</span>
+              <span className="tabular text-lead font-semibold leading-none tracking-[-0.03em] transition-transform group-hover:translate-x-1">{s.value}</span>
+            </a>
+          ))}
+        </nav>
+      </div>
+    </section>
+  );
+}

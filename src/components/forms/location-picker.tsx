@@ -7,6 +7,7 @@ import { cssVar, useResolvedTheme } from "@/components/theme";
 import type { SegmentRef, StreetIndexEntry } from "@/lib/data/types";
 import { haversineM } from "@/lib/domain/geo";
 import type { LngLat } from "@/lib/domain/types";
+import { Pin } from "./glyphs";
 
 const CENTER: LngLat = [-57.9545, -34.9214];
 const STYLE = {
@@ -110,19 +111,19 @@ export function LocationPicker({ onChange, initial, hint }: { onChange: (l: Pick
   return (
     <div>
       <div className="relative">
-        <div ref={el} className="h-[340px] w-full overflow-hidden rounded-xl border border-line bg-surface-2" />
-        <div aria-hidden className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-full text-3xl drop-shadow">📍</div>
+        <div ref={el} className="h-[360px] w-full overflow-hidden bg-surface-2" />
+        <div className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-full"><Pin /></div>
         <button type="button" onClick={locate}
-          className="absolute bottom-3 left-3 inline-flex h-10 items-center gap-2 rounded-full bg-accent px-4 text-sm font-medium text-accent-ink shadow">
-          {gpsState === "loading" ? "Buscando…" : "📡 Usar mi ubicación"}
+          className="absolute bottom-3 left-3 inline-flex h-11 items-center bg-asphalt px-4 text-small font-semibold text-asphalt-ink">
+          {gpsState === "loading" ? "Buscando…" : "Usar mi ubicación"}
         </button>
       </div>
-      <p className="mt-2 text-xs text-ink-3">{hint}</p>
-      {gpsState === "denied" && <p className="mt-1 text-xs text-ink-2">No pudimos usar el GPS. Mové el mapa o buscá la cuadra por nombre.</p>}
-      <p className="mt-3 rounded-lg bg-surface-2 px-3 py-2 text-sm" aria-live="polite">
-        {seg === undefined ? "Ubicando…" : seg ? <>📍 <strong>{seg.label}</strong></> : "No hay una calle del casco cerca de este punto."}
+      <p className="mt-3 text-small text-ink-2">{hint}</p>
+      {gpsState === "denied" && <p className="mt-1 text-small text-ink-2">No pudimos usar el GPS. Mové el mapa o buscá la cuadra por nombre.</p>}
+      <p className="mt-3 bg-asphalt px-4 py-3 text-lead font-semibold leading-tight text-asphalt-ink" aria-live="polite">
+        {seg === undefined ? "Ubicando…" : seg ? seg.label : "No hay una calle del casco cerca de este punto."}
       </p>
-      <button type="button" className="mt-2 text-sm text-ink-2 underline" onClick={() => setSearching((v) => !v)}>
+      <button type="button" className="mt-3 text-small font-semibold text-ink underline" onClick={() => setSearching((v) => !v)}>
         {searching ? "Cerrar búsqueda" : "Buscar por nombre: \"Calle __ entre __ y __\""}
       </button>
       {searching && (
@@ -137,7 +138,7 @@ export function LocationPicker({ onChange, initial, hint }: { onChange: (l: Pick
   );
 }
 
-export function StreetSearch({ onPick }: { onPick: (e: StreetIndexEntry) => void }) {
+export function StreetSearch({ onPick, dark = false }: { onPick: (e: StreetIndexEntry) => void; dark?: boolean }) {
   const [idx, setIdx] = useState<StreetIndexEntry[] | null>(null);
   const [street, setStreet] = useState("");
   const [a, setA] = useState("");
@@ -146,8 +147,8 @@ export function StreetSearch({ onPick }: { onPick: (e: StreetIndexEntry) => void
   }, []);
   const streets = useMemo(() => [...new Set(idx?.map((e) => e.street))].sort((x, y) => (parseInt(x.replace(/\D/g, "")) || 0) - (parseInt(y.replace(/\D/g, "")) || 0)), [idx]);
   const options = useMemo(() => idx?.filter((e) => e.street === street) ?? [], [idx, street]);
-  const sel = "h-11 w-full rounded-lg border border-line bg-surface px-3 text-ink";
-  if (!idx) return <p className="mt-2 text-sm text-ink-3">Cargando calles…</p>;
+  const sel = dark ? "h-12 w-full bg-asphalt-ink px-3 text-asphalt" : "h-12 w-full border border-line bg-surface px-3 text-ink";
+  if (!idx) return <p className={`mt-2 text-small ${dark ? "text-asphalt-ink-2" : "text-ink-3"}`}>Cargando calles…</p>;
   return (
     <div className="mt-2 grid grid-cols-[1fr_auto_1fr] items-center gap-2 text-sm">
       <label className="sr-only" htmlFor="calle">Calle</label>
@@ -155,7 +156,7 @@ export function StreetSearch({ onPick }: { onPick: (e: StreetIndexEntry) => void
         <option value="">Elegí la calle…</option>
         {streets.map((s) => <option key={s}>{s}</option>)}
       </select>
-      <span className="col-span-3 text-ink-3">entre</span>
+      <span className={`col-span-3 ${dark ? "text-asphalt-ink-2" : "text-ink-2"}`}>entre</span>
       <label className="sr-only" htmlFor="entre">Entre</label>
       <select id="entre" className={`${sel} col-span-3`} value={a} disabled={!street}
         onChange={(e) => {

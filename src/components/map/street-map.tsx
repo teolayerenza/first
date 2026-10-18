@@ -125,13 +125,13 @@ export default function StreetMap({ casco, segmentsUrl, issuesUrl, focus, view, 
         const f = e.features?.[0];
         if (!f || !m) return;
         const p = f.properties as Record<string, string | number | boolean>;
-        const kind = p.kind === "parche" ? `🩹 Parche mal hecho${p.parcheType ? ` (${p.parcheType})` : ""}` : "🕳️ Pozo";
+        const kind = p.kind === "parche" ? `Parche mal hecho${p.parcheType ? ` (${p.parcheType})` : ""}` : "Pozo";
         const sev = ["", "leve", "medio", "peligroso"][Number(p.severity)];
         popup
           .setLngLat(e.lngLat)
           .setHTML(
             `<div style="font:13px system-ui;color:#111"><strong>${kind}</strong> · ${sev}<br/>Reportado ${relativeDays(Number(p.days))}<br/>${
-              p.verified ? "✓ Verificado" : "Pendiente: falta foto o que otro vecino lo confirme"
+              p.verified ? "Verificado" : "Pendiente: falta foto o que otro vecino lo confirme"
             }<br/><a href="/cuadra/${p.segmentId}" style="text-decoration:underline">Ver la cuadra · ¿sigue ahí?</a></div>`,
           )
           .addTo(m);
@@ -141,11 +141,11 @@ export default function StreetMap({ casco, segmentsUrl, issuesUrl, focus, view, 
         const f = e.features?.[0];
         if (!f) return;
         const p = f.properties as Record<string, string | number | boolean>;
-        const state = p.cobbled ? "🔵 Empedrado" : CONDITION_LABEL[p.condition as keyof typeof CONDITION_LABEL];
+        const state = p.cobbled ? "Empedrado" : CONDITION_LABEL[p.condition as keyof typeof CONDITION_LABEL];
         popup
           .setLngLat(e.lngLat)
           .setHTML(
-            `<div style="font:13px system-ui;color:#111"><strong>${p.label}</strong><br/>${state}<br/>🕳️ ${p.openPozos} pozos · 🩹 ${p.openParches} parches<br/><a href="/cuadra/${p.id}" style="text-decoration:underline">Ver cuadra</a> · <a href="/calificar?cuadra=${p.id}" style="text-decoration:underline">Calificar</a></div>`,
+            `<div style="font:13px system-ui;color:#111"><strong>${p.label}</strong><br/>${state}<br/>${p.openPozos} pozos · ${p.openParches} parches mal hechos<br/><a href="/cuadra/${p.id}" style="text-decoration:underline">Ver cuadra</a> · <a href="/calificar?cuadra=${p.id}" style="text-decoration:underline">Calificar</a></div>`,
           )
           .addTo(m);
       });
@@ -170,5 +170,5 @@ export default function StreetMap({ casco, segmentsUrl, issuesUrl, focus, view, 
     map.current.setLayoutProperty("issues", "visibility", showIssues ? "visible" : "none");
   }, [ready, view, showIssues, theme]);
 
-  return <div ref={el} style={{ height }} className="w-full overflow-hidden rounded-xl border border-line bg-surface-2" aria-label="Mapa de las calles del casco" role="region" />;
+  return <div ref={el} style={{ height }} className="w-full overflow-hidden bg-asphalt-2" aria-label="Mapa de las calles del casco" role="region" />;
 }

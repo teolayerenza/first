@@ -6,30 +6,26 @@ import { flushQueue } from "@/lib/client/submit";
 
 export function Step({ n, title, children }: { n: number; title: string; children: ReactNode }) {
   return (
-    <fieldset className="rounded-2xl border border-line bg-surface p-4 sm:p-5">
+    <fieldset className="bg-surface p-5 sm:p-7">
       <legend className="sr-only">{title}</legend>
-      <p aria-hidden className="mb-3 flex items-center gap-2 text-base font-semibold text-ink">
-        <span className="grid h-6 w-6 place-items-center rounded-full bg-accent text-xs text-accent-ink">{n}</span>
-        {title}
-      </p>
+      <p aria-hidden className="mb-4 text-lead font-semibold leading-tight tracking-[-0.02em] text-ink">{title}</p>
       {children}
     </fieldset>
   );
 }
 
 /** Opción grande (radio accesible con apariencia de botón). */
-export function Choice({ name, value, checked, onChange, icon, title, desc, swatch }: {
-  name: string; value: string; checked: boolean; onChange: (v: string) => void; icon?: string; title: string; desc?: string; swatch?: string;
+export function Choice({ name, value, checked, onChange, glyph, title, desc, swatch }: {
+  name: string; value: string; checked: boolean; onChange: (v: string) => void; glyph?: ReactNode; title: string; desc?: string; swatch?: string;
 }) {
   return (
-    <label className={`flex cursor-pointer items-start gap-3 rounded-xl border p-3.5 transition ${checked ? "border-ink bg-surface-2" : "border-line hover:border-ink-3"}`}>
+    <label className={`flex min-h-16 cursor-pointer items-center gap-4 p-4 transition-colors has-[:focus-visible]:outline-3 has-[:focus-visible]:outline-[var(--focus)] ${checked ? "bg-asphalt text-asphalt-ink" : "bg-surface-2 text-ink hover:bg-line"}`}>
       <input type="radio" name={name} value={value} checked={checked} onChange={() => onChange(value)} className="sr-only" />
-      {swatch ? <span aria-hidden className={`swatch mt-0.5 h-5 w-5 shrink-0 rounded-md ${swatch}`} /> : icon ? <span aria-hidden className="text-xl leading-6">{icon}</span> : null}
+      {swatch ? <span aria-hidden className={`swatch h-6 w-6 shrink-0 ${swatch}`} /> : glyph ? <span className="shrink-0">{glyph}</span> : null}
       <span className="flex-1">
-        <span className="block font-medium text-ink">{title}</span>
-        {desc && <span className="block text-sm text-ink-2">{desc}</span>}
+        <span className="block font-semibold">{title}</span>
+        {desc && <span className={`block text-small ${checked ? "text-asphalt-ink-2" : "text-ink-2"}`}>{desc}</span>}
       </span>
-      <span aria-hidden className={`mt-1 h-4 w-4 shrink-0 rounded-full border-2 ${checked ? "border-ink bg-ink" : "border-line"}`} />
     </label>
   );
 }
@@ -39,7 +35,7 @@ export function Chips<T extends string>({ label, options, value, onChange }: { l
     <div role="radiogroup" aria-label={label} className="flex flex-wrap gap-2">
       {options.map((o) => (
         <button key={o.v} type="button" role="radio" aria-checked={value === o.v} onClick={() => onChange(value === o.v ? null : o.v)}
-          className={`rounded-full border px-3 py-1.5 text-sm ${value === o.v ? "border-ink bg-accent text-accent-ink" : "border-line text-ink-2 hover:border-ink-3"}`}>
+          className={`min-h-11 px-4 text-small font-semibold ${value === o.v ? "bg-asphalt text-asphalt-ink" : "bg-surface-2 text-ink hover:bg-line"}`}>
           {o.t}
         </button>
       ))}
@@ -60,7 +56,7 @@ export function PhotoField({ onReady }: { onReady: (p: CompressedPhoto | null) =
 
   return (
     <div>
-      <label className="flex cursor-pointer items-center gap-3 rounded-xl border border-dashed border-line p-3.5 hover:border-ink-3">
+      <label className="flex cursor-pointer items-center gap-4 bg-surface-2 p-4 hover:bg-line has-[:focus-visible]:outline-3 has-[:focus-visible]:outline-[var(--focus)]">
         <input type="file" accept="image/*" capture="environment" className="sr-only"
           onChange={async (e) => {
             const f = e.target.files?.[0];
@@ -79,19 +75,19 @@ export function PhotoField({ onReady }: { onReady: (p: CompressedPhoto | null) =
           }} />
         {preview ? (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={preview} alt="Vista previa de la foto" className="h-16 w-16 rounded-lg object-cover" />
+          <img src={preview} alt="Vista previa de la foto" className="h-16 w-16 object-cover" />
         ) : (
-          <span aria-hidden className="grid h-16 w-16 place-items-center rounded-lg bg-surface-2 text-2xl">📷</span>
+          <span aria-hidden className="grid h-16 w-16 place-items-center bg-asphalt text-small font-semibold text-asphalt-ink">Foto</span>
         )}
         <span className="text-sm">
-          <span className="block font-medium text-ink">{state === "ready" ? "Foto lista ✓ (tocá para cambiarla)" : "Sumar foto (opcional)"}</span>
-          <span className="block text-ink-2">
+          <span className="block font-semibold text-ink">{state === "ready" ? "Foto lista (tocá para cambiarla)" : "Sumar una foto (opcional)"}</span>
+          <span className="block text-small text-ink-2">
             {state === "working" ? "Achicando la foto…" : state === "ready" ? `${kb} KB, sin ubicación ni datos del teléfono` : state === "error" ? "No pudimos leer esa foto. Probá con otra." : "Con foto, el reporte cuenta al toque. No incluyas personas ni patentes."}
           </span>
         </span>
       </label>
       {state === "ready" && (
-        <button type="button" className="mt-2 text-sm text-ink-2 underline" onClick={() => { setPreview(null); setState("none"); onReady(null); }}>
+        <button type="button" className="mt-2 text-small text-ink-2 underline" onClick={() => { setPreview(null); setState("none"); onReady(null); }}>
           Quitar foto
         </button>
       )}
@@ -109,13 +105,13 @@ export function QueueFlusher() {
     return () => window.removeEventListener("online", run);
   }, []);
   if (!sent) return null;
-  return <p role="status" className="rounded-lg bg-nueva/10 px-3 py-2 text-sm text-good">Se enviaron {sent} aportes que habían quedado guardados sin señal. ¡Gracias!</p>;
+  return <p role="status" className="bg-green px-4 py-3 text-small text-green-ink">Se enviaron {sent} aportes que habían quedado guardados sin señal. ¡Gracias!</p>;
 }
 
 export function SubmitButton({ disabled, busy, children }: { disabled?: boolean; busy?: boolean; children: ReactNode }) {
   return (
     <button type="submit" disabled={disabled || busy}
-      className="inline-flex h-12 w-full items-center justify-center rounded-full bg-accent px-6 font-medium text-accent-ink disabled:opacity-40">
+      className="inline-flex h-[52px] w-full items-center justify-center bg-green px-6 font-semibold text-green-ink hover:opacity-90 disabled:bg-surface-2 disabled:text-ink-2">
       {busy ? "Enviando…" : children}
     </button>
   );

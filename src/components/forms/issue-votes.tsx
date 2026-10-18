@@ -24,21 +24,21 @@ export function IssueVotes({ issueId, kind }: { issueId: string; kind: IssueKind
     } else setMsg(r.error === "offline_queued" ? "Sin señal: lo mandamos cuando vuelva." : ERROR_MESSAGES[r.error as SubmitError] ?? "No se pudo enviar.");
   }
 
-  if (msg) return <p role="status" className="mt-2 text-sm text-good">{msg}</p>;
-  const btn = "h-9 rounded-full border border-line px-3 text-sm text-ink hover:border-ink disabled:opacity-40";
+  if (msg) return <p role="status" className="mt-3 font-semibold text-good">{msg}</p>;
+  const btn = "min-h-11 bg-surface-2 px-4 text-small font-semibold text-ink hover:bg-line disabled:opacity-40";
   return (
     <div className="mt-2">
       {askQuality ? (
         <div role="group" aria-label="¿Quedó bien el arreglo?" className="flex flex-wrap items-center gap-2">
-          <span className="text-sm text-ink">¿Quedó bien o quedó un parche mal hecho?</span>
-          <button disabled={busy} className={btn} onClick={() => vote("arreglado", "bien")}>✅ Quedó bien</button>
-          <button disabled={busy} className={btn} onClick={() => vote("arreglado", "parche_malo")}>🩹 Quedó mal</button>
+          <span className="font-semibold text-ink">¿Quedó bien o quedó un parche mal hecho?</span>
+          <button disabled={busy} className={btn} onClick={() => vote("arreglado", "bien")}>Quedó bien</button>
+          <button disabled={busy} className={btn} onClick={() => vote("arreglado", "parche_malo")}>Quedó mal: es un parche mal hecho</button>
         </div>
       ) : (
         <div className="flex flex-wrap gap-2">
           <button disabled={busy} className={btn} onClick={() => vote("sigue")}>Sigue ahí</button>
           <button disabled={busy} className={btn} onClick={() => (kind === "pozo" ? setAskQuality(true) : vote("arreglado", "bien"))}>Ya lo arreglaron</button>
-          <button disabled={busy} className={`${btn} text-ink-3`} onClick={() => vote("falso")}>No existe / denunciar foto</button>
+          <button disabled={busy} className={`${btn} text-ink-2`} onClick={() => vote("falso")}>No existe / denunciar foto</button>
         </div>
       )}
     </div>

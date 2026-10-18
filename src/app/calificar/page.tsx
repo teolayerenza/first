@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { connection } from "next/server";
 import { Suspense } from "react";
+import { FormPage } from "@/components/form-page";
 import { RateSegmentForm } from "@/components/forms/rate-segment";
 import { getDataSource } from "@/lib/data";
 import { midpoint } from "@/lib/domain/geo";
@@ -16,12 +17,10 @@ async function Form({ searchParams }: { searchParams: Promise<{ cuadra?: string 
 
 export default function CalificarPage(props: PageProps<"/calificar">) {
   return (
-    <div className="mx-auto max-w-2xl px-4 py-6">
-      <h1 className="text-2xl font-semibold tracking-tight text-ink">Calificar una cuadra</h1>
-      <p className="mb-5 mt-1 text-ink-2">¿Cómo está el asfalto en general? Tarda unos 10 segundos.</p>
-      <Suspense fallback={<p className="text-ink-3">Cargando…</p>}>
+    <FormPage title="Calificá una cuadra" lead="Cómo está el asfalto en general, no un pozo puntual. Tarda unos 10 segundos.">
+      <Suspense fallback={<p className="text-ink-2">Cargando…</p>}>
         <Form searchParams={props.searchParams as Promise<{ cuadra?: string }>} />
       </Suspense>
-    </div>
+    </FormPage>
   );
 }

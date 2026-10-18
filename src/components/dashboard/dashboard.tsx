@@ -1,13 +1,17 @@
-import Link from "next/link";
+import type { ReactNode } from "react";
 import type { Dashboard as DashboardData } from "@/lib/data/types";
 import type { LngLat } from "@/lib/domain/types";
-import { fmt1, fmtInt, fmtPct, relativeDays } from "@/lib/format";
-import { AnonymityBlock } from "../anonymity";
+import { fmt1, fmtInt, fmtPct, fmtPp, relativeDays } from "@/lib/format";
+import { AnonymityStatement } from "../anonymity";
 import { LiveNow, LiveRefresh } from "../live";
+import { Reveal } from "../reveal";
 import { MapSection } from "../map/map-section";
 import { ConditionBar } from "./condition-bar";
+import { Hero } from "./hero";
 import { DeteriorationLine, NewVsFixedColumns, SeriesTable } from "./monthly-charts";
-import { AnonymityStrip, CtaButtons, Delta, Section, StatTile } from "./parts";
+import { RoadProfile } from "./road-profile";
+import { StartFragment } from "./start-fragment";
+import { ZoneBands } from "./zone-bands";
 
 interface Props {
   data: DashboardData;
@@ -17,188 +21,198 @@ interface Props {
 
 /** "1 de cada 3": fracción simple y honesta para un porcentaje. */
 function oneIn(pct: number): string {
-  if (pct <= 0) return "ningún arreglo";
+  if (pct <= 0) return "Ningún arreglo";
   const n = Math.round(100 / pct);
-  return n <= 1 ? "casi todos los arreglos" : `1 de cada ${n} arreglos`;
+  return n <= 1 ? "Casi todos los arreglos" : `1 de cada ${n} arreglos`;
 }
+
+/** Un capítulo: campo plano a todo el ancho; todos comparten margen izquierdo y grilla. */
+function Chapter({ id, className, children, label }: { id: string; className: string; children: ReactNode; label: string }) {
+  return (
+    <section id={id} aria-label={label} className={`scroll-mt-4 px-5 py-20 sm:px-8 lg:py-32 ${className}`}>
+      <div className="mx-auto max-w-[1400px]" data-reveal="">{children}</div>
+    </section>
+  );
+}
+
+const BIG = "tabular text-[clamp(3.5rem,1rem+5.6vw,6rem)] font-semibold leading-none tracking-[-0.04em]";
 
 export function Dashboard({ data, casco, zone }: Props) {
   const { kpis, previous, contributors } = data;
   const i = kpis.issues;
   const deltaMuy = previous ? Math.round((kpis.pct.muy_deteriorada - previous.pct.muy_deteriorada) * 10) / 10 : null;
+  const flat = deltaMuy !== null && Math.abs(deltaMuy) < 0.05;
   const updated = new Date(kpis.asOf).toLocaleTimeString("es-AR", { hour: "2-digit", minute: "2-digit", timeZone: "America/Argentina/Buenos_Aires" });
-  const scopeName = zone ? `Zona ${zone.name}` : "Casco urbano";
-  const ranked = data.zones.filter((z) => z.eligible).sort((a, b) => b.pctMuyDeteriorada - a.pctMuyDeteriorada);
-  const byPozos = data.zones.filter((z) => z.eligible).sort((a, b) => b.pozosPerKm - a.pozosPerKm);
-  const maxPct = Math.max(1, ...ranked.map((z) => z.pctMuyDeteriorada));
+  const segmentsUrl = `/api/datos/cuadras.geojson${zone ? `?zona=${zone.id}` : ""}`;
+  const where = zone ? `de la zona ${zone.name}` : "del casco";
 
   return (
-    <div className="mx-auto flex max-w-6xl flex-col gap-4 px-4 py-5 sm:gap-6 sm:py-8">
+    <div>
       <LiveRefresh />
+      <Reveal />
 
-      {/* ── Encabezado ── */}
-      <div className="flex flex-col gap-1">
-        <p className="text-sm text-ink-3">
-          {zone && (
-            <>
-              <Link href="/" className="underline hover:text-ink">Casco urbano</Link> ›{" "}
-            </>
-          )}
-          {scopeName} · actualizado {updated}
-        </p>
-        <p className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-ink-2">
-          <span>
-            👥 <strong className="tabular text-ink">{fmtInt(contributors.total)}</strong> vecinos ya se sumaron
-          </span>
-          <span className="tabular text-ink-3">+{fmtInt(contributors.new7d)} esta semana</span>
-          <LiveNow />
-        </p>
-      </div>
+      <Hero
+        title={zone ? `Zona ${zone.name}` : "Calles de La Plata"}
+        lead={
+          zone
+            ? `Estado del asfalto, pozos y parches de las calles entre ${zone.name.replace(" / ", " y ")}.`
+            : "Medidas por vecinos: cada cuadra del casco, calificada por quienes viven y pasan por ahí. Cada pozo y cada parche mal hecho, en el mapa."
+        }
+        casco={casco}
+        segmentsUrl={segmentsUrl}
+        swatches={[
+          { href: "#estado", label: "Muy deterioradas", value: fmtPct(kpis.pct.muy_deteriorada), className: "bg-surface text-ink" },
+          { href: "#pozos", label: "Pozos abiertos", value: fmtInt(i.openPozos), className: "bg-red text-red-ink" },
+          { href: "#mapa", label: "Mapa", value: `${fmtInt(kpis.cuadrasAsphalt)} cuadras`, className: "bg-asphalt-3 text-asphalt-ink" },
+          ...(zone ? [] : [{ href: "#zonas", label: "Zonas", value: "Ranking", className: "bg-paint text-paint-ink" }]),
+          { href: "#sumate", label: "Vecinos", value: fmtInt(contributors.total), className: "bg-green text-green-ink" },
+        ]}
+      />
 
-      {/* ── Estado del asfalto ── */}
-      <Section kicker="Estado del asfalto" title={zone ? `Cómo están las calles de ${zone.name}` : "Cómo están las calles del casco"}>
-        <div className="flex flex-wrap items-end gap-x-4 gap-y-2">
-          <p className="text-ink">
-            <span className="tabular block text-6xl font-semibold leading-none tracking-tight sm:text-7xl">{fmtPct(kpis.pct.muy_deteriorada)}</span>
-            <span className="mt-2 block text-lg">de las calles {zone ? "de la zona " : ""}está <strong>muy deteriorada</strong></span>
+      {/* Estado del asfalto: el capítulo tranquilo, sobre hormigón. */}
+      <Chapter id="estado" label="Estado del asfalto" className="bg-bg text-ink">
+        <div className="rise">
+          <h2 className="tabular text-display leading-[0.85]">{fmtPct(kpis.pct.muy_deteriorada)}</h2>
+          <p className="mt-6 max-w-[34ch] text-lead leading-snug">
+            de las calles {where} está muy deteriorada: {fmtInt(kpis.cuadras.muy_deteriorada)} de {fmtInt(kpis.cuadrasAsphalt)} cuadras,{" "}
+            {fmt1(kpis.km.muy_deteriorada)} de {fmt1(kpis.kmAsphalt)} km de asfalto.{" "}
+            {deltaMuy !== null && (
+              <strong className={`tabular ${flat ? "" : deltaMuy > 0 ? "text-bad" : "text-good"}`}>
+                {flat ? "Igual que hace 30 días." : `${deltaMuy > 0 ? "Empeoró" : "Mejoró"} ${fmtPp(deltaMuy).replace(/^[+−]/, "")} en 30 días.`}
+              </strong>
+            )}
           </p>
-          <div className="pb-1"><Delta delta={deltaMuy} /></div>
         </div>
-        <p className="tabular mt-2 text-sm text-ink-3">
-          {fmtInt(kpis.cuadras.muy_deteriorada)} de {fmtInt(kpis.cuadrasAsphalt)} cuadras · {fmt1(kpis.km.muy_deteriorada)} de {fmt1(kpis.kmAsphalt)} km de asfalto
-        </p>
-        <div className="mt-6">
+        <ul className="mt-16 grid gap-8 sm:grid-cols-3">
+          {[
+            [fmtPct(kpis.pctCobbled), "es empedrado (se cuenta aparte)"],
+            [fmtPct(kpis.pctTodoParche), "es parche sobre parche"],
+            [fmtPct(kpis.pctSurveyed), "ya está relevado por vecinos"],
+          ].map(([v, t]) => (
+            <li key={t} className="text-lead leading-snug">
+              <span className="tabular block text-head font-semibold leading-none tracking-[-0.04em]">{v}</span> {t}
+            </li>
+          ))}
+        </ul>
+        <div className="mt-16">
           <ConditionBar kpis={kpis} />
         </div>
-        <div className="mt-5 flex flex-wrap gap-2 text-sm">
-          <span className="rounded-full bg-surface-2 px-3 py-1 text-ink-2">🔵 <strong className="tabular text-ink">{fmtPct(kpis.pctCobbled)}</strong> es empedrado (aparte)</span>
-          <span className="rounded-full bg-surface-2 px-3 py-1 text-ink-2">🩹 <strong className="tabular text-ink">{fmtPct(kpis.pctTodoParche)}</strong> es parche sobre parche</span>
-          <span className="rounded-full bg-surface-2 px-3 py-1 text-ink-2">📋 <strong className="tabular text-ink">{fmtPct(kpis.pctSurveyed)}</strong> relevado</span>
-        </div>
-        {kpis.pct.sin_relevar > 30 && (
-          <p className="mt-3 text-sm text-ink-3">
-            Todavía hay un {fmtPct(kpis.pct.sin_relevar)} sin relevar. Cuantos más vecinos califiquen su cuadra, más preciso es el número.
-          </p>
-        )}
-      </Section>
+        <p className="mt-10 max-w-[60ch] text-ink-2">
+          Actualizado a las {updated}. Falta relevar el {fmtPct(kpis.pct.sin_relevar)} del asfalto: cuantos más vecinos califiquen su cuadra,
+          más preciso es el número. <a href="/metodologia" className="font-semibold text-ink underline">Cómo se calcula</a>.
+        </p>
+      </Chapter>
 
-      {/* ── Pozos y parches ── */}
-      <Section kicker="Problemas puntuales" title="Pozos y parches mal hechos">
-        <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-          <StatTile icon="🕳️" label="Pozos abiertos" value={fmtInt(i.openPozos)} sub={`${fmt1(i.pozosPerKm)} por km de calle`} />
-          <StatTile icon="🩹" label="Parches mal hechos" value={fmtInt(i.openParches)} sub="elevados, hundidos o desarmados" />
-          <StatTile
-            icon="🔧"
-            label="Últimos 30 días"
-            value={<>{fmtInt(i.resolvedPozos30d)} <span className="text-lg font-normal text-ink-3">vs</span> {fmtInt(i.newPozos30d)}</>}
-            sub="pozos arreglados vs. nuevos"
-          />
-          <StatTile
-            icon="⏱️"
-            label="Tiempo de arreglo"
-            value={i.avgRepairDays === null ? "—" : `${fmtInt(i.avgRepairDays)} días`}
-            sub={i.medianRepairDays === null ? "sin arreglos en 90 días" : `promedio · mediana ${fmtInt(i.medianRepairDays)} días`}
-          />
+      {/* Pozos y parches: el campo rojo. Corte de una calle + dos cifras. */}
+      <Chapter id="pozos" label="Pozos y parches" className="bg-red text-red-ink">
+        <h2 className="max-w-[16ch] text-head">Pozos y parches mal hechos</h2>
+        <div className="mt-12 grid lg:grid-cols-3">
+          <div className="bg-red-2 lg:col-span-2">
+            <RoadProfile className="h-full w-full" />
+          </div>
+          <div className="grid grid-cols-2 lg:grid-cols-1">
+            <div className="flex min-h-56 flex-col bg-asphalt p-6 text-asphalt-ink sm:p-7">
+              <p className={BIG}>{fmtInt(i.openPozos)}</p>
+              <p className="mt-3">pozos abiertos, {fmt1(i.pozosPerKm)} por km de calle</p>
+            </div>
+            <div className="flex min-h-56 flex-col bg-paint p-6 text-paint-ink sm:p-7">
+              <p className={BIG}>{fmtInt(i.openParches)}</p>
+              <p className="mt-3">parches mal hechos: elevados, hundidos o desarmados</p>
+            </div>
+          </div>
         </div>
-        <div className="mt-3 grid gap-3 sm:grid-cols-2">
-          {i.badFixRatePct !== null && (
-            <div className="rounded-xl border border-line bg-bg p-4">
-              <p className="text-sm text-ink-2">🩹 Calidad del arreglo</p>
-              <p className="mt-1 text-xl font-semibold text-ink">{oneIn(i.badFixRatePct)} queda mal</p>
-              <p className="tabular mt-1 text-xs text-ink-3">
-                {fmtPct(i.badFixRatePct)} de {fmtInt(i.badFixSample)} arreglos de los últimos 90 días quedó como un parche mal hecho, según los vecinos.
+        <div className="mt-20 grid gap-12 lg:grid-cols-2">
+          {i.badFixRatePct !== null ? (
+            <div>
+              <p className="text-head font-semibold leading-[0.95] tracking-[-0.04em]">{oneIn(i.badFixRatePct)} queda mal</p>
+              <p className="mt-5 max-w-[44ch]">
+                Cuando un vecino marca que arreglaron un pozo, le preguntamos si quedó bien. En los últimos 90 días, el{" "}
+                {fmtPct(i.badFixRatePct)} de {fmtInt(i.badFixSample)} arreglos quedó como un parche mal hecho.
               </p>
             </div>
-          )}
-          {i.oldestOpen && (
-            <div className="rounded-xl border border-line bg-bg p-4">
-              <p className="text-sm text-ink-2">🎂 El pozo más viejo sin arreglar</p>
-              <p className="mt-1 text-xl font-semibold text-ink">{i.oldestOpen.label}</p>
-              <p className="tabular mt-1 text-xs text-ink-3">Abierto {relativeDays(i.oldestOpen.days)} ({fmtInt(i.oldestOpen.days)} días)</p>
+          ) : <div />}
+          <dl className="grid gap-8 self-end sm:grid-cols-2">
+            <div className="flex flex-col">
+              <dt className="order-2">pozos arreglados y nuevos en 30 días</dt>
+              <dd className="tabular order-1 text-lead font-semibold">{fmtInt(i.resolvedPozos30d)} arreglados, {fmtInt(i.newPozos30d)} nuevos</dd>
             </div>
-          )}
+            <div className="flex flex-col">
+              <dt className="order-2">tarda en promedio un arreglo</dt>
+              <dd className="tabular order-1 text-lead font-semibold">{i.avgRepairDays === null ? "Sin datos" : `${fmtInt(i.avgRepairDays)} días`}</dd>
+            </div>
+            {i.oldestOpen && (
+              <div className="flex flex-col sm:col-span-2">
+                <dt className="order-2">el pozo más viejo sin arreglar, abierto {relativeDays(i.oldestOpen.days)}</dt>
+                <dd className="order-1 text-lead font-semibold">{i.oldestOpen.label}</dd>
+              </div>
+            )}
+          </dl>
         </div>
-      </Section>
+      </Chapter>
 
-      {/* ── Aportar ── */}
-      <div className="rounded-2xl border border-line bg-surface p-4 sm:p-6">
-        <CtaButtons />
-        <AnonymityStrip />
-      </div>
+      {/* Mapa: asfalto. */}
+      <Chapter id="mapa" label="Mapa" className="bg-asphalt text-asphalt-ink">
+        <h2 className="text-head">Cuadra por cuadra</h2>
+        <p className="mt-4 max-w-[52ch] text-asphalt-ink-2">
+          Tocá una cuadra para ver su estado y sus pozos. En la vista 3D, cada cuadra sube según cuántos problemas abiertos tiene.
+        </p>
+        <div className="mt-10">
+          <MapSection casco={casco} zoneId={zone?.id} focus={zone?.ring} />
+        </div>
+      </Chapter>
 
-      {/* ── Mapa / 3D ── */}
-      <Section kicker="Mapa" title={zone ? `Las calles de ${zone.name}` : "Las calles del casco, cuadra por cuadra"}>
-        <MapSection casco={casco} zoneId={zone?.id} focus={zone?.ring} />
-      </Section>
-
-      {/* ── Rankings ── */}
+      {/* Zonas: amarillo pintura vial. */}
       {!zone && (
-        <div className="grid gap-4 sm:gap-6 lg:grid-cols-2">
-          <Section kicker="Ranking" title="Zonas con más calles muy deterioradas">
-            <ol className="flex flex-col gap-2">
-              {ranked.slice(0, 8).map((z, idx) => (
-                <li key={z.id}>
-                  <Link href={`/zona/${z.slug}`} className="group grid grid-cols-[1.5rem_1fr_auto] items-center gap-2 text-sm">
-                    <span className="tabular text-ink-3">{idx + 1}.</span>
-                    <span>
-                      <span className="text-ink group-hover:underline">{z.name}</span>
-                      <span aria-hidden className="mt-1 block h-1.5 rounded-r-[3px] bg-muy" style={{ width: `${(z.pctMuyDeteriorada / maxPct) * 100}%` }} />
-                    </span>
-                    <span className="tabular font-semibold text-ink">{fmtPct(z.pctMuyDeteriorada)}</span>
-                  </Link>
-                </li>
-              ))}
-            </ol>
-            <p className="mt-3 text-xs text-ink-3">Solo zonas con al menos 20% de sus calles relevadas.</p>
-          </Section>
-          <Section kicker="Ranking" title="Zonas con más pozos por km">
-            <ol className="flex flex-col gap-2">
-              {byPozos.slice(0, 8).map((z, idx) => (
-                <li key={z.id}>
-                  <Link href={`/zona/${z.slug}`} className="grid grid-cols-[1.5rem_1fr_auto] items-center gap-2 text-sm hover:underline">
-                    <span className="tabular text-ink-3">{idx + 1}.</span>
-                    <span className="text-ink">{z.name}</span>
-                    <span className="tabular font-semibold text-ink">{fmt1(z.pozosPerKm)} / km</span>
-                  </Link>
-                </li>
-              ))}
-            </ol>
-            <h3 className="mt-5 text-sm font-medium text-ink">🕐 Pozos más viejos sin arreglar</h3>
-            <ul className="mt-2 flex flex-col gap-1.5 text-sm">
-              {data.oldestOpenIssues.map((o) => (
-                <li key={o.id} className="flex justify-between gap-2">
-                  <span className="text-ink-2">{o.kind === "parche" ? "🩹" : "🕳️"} {o.label}</span>
-                  <span className="tabular text-ink">{fmtInt(o.days)} días</span>
-                </li>
-              ))}
-            </ul>
-          </Section>
-        </div>
+        <Chapter id="zonas" label="Zonas" className="bg-paint text-paint-ink">
+          <h2 className="text-head">Dónde está peor</h2>
+          <p className="mt-4 max-w-[48ch] text-lead leading-snug">Cuadrante por cuadrante, entre avenidas.</p>
+          <ZoneBands data={data} />
+        </Chapter>
       )}
 
-      {/* ── Evolución ── */}
-      <Section kicker="Evolución" title="Mes a mes">
-        <div className="grid gap-6 lg:grid-cols-2">
+      {/* Evolución: hormigón claro. */}
+      <Chapter id="evolucion" label="Evolución" className="bg-surface text-ink">
+        <h2 className="text-head">Mes a mes</h2>
+        <SeriesTable series={data.series} />
+        <div className="mt-12 grid gap-12 lg:grid-cols-2">
           <div className="min-w-0">
-            <h3 className="mb-2 text-sm font-medium text-ink">% de calles muy deterioradas</h3>
+            <h3 className="mb-4 text-lead tracking-[-0.02em]">Calles muy deterioradas</h3>
             <DeteriorationLine series={data.series} />
           </div>
           <div className="min-w-0">
-            <h3 className="mb-2 text-sm font-medium text-ink">Pozos nuevos vs. arreglados</h3>
+            <h3 className="mb-4 text-lead tracking-[-0.02em]">Pozos nuevos y arreglados</h3>
             <NewVsFixedColumns series={data.series} />
           </div>
         </div>
-        <SeriesTable series={data.series} />
-      </Section>
+      </Chapter>
 
-      <AnonymityBlock />
+      {/* Sumate: el campo verde, con el primer paso ya abierto. */}
+      <Chapter id="sumate" label="Sumate" className="bg-green text-green-ink">
+        <div className="grid items-end gap-12 lg:min-h-[60svh] lg:grid-cols-12">
+          <div className="lg:col-span-6">
+            <h2 className="text-[clamp(3.5rem,1rem+6vw,7rem)] leading-[0.92]">Sumá tu cuadra</h2>
+            <p className="mt-6 max-w-[40ch] text-lead leading-snug">
+              Ya se sumaron <span className="tabular font-semibold">{fmtInt(contributors.total)}</span> vecinos,{" "}
+              <span className="tabular">{fmtInt(contributors.new7d)}</span> esta semana. Es anónimo y tarda menos de un minuto.
+            </p>
+            <p className="mt-3"><LiveNow /></p>
+          </div>
+          <div className="flex lg:col-span-5 lg:col-start-8 lg:justify-end">
+            <StartFragment />
+          </div>
+        </div>
+      </Chapter>
 
-      {data.moderation[0] && (
-        <p className="text-center text-xs text-ink-3">
-          🛡️ Última acción de moderación: {data.moderation[0].action.toLowerCase()} ({fmtInt(data.moderation[0].count)}) en {data.moderation[0].area}.{" "}
-          <Link href="/moderacion" className="underline hover:text-ink">Ver bitácora pública</Link>
-        </p>
-      )}
+      {/* Anonimato: asfalto, texto grande con lo importante resaltado. */}
+      <Chapter id="anonimato" label="Tu anonimato" className="bg-asphalt text-asphalt-ink">
+        <AnonymityStatement />
+        {data.moderation[0] && (
+          <p className="mt-16 text-small text-asphalt-ink-2">
+            Última acción de moderación: {data.moderation[0].action.toLowerCase()} ({fmtInt(data.moderation[0].count)}) en {data.moderation[0].area}.{" "}
+            <a href="/moderacion" className="underline">Ver la bitácora pública</a>.
+          </p>
+        )}
+      </Chapter>
     </div>
   );
 }

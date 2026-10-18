@@ -28,37 +28,31 @@ export function LiveRefresh() {
 }
 
 /**
- * "Aportando ahora": Supabase Presence. Cada pestaña anuncia una clave aleatoria efímera;
- * no viaja ningún dato del dispositivo y nada se guarda.
+ * Cuántas personas tienen la app abierta: Supabase Presence. Cada pestaña anuncia una clave aleatoria
+ * efímera; no viaja ningún dato del dispositivo y nada se guarda.
  */
 export function LiveNow() {
   const [n, setN] = useState<number | null>(null);
   useEffect(() => {
     const sb = getBrowserSupabase();
     if (!sb) {
-      // Demo: un número verosímil que cambia por minuto.
       const tick = () => setN(8 + (Math.floor(Date.now() / 60_000) % 17));
       tick();
       const t = setInterval(tick, 60_000);
       return () => clearInterval(t);
     }
     const ch = sb.channel("presencia", { config: { presence: { key: crypto.randomUUID() } } });
-    ch.on("presence", { event: "sync" }, () => setN(Object.keys(ch.presenceState()).length))
-      .subscribe((status) => {
-        if (status === "SUBSCRIBED") ch.track({});
-      });
+    ch.on("presence", { event: "sync" }, () => setN(Object.keys(ch.presenceState()).length)).subscribe((status) => {
+      if (status === "SUBSCRIBED") ch.track({});
+    });
     return () => {
       sb.removeChannel(ch);
     };
   }, []);
   if (n === null) return null;
   return (
-    <span className="inline-flex items-center gap-1.5">
-      <span aria-hidden className="relative flex h-2 w-2">
-        <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-nueva opacity-60 motion-reduce:hidden" />
-        <span className="relative inline-flex h-2 w-2 rounded-full bg-nueva" />
-      </span>
-      <span className="tabular">{fmtInt(n)}</span> mirando ahora{DEMO ? " (demo)" : ""}
+    <span>
+      <span className="tabular">{fmtInt(n)}</span> con la app abierta ahora{DEMO ? " (demo)" : ""}
     </span>
   );
 }

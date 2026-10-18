@@ -11,7 +11,7 @@ const StreetMap = dynamic(() => import("./street-map"), { ssr: false, loading: (
 const Casco3D = dynamic(() => import("../three/casco-3d"), { ssr: false, loading: () => <Placeholder /> });
 
 function Placeholder() {
-  return <div className="grid h-[520px] place-items-center rounded-xl border border-line bg-surface-2 text-sm text-ink-3">Cargando…</div>;
+  return <div className="grid h-[520px] place-items-center bg-asphalt-2 text-small text-asphalt-ink-2">Cargando…</div>;
 }
 
 const VIEWS: { id: MapView; label: string }[] = [
@@ -60,12 +60,12 @@ export function MapSection({ casco, zoneId, focus }: { casco: LngLat[]; zoneId?:
   }, [mode, fc, segmentsUrl]);
 
   const tab = (active: boolean) =>
-    `rounded-full px-3 py-1.5 text-sm ${active ? "bg-accent text-accent-ink" : "text-ink-2 hover:text-ink"}`;
+    `min-h-11 px-4 text-small font-semibold ${active ? "bg-asphalt-ink text-asphalt" : "bg-asphalt-3 text-asphalt-ink hover:bg-asphalt-2"}`;
 
   return (
     <div>
       <div className="mb-3 flex flex-wrap items-center gap-2">
-        <div role="tablist" aria-label="Tipo de vista" className="flex rounded-full border border-line p-0.5">
+        <div role="tablist" aria-label="Tipo de vista" className="flex">
           <button role="tab" aria-selected={mode === "2d"} className={tab(mode === "2d")} onClick={() => setMode("2d")}>Mapa</button>
           <button role="tab" aria-selected={mode === "3d"} className={tab(mode === "3d")} onClick={() => setMode("3d")}>3D</button>
         </div>
@@ -73,16 +73,16 @@ export function MapSection({ casco, zoneId, focus }: { casco: LngLat[]; zoneId?:
           <>
             <label className="sr-only" htmlFor="map-view">Qué mostrar</label>
             <select id="map-view" value={view} onChange={(e) => setView(e.target.value as MapView)}
-              className="h-9 rounded-full border border-line bg-surface px-3 text-sm text-ink">
+              className="min-h-11 bg-asphalt-3 px-3 text-small font-semibold text-asphalt-ink">
               {VIEWS.map((v) => <option key={v.id} value={v.id}>{v.label}</option>)}
             </select>
-            <label className="flex items-center gap-2 text-sm text-ink-2">
+            <label className="flex min-h-11 items-center gap-2 text-small text-asphalt-ink">
               <input type="checkbox" checked={showIssues} onChange={(e) => setShowIssues(e.target.checked)} className="h-4 w-4 accent-current" />
               Ver pozos y parches
             </label>
           </>
         ) : (
-          <div role="radiogroup" aria-label="Altura de las cuadras" className="flex rounded-full border border-line p-0.5">
+          <div role="radiogroup" aria-label="Altura de las cuadras" className="flex">
             <button role="radio" aria-checked={h3d === "problemas"} className={tab(h3d === "problemas")} onClick={() => setH3d("problemas")}>Altura = problemas</button>
             <button role="radio" aria-checked={h3d === "estado"} className={tab(h3d === "estado")} onClick={() => setH3d("estado")}>Altura = deterioro</button>
           </div>
@@ -97,20 +97,20 @@ export function MapSection({ casco, zoneId, focus }: { casco: LngLat[]; zoneId?:
         <Placeholder />
       )}
 
-      <ul className="mt-3 flex flex-wrap gap-x-4 gap-y-1.5 text-xs text-ink-2">
+      <ul className="mt-4 flex flex-wrap gap-x-5 gap-y-2 text-small text-asphalt-ink-2">
         {(mode === "3d" ? LEGENDS.estado : LEGENDS[view]).map((l) => (
-          <li key={l.label} className="flex items-center gap-1.5"><span aria-hidden className={`swatch h-2.5 w-4 rounded-sm ${l.cls}`} />{l.label}</li>
+          <li key={l.label} className="flex items-center gap-1.5"><span aria-hidden className={`swatch h-3 w-5 ${l.cls}`} />{l.label}</li>
         ))}
         {mode === "2d" && showIssues && (
           <>
-            <li className="flex items-center gap-1.5"><span aria-hidden className="h-2.5 w-2.5 rounded-full bg-pozo" />Pozo</li>
-            <li className="flex items-center gap-1.5"><span aria-hidden className="h-2.5 w-2.5 rounded-full bg-parche" />Parche mal hecho</li>
-            <li className="flex items-center gap-1.5"><span aria-hidden className="h-2.5 w-2.5 rounded-full border-2 border-pozo" />Pendiente de verificar</li>
+            <li className="flex items-center gap-1.5"><span aria-hidden className="h-3 w-3 rounded-full bg-asphalt-ink" />Pozo</li>
+            <li className="flex items-center gap-1.5"><span aria-hidden className="h-3 w-3 rounded-full bg-parche" />Parche mal hecho</li>
+            <li className="flex items-center gap-1.5"><span aria-hidden className="h-3 w-3 rounded-full border-2 border-asphalt-ink" />Pendiente de verificar</li>
           </>
         )}
       </ul>
       {mode === "3d" && (
-        <p className="mt-2 text-xs text-ink-3">
+        <p className="mt-3 text-small text-asphalt-ink-2">
           {h3d === "problemas" ? "Cada cuadra sube según cuántos pozos y parches abiertos tiene cada 100 m." : "Cada cuadra sube según qué tan deteriorada está."} Arrastrá para girar, pellizcá o usá la rueda para acercar.
         </p>
       )}
