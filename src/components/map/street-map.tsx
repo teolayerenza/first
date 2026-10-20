@@ -58,7 +58,8 @@ interface Props {
   focus?: LngLat[];
   view: MapView;
   showIssues: boolean;
-  height?: number;
+  /** Alto en px, o "fill" para ocupar todo el contenedor (el hero). */
+  height?: number | "fill";
 }
 
 export default function StreetMap({ casco, segmentsUrl, issuesUrl, focus, view, showIssues, height = 520 }: Props) {
@@ -179,5 +180,8 @@ export default function StreetMap({ casco, segmentsUrl, issuesUrl, focus, view, 
     map.current.setLayoutProperty("issues", "visibility", showIssues ? "visible" : "none");
   }, [ready, view, showIssues, theme]);
 
-  return <div ref={el} style={{ height }} className="w-full overflow-hidden bg-asphalt-2" aria-label="Mapa de las calles del casco" role="region" />;
+  return (
+    <div ref={el} style={height === "fill" ? undefined : { height }} className={`w-full overflow-hidden bg-asphalt-2 ${height === "fill" ? "h-full" : ""}`}
+      aria-label="Mapa de las calles del casco" role="region" />
+  );
 }

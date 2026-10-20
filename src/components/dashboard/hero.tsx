@@ -9,6 +9,7 @@ import type { LngLat } from "@/lib/domain/types";
 import { CONDITION_HINT, CONDITION_LABEL } from "@/lib/format";
 
 const Casco3D = dynamic(() => import("../three/casco-3d"), { ssr: false });
+const StreetMap = dynamic(() => import("../map/street-map"), { ssr: false });
 
 export interface Swatch {
   href: string;
@@ -33,13 +34,19 @@ const FIELD: Record<string, string> = {
  */
 export function Hero({ title, lead, casco, segmentsUrl, swatches }: { title: string; lead: string; casco: LngLat[]; segmentsUrl: string; swatches: Swatch[] }) {
   const [fc, setFc] = useState<SegmentsFC | null>(null);
+  // Arranca en el mapa 2D; el 3D se carga recién cuando se elige.
+  const [mode, setMode] = useState<"2d" | "3d">("2d");
   const [cuadra, setCuadra] = useState<SegmentDetail | null>(null);
   const [loading, setLoading] = useState(false);
   const [gpsMsg, setGpsMsg] = useState<string | null>(null);
 
   useEffect(() => {
+    if (mode !== "3d" || fc) return;
     fetch(segmentsUrl).then((r) => r.json()).then(setFc).catch(() => {});
-  }, [segmentsUrl]);
+  }, [mode, fc, segmentsUrl]);
+  const issuesUrl = segmentsUrl.replace("cuadras.geojson", "problemas.geojson");
+  const tab = (active: boolean) =>
+    `min-h-10 px-4 text-small font-semibold ${active ? "bg-asphalt-ink text-asphalt" : "bg-asphalt-3 text-asphalt-ink hover:bg-asphalt-2"}`;
 
   async function pick(id: number) {
     setLoading(true);
@@ -86,7 +93,15 @@ export function Hero({ title, lead, casco, segmentsUrl, swatches }: { title: str
         <div className="relative flex flex-col overflow-hidden bg-asphalt lg:col-span-10 lg:block">
           {/* En escritorio el casco ocupa la derecha del panel; en el celular, una franja entre el texto y el buscador. */}
           <div className="relative order-2 h-[46svh] lg:absolute lg:inset-y-0 lg:left-[36%] lg:right-0 lg:h-auto">
-            {fc && <Casco3D data={fc} casco={casco} mode="problemas" fill />}
+            {mode === "2d" ? (
+              <StreetMap casco={casco} segmentsUrl={segmentsUrl} issuesUrl={issuesUrl} view="estado" showIssues height="fill" />
+            ) : (
+              fc && <Casco3D data={fc} casco={casco} mode="problemas" fill />
+            )}
+            <div role="tablist" aria-label="Tipo de vista" className="absolute left-2 top-2 z-10 flex">
+              <button role="tab" aria-selected={mode === "2d"} className={tab(mode === "2d")} onClick={() => setMode("2d")}>Mapa</button>
+              <button role="tab" aria-selected={mode === "3d"} className={tab(mode === "3d")} onClick={() => setMode("3d")}>3D</button>
+            </div>
           </div>
           <div className="rise relative order-1 p-5 sm:p-8 lg:max-w-[38%]">
             <h1 id="hero-title" className="text-[clamp(2.75rem,1rem+4.6vw,6.25rem)]">{title}</h1>
