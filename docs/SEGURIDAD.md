@@ -146,6 +146,7 @@ Es lo más difícil de frenar sin identificar a la gente, así que la respuesta 
 
 ## 5. Aplicación web y operación
 
+- **CORS abierto en `submit`**: no hay cookies; la escritura la protegen el JWT de la sesión anónima y Turnstile (atado al dominio en Cloudflare). `ALLOWED_ORIGIN` ya no se usa.
 - **Un solo texto libre: el comentario opcional de un pozo o parche** (hasta 200 caracteres, público). Antes de guardarlo,
   `cleanComment` (src/lib/domain/submit.ts) saca teléfonos, mails, links y @usuarios. Se muestra solo en reportes verificados,
   siempre como texto plano (React lo escapa; nunca en el globo del mapa, que usa HTML), y con 3 denuncias se oculta el
