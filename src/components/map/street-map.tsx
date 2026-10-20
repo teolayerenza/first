@@ -2,6 +2,7 @@
 
 import "maplibre-gl/dist/maplibre-gl.css";
 import { maplibregl } from "@/lib/client/maplibre";
+import { tintParks } from "@/lib/client/map-style";
 import type { ExpressionSpecification, StyleSpecification } from "maplibre-gl";
 import { useEffect, useRef, useState } from "react";
 import { cssVar, useResolvedTheme } from "@/components/theme";
@@ -22,7 +23,7 @@ async function loadStyle(theme: "light" | "dark"): Promise<StyleSpecification> {
     const t = setTimeout(() => ctrl.abort(), 4000);
     const res = await fetch(STYLE_URL[theme], { signal: ctrl.signal });
     clearTimeout(t);
-    if (res.ok) return (await res.json()) as StyleSpecification;
+    if (res.ok) return tintParks((await res.json()) as StyleSpecification, theme);
   } catch {}
   return { version: 8, sources: {}, layers: [{ id: "bg", type: "background", paint: { "background-color": cssVar("--surface-2") } }] };
 }

@@ -2,6 +2,7 @@
 
 import "maplibre-gl/dist/maplibre-gl.css";
 import { maplibregl } from "@/lib/client/maplibre";
+import { tintParks } from "@/lib/client/map-style";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { cssVar, useResolvedTheme } from "@/components/theme";
 import type { SegmentRef, StreetIndexEntry } from "@/lib/data/types";
@@ -67,7 +68,7 @@ export function LocationPicker({ onChange, initial, hint }: { onChange: (l: Pick
       try {
         const r = await fetch(STYLE[theme], { signal: AbortSignal.timeout(4000) });
         if (!r.ok) throw new Error();
-        style = await r.json();
+        style = tintParks(await r.json(), theme);
       } catch {
         style = { version: 8, sources: {}, layers: [{ id: "bg", type: "background", paint: { "background-color": cssVar("--surface-2") } }] };
       }
