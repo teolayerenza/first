@@ -143,7 +143,7 @@ export async function handleSubmit(raw: unknown, ctx: SubmitContext, deps: Submi
           approxDate: null,
         });
       }
-      await deps.store.publish?.();
+      await publish(deps);
       return { ok: true, kind: "rating", segmentId: p.segmentId };
     }
 
@@ -177,7 +177,7 @@ export async function handleSubmit(raw: unknown, ctx: SubmitContext, deps: Submi
         photoPath: p.photoPath,
         comment: cleanComment(p.comment),
       });
-      await deps.store.publish?.();
+      await publish(deps);
       return { ok: true, kind: "issue", issueId: id, segmentId: snapped.segmentId };
     }
 
@@ -193,9 +193,18 @@ export async function handleSubmit(raw: unknown, ctx: SubmitContext, deps: Submi
         fixQuality: p.fixQuality,
         mature,
       });
-      await deps.store.publish?.();
+      await publish(deps);
       return { ok: true, kind: "vote", issueId: p.issueId };
     }
+  }
+}
+
+/** El aporte ya quedó guardado: si publicar falla, lo publica el job del minuto siguiente. */
+async function publish(deps: SubmitDeps) {
+  try {
+    await deps.store.publish?.();
+  } catch {
+    // Sin log del error: puede traer datos del aporte.
   }
 }
 
