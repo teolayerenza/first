@@ -17,10 +17,10 @@ export default function MetodologiaPage() {
         <ul className="list-disc pl-5">
           <li>Se toman las calificaciones de los últimos {C.conditionWindowDays} días. Cada dispositivo tiene un solo voto vigente por cuadra.</li>
           <li>Una calificación hecha <strong>en el lugar</strong> (el GPS está a menos de {C.onSiteRadiusM} m) pesa {C.onSiteWeight}; una hecha a distancia pesa 1.</li>
-          <li>El estado es la opción con más peso, siempre que sume al menos {C.minRatingWeight}. Ante un empate, gana la opción peor.</li>
-          <li>Si no llega a ese mínimo, la cuadra queda <strong>sin relevar</strong>.</li>
-          <li>Si al menos {C.repavedConfirmations} dispositivos confirman una repavimentación de los últimos 12 meses, la cuadra pasa a <strong>nueva</strong>.</li>
-          <li>El <strong>empedrado</strong> sale de OpenStreetMap o de 2 vecinos que lo confirman, y queda fuera de los porcentajes de asfalto.</li>
+          <li>Con una calificación ya alcanza. Si hay varias, el estado es la opción con más peso. Ante un empate, gana la opción peor.</li>
+          <li>Si nadie la calificó, la cuadra queda <strong>sin relevar</strong>.</li>
+          <li>Si un vecino confirma una repavimentación de los últimos 12 meses, la cuadra pasa a <strong>nueva</strong>.</li>
+          <li>El <strong>empedrado</strong> lo marcan los vecinos, y queda fuera de los porcentajes de asfalto.</li>
         </ul>
       </Block>
 

@@ -245,6 +245,75 @@ h1, h2, h3, .display {
   font-family: var(--font-sans);
 }
 
+/* Fichas del mapa (src/components/map/popups.ts): franja del color del estado, datos y botones grandes. */
+.pocitos-popup .maplibregl-popup-content {
+  padding: 0;
+  background: var(--surface);
+  color: var(--ink);
+  box-shadow: 0 6px 24px rgb(0 0 0 / 0.25);
+}
+.pocitos-popup.maplibregl-popup-anchor-top .maplibregl-popup-tip,
+.pocitos-popup.maplibregl-popup-anchor-top-left .maplibregl-popup-tip,
+.pocitos-popup.maplibregl-popup-anchor-top-right .maplibregl-popup-tip {
+  border-bottom-color: var(--surface);
+}
+.pocitos-popup.maplibregl-popup-anchor-bottom .maplibregl-popup-tip,
+.pocitos-popup.maplibregl-popup-anchor-bottom-left .maplibregl-popup-tip,
+.pocitos-popup.maplibregl-popup-anchor-bottom-right .maplibregl-popup-tip {
+  border-top-color: var(--surface);
+}
+.pocitos-popup.maplibregl-popup-anchor-left .maplibregl-popup-tip {
+  border-right-color: var(--surface);
+}
+.pocitos-popup.maplibregl-popup-anchor-right .maplibregl-popup-tip {
+  border-left-color: var(--surface);
+}
+.pocitos-popup .maplibregl-popup-close-button {
+  width: 40px;
+  height: 40px;
+  font-size: 24px;
+  line-height: 1;
+  color: inherit;
+  border-radius: 0;
+}
+.pp { min-width: 240px; }
+.pp-band { padding: 12px 48px 12px 16px; color: #fff; }
+.pp-state { font-size: 20px; font-weight: 700; line-height: 1.1; }
+.pp-sub { margin-top: 2px; font-size: 13px; opacity: 0.9; }
+.pp-nueva { background: var(--c-nueva); }
+.pp-buena { background: var(--c-buena); color: #141414; }
+.pp-gastada { background: var(--c-gastada); color: #141414; }
+.pp-muy_deteriorada { background: var(--c-muy); }
+.pp-sin_relevar {
+  background-color: var(--c-sin);
+  background-image: repeating-linear-gradient(45deg, var(--hatch) 0 1.5px, transparent 1.5px 6px); /* taste-skill-ignore: rayado de accesibilidad, no un degradé */
+  color: var(--ink);
+}
+.pp-empedrado { background: var(--c-empedrado); }
+/* Pozo y parche cambian de tono con el tema: la tinta es el fondo de la página, siempre contrasta. */
+.pp-pozo { background: var(--c-pozo); color: var(--surface); }
+.pp-parche { background: var(--c-parche); color: var(--surface); }
+.pp-body { padding: 12px 16px 16px; }
+.pp-title { font-size: 16px; font-weight: 700; line-height: 1.25; }
+.pp-meta { margin-top: 4px; font-size: 14px; color: var(--ink-2); }
+.pp-quote { margin-top: 10px; padding: 8px 12px; background: var(--surface-2); font-size: 14px; }
+.pp-actions { margin-top: 14px; display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; gap: 8px; }
+.pp-btn {
+  display: flex;
+  min-height: 44px;
+  align-items: center;
+  justify-content: center;
+  padding: 0 12px;
+  background: var(--surface-2);
+  color: var(--ink);
+  font-size: 15px;
+  font-weight: 600;
+  text-decoration: none;
+}
+.pp-btn:hover { background: var(--line); }
+.pp-primary { background: var(--paint); color: var(--paint-ink); }
+.pp-primary:hover { background: var(--paint-2); }
+
 /* Respuesta al toque en todos los controles. */
 @media (prefers-reduced-motion: no-preference) {
   a, button, select, label {

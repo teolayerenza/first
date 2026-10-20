@@ -16,9 +16,10 @@ create table config (
 
 insert into config (key, value) values
   ('conditionWindowDays', '365'),
-  ('minRatingWeight', '2'),
+  ('minRatingWeight', '1'),
   ('onSiteWeight', '2'),
-  ('repavedConfirmations', '2'),
+  ('repavedConfirmations', '1'),
+  ('cobbledConfirmations', '1'),
   ('resolveVotes', '2'),
   ('hideVotes', '3'),
   ('dedupeRadiusM', '8'),

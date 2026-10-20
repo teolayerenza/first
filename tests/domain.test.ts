@@ -33,9 +33,13 @@ describe("grilla del casco", () => {
 });
 
 describe("estado del asfalto", () => {
-  it("sin_relevar con un solo voto a distancia; vale con uno en el lugar", () => {
-    expect(computeCondition([rating({})], [], now).condition).toBe("sin_relevar");
-    expect(computeCondition([rating({ onSite: true })], [], now).condition).toBe("buena");
+  it("una sola calificación alcanza; sin calificaciones queda sin_relevar", () => {
+    expect(computeCondition([], [], now).condition).toBe("sin_relevar");
+    expect(computeCondition([rating({})], [], now).condition).toBe("buena");
+  });
+  it("la calificación en el lugar pesa más", () => {
+    const r = [rating({ voterHash: "a", onSite: true }), rating({ voterHash: "b", rating: "muy_deteriorada" })];
+    expect(computeCondition(r, [], now).condition).toBe("buena");
   });
   it("ante empate gana la opción peor", () => {
     const r = [rating({ voterHash: "a" }), rating({ voterHash: "b" }), rating({ voterHash: "c", rating: "muy_deteriorada" }), rating({ voterHash: "d", rating: "muy_deteriorada" })];
@@ -45,10 +49,10 @@ describe("estado del asfalto", () => {
     const r = [rating({ voterHash: "a", createdAt: daysAgo(400), onSite: true }), rating({ voterHash: "b", state: "en_revision", onSite: true })];
     expect(computeCondition(r, [], now).condition).toBe("sin_relevar");
   });
-  it("una repavimentación confirmada por 2 dispositivos la vuelve 'nueva'", () => {
-    const ev = (voterHash: string) => ({ segmentId: 1, voterHash, type: "repavimentada" as const, approxDate: daysAgo(30), createdAt: daysAgo(20), state: "activo" as const });
-    expect(computeCondition([rating({ rating: "muy_deteriorada", onSite: true })], [ev("a")], now).condition).toBe("muy_deteriorada");
-    expect(computeCondition([rating({ rating: "muy_deteriorada", onSite: true })], [ev("a"), ev("b")], now).condition).toBe("nueva");
+  it("una repavimentación de los últimos 12 meses la vuelve 'nueva'", () => {
+    const ev = (voterHash: string, d = 30) => ({ segmentId: 1, voterHash, type: "repavimentada" as const, approxDate: daysAgo(d), createdAt: daysAgo(20), state: "activo" as const });
+    expect(computeCondition([rating({ rating: "muy_deteriorada", onSite: true })], [ev("a", 400)], now).condition).toBe("muy_deteriorada");
+    expect(computeCondition([rating({ rating: "muy_deteriorada", onSite: true })], [ev("a")], now).condition).toBe("nueva");
   });
 });
 

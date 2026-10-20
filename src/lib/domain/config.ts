@@ -4,12 +4,15 @@
 export const DEFAULT_CONFIG = {
   /** Ventana de vigencia de calificaciones y repavimentaciones. */
   conditionWindowDays: 365,
-  /** Peso mínimo de la moda para que una cuadra deje de estar "sin relevar". */
-  minRatingWeight: 2,
+  /** Peso mínimo de la moda para que una cuadra deje de estar "sin relevar". Con 1 alcanza una calificación;
+   *  las siguientes se suman y gana la opción con más peso. */
+  minRatingWeight: 1,
   /** Peso de una calificación hecha en el lugar (GPS a < 50 m de la cuadra). */
   onSiteWeight: 2,
   /** Confirmaciones distintas necesarias para dar por buena una repavimentación. */
-  repavedConfirmations: 2,
+  repavedConfirmations: 1,
+  /** Dispositivos distintos que tienen que marcar "es empedrado" para que la cuadra pase a empedrado. */
+  cobbledConfirmations: 1,
   /** Votos "arreglado" distintos para resolver un problema. */
   resolveVotes: 2,
   /** Votos "falso" distintos para ocultar un problema. */

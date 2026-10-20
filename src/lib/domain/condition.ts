@@ -78,12 +78,12 @@ export function computeCondition(
   return { condition: mode ?? "sin_relevar", patching, repavedAt: null, ratingCount: active.length };
 }
 
-/** Empedrado: lo marca OSM o lo confirman al menos 2 dispositivos. */
+/** Empedrado: lo confirman al menos `cobbledConfirmations` dispositivos. */
 export function isCobbledByVotes(events: SegmentEvent[], asOf: Date): boolean {
   const voters = new Set(
     events
       .filter((e) => e.type === "es_empedrado" && e.state === "activo" && e.createdAt <= asOf)
       .map((e) => e.voterHash),
   );
-  return voters.size >= 2;
+  return voters.size >= DEFAULT_CONFIG.cobbledConfirmations;
 }

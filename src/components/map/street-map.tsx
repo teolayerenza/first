@@ -7,7 +7,7 @@ import type { ExpressionSpecification, StyleSpecification } from "maplibre-gl";
 import { useEffect, useRef, useState } from "react";
 import { cssVar, useResolvedTheme } from "@/components/theme";
 import type { LngLat } from "@/lib/domain/types";
-import { CONDITION_LABEL, relativeDays } from "@/lib/format";
+import { issuePopup, segmentPopup } from "./popups";
 
 export type MapView = "estado" | "parcheo" | "problemas";
 
@@ -130,34 +130,17 @@ export default function StreetMap({ casco, segmentsUrl, issuesUrl, focus, view, 
         setReady(true);
       });
 
-      const popup = new maplibregl.Popup({ closeButton: true, maxWidth: "260px" });
+      const popup = new maplibregl.Popup({ closeButton: true, maxWidth: "280px", className: "pocitos-popup" });
       m.on("click", "issues", (e) => {
         const f = e.features?.[0];
         if (!f || !m) return;
-        const p = f.properties as Record<string, string | number | boolean>;
-        const kind = p.kind === "parche" ? `Parche mal hecho${p.parcheType ? ` (${p.parcheType})` : ""}` : "Pozo";
-        const sev = ["", "leve", "medio", "peligroso"][Number(p.severity)];
-        popup
-          .setLngLat(e.lngLat)
-          .setHTML(
-            `<div style="font:13px system-ui;color:#111"><strong>${kind}</strong> · ${sev}<br/>Reportado ${relativeDays(Number(p.days))}<br/>${
-              p.verified ? "Verificado" : "Pendiente: falta foto o que otro vecino lo confirme"
-            }<br/><a href="/cuadra/${p.segmentId}" style="text-decoration:underline">Ver la cuadra · ¿sigue ahí?</a></div>`,
-          )
-          .addTo(m);
+        popup.setLngLat(e.lngLat).setHTML(issuePopup(f.properties)).addTo(m);
       });
       m.on("click", "segments", (e) => {
         if (!m || m.queryRenderedFeatures(e.point, { layers: ["issues"] }).length) return;
         const f = e.features?.[0];
         if (!f) return;
-        const p = f.properties as Record<string, string | number | boolean>;
-        const state = p.cobbled ? "Empedrado" : CONDITION_LABEL[p.condition as keyof typeof CONDITION_LABEL];
-        popup
-          .setLngLat(e.lngLat)
-          .setHTML(
-            `<div style="font:13px system-ui;color:#111"><strong>${p.label}</strong><br/>${state}<br/>${p.openPozos} pozos · ${p.openParches} parches mal hechos<br/><a href="/cuadra/${p.id}" style="text-decoration:underline">Ver cuadra</a> · <a href="/calificar?cuadra=${p.id}" style="text-decoration:underline">Calificar</a></div>`,
-          )
-          .addTo(m);
+        popup.setLngLat(e.lngLat).setHTML(segmentPopup(f.properties)).addTo(m);
       });
       for (const layer of ["issues", "segments"]) {
         m.on("mouseenter", layer, () => m && (m.getCanvas().style.cursor = "pointer"));

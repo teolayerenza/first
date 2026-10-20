@@ -32,9 +32,9 @@ declare
   v_weight   numeric;
   v_len      double precision;
 begin
-  -- Empedrado confirmado por ≥ 2 dispositivos.
+  -- Empedrado confirmado por ≥ cobbledConfirmations dispositivos.
   if (select count(distinct voter_hash) from public.segment_events
-       where segment_id = p_segment_id and type = 'es_empedrado' and state = 'activo') >= 2 then
+       where segment_id = p_segment_id and type = 'es_empedrado' and state = 'activo') >= public.cfg('cobbledConfirmations') then
     update public.segments set surface = 'sett' where id = p_segment_id and not is_cobbled;
   end if;
 
