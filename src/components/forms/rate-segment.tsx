@@ -13,7 +13,12 @@ import { Chips, Choice, QueueFlusher, Step, SubmitButton } from "./ui";
 type Repaved = "este_mes" | "1_3_meses" | "mas_3_meses";
 
 export function RateSegmentForm({ preset }: { preset?: { id: number; label: string; mid: [number, number] } | null }) {
-  const [loc, setLoc] = useState<PickedLocation | null>(null);
+  // Si llega una cuadra elegida (desde el inicio o desde la página de la cuadra), queda fija: no hay que
+  // buscarla de nuevo en el mapa. "Cambiar" abre el mapa.
+  const [loc, setLoc] = useState<PickedLocation | null>(
+    preset ? { point: preset.mid, segment: { id: preset.id, label: preset.label, condition: "sin_relevar" }, onSite: false } : null,
+  );
+  const [fixed, setFixed] = useState(!!preset);
   const [rating, setRating] = useState<Rating | null>(null);
   const [patching, setPatching] = useState<Patching | null>(null);
   const [repaved, setRepaved] = useState<Repaved | null>(null);
@@ -103,7 +108,16 @@ export function RateSegmentForm({ preset }: { preset?: { id: number; label: stri
     <form className="flex flex-col gap-2" onSubmit={(e) => { e.preventDefault(); send(); }}>
       <QueueFlusher />
       <Step n={1} title="¿Qué cuadra?">
-        <LocationPicker onChange={setLoc} initial={preset?.mid} hint="Mové el mapa hasta que el pin quede sobre la cuadra. Si estás ahí, tocá “Usar mi ubicación”: tu calificación pesa más." />
+        {fixed && preset ? (
+          <div className="flex flex-wrap items-center justify-between gap-3 bg-asphalt px-4 py-3 text-asphalt-ink">
+            <p className="text-lead font-semibold leading-tight">{preset.label}</p>
+            <button type="button" onClick={() => setFixed(false)} className="text-small font-semibold underline">
+              Cambiar
+            </button>
+          </div>
+        ) : (
+          <LocationPicker onChange={setLoc} initial={preset?.mid} hint="Mové el mapa hasta que el pin quede sobre la cuadra. Si estás ahí, tocá “Usar mi ubicación”: tu calificación pesa más." />
+        )}
       </Step>
 
       <Step n={2} title="¿Cómo está el asfalto?">

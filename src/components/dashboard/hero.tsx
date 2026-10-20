@@ -35,6 +35,7 @@ export function Hero({ title, lead, casco, segmentsUrl, swatches }: { title: str
   const [fc, setFc] = useState<SegmentsFC | null>(null);
   const [cuadra, setCuadra] = useState<SegmentDetail | null>(null);
   const [loading, setLoading] = useState(false);
+  const [gpsMsg, setGpsMsg] = useState<string | null>(null);
 
   useEffect(() => {
     fetch(segmentsUrl).then((r) => r.json()).then(setFc).catch(() => {});
@@ -45,6 +46,36 @@ export function Hero({ title, lead, casco, segmentsUrl, swatches }: { title: str
     const r = await fetch(`/api/cuadra/${id}`);
     setCuadra(r.ok ? await r.json() : null);
     setLoading(false);
+  }
+
+  /** Tu cuadra por GPS: solo con ubicación precisa (celular); una compu sin GPS puede errar por kilómetros. */
+  function locate() {
+    setGpsMsg(null);
+    if (!navigator.geolocation) return setGpsMsg("Este dispositivo no permite usar la ubicación. Buscá la cuadra por nombre.");
+    setLoading(true);
+    navigator.geolocation.getCurrentPosition(
+      async (pos) => {
+        if (pos.coords.accuracy > 500) {
+          setLoading(false);
+          return setGpsMsg("Este dispositivo no tiene GPS y solo da una ubicación aproximada. Buscá la cuadra por nombre.");
+        }
+        try {
+          const r = await fetch(`/api/geo/cercana?lng=${pos.coords.longitude}&lat=${pos.coords.latitude}`);
+          const { segment, inCasco } = (await r.json()) as { segment: { id: number } | null; inCasco: boolean };
+          if (!inCasco) setGpsMsg("Por ahora tu zona no está incluida. Pocitos LP empieza por el casco urbano y vamos a ir sumando barrios.");
+          else if (!segment) setGpsMsg("No hay una calle del casco cerca de donde estás.");
+          else return pick(segment.id);
+        } catch {
+          setGpsMsg("No pudimos buscar tu cuadra. Probá de nuevo.");
+        }
+        setLoading(false);
+      },
+      () => {
+        setLoading(false);
+        setGpsMsg("No pudimos usar el GPS. Buscá la cuadra por nombre.");
+      },
+      { enableHighAccuracy: true, timeout: 10_000, maximumAge: 30_000 },
+    );
   }
 
   const key = cuadra ? (cuadra.cobbled ? "empedrado" : cuadra.condition) : null;
@@ -63,7 +94,11 @@ export function Hero({ title, lead, casco, segmentsUrl, swatches }: { title: str
           </div>
           <div className="relative order-3 bg-asphalt p-5 sm:p-8 lg:absolute lg:bottom-0 lg:left-0 lg:w-[36%] lg:min-w-[360px]">
             <p className="text-lead font-semibold leading-tight">¿Cómo está tu cuadra?</p>
-            <StreetSearch dark onPick={(e) => pick(e.id)} />
+            <button type="button" onClick={locate} className="mt-3 inline-flex h-11 items-center bg-asphalt-ink px-4 text-small font-semibold text-asphalt">
+              Usar mi ubicación
+            </button>
+            {gpsMsg && <p className="mt-2 text-small text-asphalt-ink-2">{gpsMsg}</p>}
+            <StreetSearch dark onPick={(e) => { setGpsMsg(null); pick(e.id); }} />
             {loading && <p className="mt-3 text-small text-asphalt-ink-2">Buscando…</p>}
             {cuadra && key && !loading && (
               <div className={`mt-3 p-4 ${FIELD[key]}`} aria-live="polite">

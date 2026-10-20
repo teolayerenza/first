@@ -202,7 +202,7 @@ function repavedDate(now: Date, when: NonNullable<RatingPayload["repaved"]>): Da
 
 export const ERROR_MESSAGES: Record<SubmitError, string> = {
   invalid_payload: "Los datos enviados no son válidos.",
-  captcha_failed: "No pudimos verificar que seas una persona. Probá de nuevo.",
+  captcha_failed: "No pudimos verificar que seas una persona. Recargá la página y probá de nuevo.",
   rate_limited: "Llegaste al límite de aportes por hoy. ¡Gracias por sumar tanto!",
   outside_casco: "Por ahora Pocitos LP funciona solo dentro del casco urbano.",
   no_street_nearby: "No encontramos una calle cerca de ese punto. Acercá el pin a la calle.",

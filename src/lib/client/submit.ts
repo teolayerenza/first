@@ -40,9 +40,10 @@ async function post(payload: SubmitInput): Promise<ClientResult> {
   let { data } = await sb.auth.getSession();
   if (!data.session) {
     // La sesión anónima también pide captcha: así un bot no puede fabricar miles de "vecinos".
-    const captchaToken = (await getCaptchaToken()) ?? undefined;
+    const captchaToken = await getCaptchaToken();
+    if (!captchaToken) return { ok: false, status: 403, error: "captcha_failed" };
     const signIn = await sb.auth.signInAnonymously({ options: { captchaToken } });
-    if (signIn.error) return { ok: false, status: 401, error: "unauthorized" };
+    if (signIn.error) return { ok: false, status: 401, error: signIn.error.code === "captcha_failed" ? "captcha_failed" : "unauthorized" };
     data = { session: signIn.data.session! };
   }
   const res = await fetch(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1/submit`, {

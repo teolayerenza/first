@@ -46,7 +46,11 @@ export async function getCaptchaToken(): Promise<string | null> {
       sitekey: SITE_KEY,
       appearance: "interaction-only",
       callback: (t: string) => done(t),
-      "error-callback": () => done(null),
+      // El código de error de Turnstile queda en la consola para diagnosticar (dominio no habilitado, clave, red).
+      "error-callback": (code: string) => {
+        console.warn("Turnstile:", code);
+        done(null);
+      },
       "timeout-callback": () => done(null),
     });
   });
