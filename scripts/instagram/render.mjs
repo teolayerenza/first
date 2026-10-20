@@ -1,4 +1,5 @@
-// Genera las placas de los 6 posteos fundacionales de Instagram (1080×1350) en difusion/instagram/.
+// Genera todo lo visual de la cuenta de Instagram en instagram/: foto de perfil, las placas de los 6 posteos
+// fundacionales (1080×1350), las historias de lanzamiento (1080×1920) y las tapas de destacadas.
 //
 //   npm run build && npx next start -p 3200      # en otra terminal
 //   node scripts/instagram/render.mjs http://localhost:3200
@@ -8,10 +9,11 @@
 
 import { mkdirSync, readFileSync } from "node:fs";
 import { chromium } from "playwright";
+import { HIGHLIGHTS, ICON_OFFSET, ICONS, PROFILE, STORIES } from "./extras.mjs";
 import { POSTS } from "./posts.mjs";
 
 const BASE = process.argv[2] ?? "http://localhost:3200";
-const OUT = "difusion/instagram";
+const OUT = "instagram";
 const font = readFileSync("node_modules/@fontsource-variable/hanken-grotesk/files/hanken-grotesk-latin-wght-normal.woff2").toString("base64");
 
 // Colores de la web (src/app/globals.css).
@@ -39,6 +41,37 @@ function cascoSvg() {
   return `<svg viewBox="0 0 ${size} ${size}" width="${size}" height="${size}"><g fill="none" stroke="#6b6a64" stroke-width="2.2" stroke-linecap="round">${lines}</g></svg>`;
 }
 
+const fontFace = `@font-face { font-family: H; src: url(data:font/woff2;base64,${font}) format("woff2"); font-weight: 100 900; }`;
+
+/** Un ícono grande centrado sobre un campo de color (foto de perfil y tapas de destacadas). */
+function iconHtml({ field, icon }, w, h, size) {
+  const [bg, ink] = FIELD[field];
+  return `<!doctype html><html><head><style>* { margin: 0 } body { width: ${w}px; height: ${h}px; background: ${bg}; color: ${ink};
+    display: flex; align-items: center; justify-content: center; }</style></head>
+    <body><svg viewBox="0 ${ICON_OFFSET[icon] ?? 0} 60 60" width="${size}" height="${size}" fill="currentColor">${ICONS[icon]}</svg></body></html>`;
+}
+
+function storyHtml(s) {
+  const [bg, ink, ink2] = FIELD[s.field];
+  return `<!doctype html><html><head><meta charset="utf-8"><style>
+    ${fontFace}
+    * { margin: 0; box-sizing: border-box; }
+    body { width: 1080px; height: 1920px; background: ${bg}; color: ${ink}; font-family: H, sans-serif; }
+    .s { height: 100%; padding: 280px 88px 420px; display: flex; flex-direction: column; justify-content: center; gap: 48px; }
+    h1 { font-size: ${s.size ?? 128}px; font-weight: 600; line-height: 1; letter-spacing: -0.035em; }
+    .big { font-size: 240px; font-weight: 600; line-height: .9; letter-spacing: -0.05em; }
+    p { font-size: 60px; line-height: 1.25; color: ${ink2}; }
+    .icon { width: 240px; height: 240px; }
+    .map svg { width: 760px; height: 760px; }
+  </style></head><body><div class="s">
+    ${s.icon ? `<svg class="icon" viewBox="0 0 60 60" fill="currentColor">${ICONS[s.icon]}</svg>` : ""}
+    ${s.big ? `<div class="big">${s.big}</div>` : ""}
+    <h1>${s.title}</h1>
+    ${s.text ? `<p>${s.text}</p>` : ""}
+    ${s.map ? `<div class="map">${cascoSvg()}</div>` : ""}
+  </div></body></html>`;
+}
+
 function slideHtml(slide, shots) {
   const [bg, ink, ink2] = FIELD[slide.field];
   const media = slide.shot ? `<img class="shot" src="data:image/png;base64,${shots[slide.shot]}"/>` : slide.map ? `<div class="map">${cascoSvg()}</div>` : "";
@@ -49,7 +82,7 @@ function slideHtml(slide, shots) {
   // Sin imagen, el texto va centrado en la altura para que no quede media placa vacía.
   const body = media || legend ? `${head}<div class="grow">${media}${legend}</div>` : `<div class="solo">${head}</div>`;
   return `<!doctype html><html><head><meta charset="utf-8"><style>
-    @font-face { font-family: H; src: url(data:font/woff2;base64,${font}) format("woff2"); font-weight: 100 900; }
+    ${fontFace}
     * { margin: 0; box-sizing: border-box; }
     body { width: 1080px; height: 1350px; background: ${bg}; color: ${ink}; font-family: H, sans-serif; }
     .slide { height: 100%; padding: 96px 88px 80px; display: flex; flex-direction: column; gap: 40px; }
@@ -97,7 +130,7 @@ const browser = await chromium.launch({ executablePath: process.env.CHROMIUM_PAT
 const shots = await captureShots(browser);
 const page = await browser.newPage({ viewport: { width: 1080, height: 1350 } });
 for (const post of POSTS) {
-  const dir = `${OUT}/${post.slug}`;
+  const dir = `${OUT}/posteos/${post.slug}`;
   mkdirSync(dir, { recursive: true });
   for (const [i, slide] of post.slides.entries()) {
     await page.setContent(slideHtml(slide, shots), { waitUntil: "load" });
@@ -105,5 +138,24 @@ for (const post of POSTS) {
   }
   console.log(`${post.slug}: ${post.slides.length} placas`);
 }
+// Historias (1080×1920): el texto queda lejos de los bordes de arriba y de abajo, que tapa Instagram.
+const story = await browser.newPage({ viewport: { width: 1080, height: 1920 } });
+mkdirSync(`${OUT}/historias/lanzamiento`, { recursive: true });
+for (const [i, s] of STORIES.entries()) {
+  await story.setContent(storyHtml(s), { waitUntil: "load" });
+  await story.screenshot({ path: `${OUT}/historias/lanzamiento/${String(i + 1).padStart(2, "0")}.png` });
+}
+mkdirSync(`${OUT}/historias/destacadas`, { recursive: true });
+for (const h of HIGHLIGHTS) {
+  await story.setContent(iconHtml(h, 1080, 1920, 520), { waitUntil: "load" });
+  await story.screenshot({ path: `${OUT}/historias/destacadas/${h.slug}.png` });
+}
+console.log(`historias: ${STORIES.length} de lanzamiento, ${HIGHLIGHTS.length} tapas de destacadas`);
+
+const square = await browser.newPage({ viewport: { width: 1080, height: 1080 } });
+mkdirSync(`${OUT}/perfil`, { recursive: true });
+await square.setContent(iconHtml(PROFILE, 1080, 1080, 700), { waitUntil: "load" });
+await square.screenshot({ path: `${OUT}/perfil/foto-de-perfil.png` });
+console.log("perfil: foto");
 await browser.close();
 

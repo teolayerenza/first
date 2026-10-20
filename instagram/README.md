@@ -1,44 +1,46 @@
-# Instagram: los 6 posteos de lanzamiento
+# Instagram de Pocitos LP
 
-Las placas están en esta carpeta (1080×1350, formato vertical de Instagram). Se regeneran con
-`node scripts/instagram/render.mjs` (ver el encabezado del script).
+Todo lo de la cuenta está acá. Lo visual se regenera con `node scripts/instagram/render.mjs` (instrucciones en el script).
 
-## Antes de programar
+| Carpeta | Qué hay |
+|---|---|
+| `perfil/` | Foto de perfil, nombre, bio, link, tipo de cuenta y reglas (`perfil.md`) |
+| `posteos/` | Las placas de los 6 posteos de lanzamiento (1080×1350), una carpeta por posteo |
+| `historias/` | Historias de lanzamiento y tapas de destacadas (`historias/README.md`) |
 
-- [ ] Cuenta `@pocitoslp` creada y pasada a **cuenta profesional** (Configuración → Tipo de cuenta → Profesional). Sin eso no se puede programar.
-- [ ] Bio:
-  > El estado real de las calles de La Plata, medido por vecinos.
-  > Casco urbano · 100% anónimo · Datos abiertos
-  > Reportá un pozo en 15 segundos
-- [ ] Link de la bio: la dirección de la web. Conviene un dominio propio (por ejemplo `pocitoslp.com.ar`) antes de lanzar: `first-rosy-ten.vercel.app` no inspira confianza.
-- [ ] El mail `hola@pocitoslp.com.ar` que figura en la web tiene que existir (o cambiarlo en la web antes de lanzar).
+## Antes de lanzar
 
-## Calendario
+- [ ] Cuenta `@pocitoslp` creada y pasada a profesional (`perfil/perfil.md`).
+- [ ] Foto, nombre, bio y link cargados.
+- [ ] El mail `hola@pocitoslp.com.ar` existe (o se cambia en la web y en el perfil).
+- [ ] **Enviar un reporte de prueba desde el celular y que se guarde** (necesita la clave pública de Turnstile en Vercel).
 
-Los 6 se publican **el mismo día**, en orden inverso (del 6 al 1) y con 5 minutos entre cada uno, para que el 1 quede
-arriba a la izquierda de la grilla. Propuesta: **martes 20 de octubre a las 18:30** (después del trabajo, día hábil).
+## Día del lanzamiento
+
+Los 6 posteos el mismo día, del 6 al 1, cada 5 minutos, para que el 1 quede arriba a la izquierda de la grilla.
+Después, las historias de lanzamiento. Fecha y hora a elegir (propuesta: un día hábil a las 18:30).
 
 | Hora | Posteo | Placas |
 |---|---|---|
-| 18:30 | `6-para-que` | 5 |
-| 18:35 | `5-anonimato` | 4 |
-| 18:40 | `4-tablero` | 5 |
-| 18:45 | `3-calificar` | 4 |
-| 18:50 | `2-reportar` | 6 |
-| 18:55 | `1-que-es` | 5 |
+| 18:30 | `posteos/6-para-que` | 5 |
+| 18:35 | `posteos/5-anonimato` | 4 |
+| 18:40 | `posteos/4-tablero` | 5 |
+| 18:45 | `posteos/3-calificar` | 4 |
+| 18:50 | `posteos/2-reportar` | 6 |
+| 18:55 | `posteos/1-que-es` | 5 |
 
-## Cómo programarlos (Meta Business Suite, gratis)
+### Cómo programar los posteos (Meta Business Suite, gratis)
 
 1. Entrá a **business.facebook.com** (o la app Meta Business Suite) con la cuenta que administra @pocitoslp.
-2. **Crear publicación** → elegí solo Instagram como destino.
-3. **Agregar contenido** → subí las placas de la carpeta del posteo **en orden** (01, 02, 03…). Varias imágenes = carrusel.
+2. **Crear publicación** → elegí solo Instagram.
+3. **Agregar contenido** → subí las placas del posteo **en orden** (01, 02, 03…): varias imágenes forman un carrusel.
 4. Pegá el texto de abajo.
-5. En **Opciones de programación**, elegí **Programar** → fecha y hora de la tabla → **Programar**.
+5. **Opciones de programación** → **Programar** → fecha y hora → **Programar**.
 6. Repetí con los otros 5, en el orden de la tabla.
 
-Desde el celular también se puede: al crear el posteo en Instagram, **Configuración avanzada → Programar esta publicación**.
+Desde el celular también se puede: al crear el posteo, **Configuración avanzada → Programar esta publicación**.
 
-## Textos
+## Textos de los posteos
 
 ### 1-que-es
 
