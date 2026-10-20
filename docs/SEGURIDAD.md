@@ -46,7 +46,7 @@ Celular ──▶ Cloudflare (WAF + rate limit por IP, sin guardar la IP)
               │
               ▼
         Postgres (RPC security definer) → tablas en estado "pendiente"
-              │  cada 10 min (pg_cron)
+              │  cada 1 min (pg_cron)
               ▼
         Detector de anomalías → promueve a "activo" o retiene "en revisión"
               │
@@ -91,7 +91,7 @@ Los contadores usan `HMAC(sal_del_día, dispositivo)` y se borran todos los día
 - **Sesiones nuevas pesan menos**: los aportes de una sesión creada hace menos de 24 h cuentan, pero no alcanzan
   para verificar algo por sí solos. Crear 100 sesiones de golpe no sirve de nada. (La antigüedad de la sesión se lee del JWT; no se guarda nada extra.)
 
-### Capa 4 — Detector de anomalías (job SQL cada 10 min)
+### Capa 4 — Detector de anomalías (job SQL cada minuto)
 Reglas simples y explicables, con umbrales en `config`:
 - Ráfaga de aportes en una zona o cuadra vs. su promedio histórico.
 - Muchas calificaciones que cambian el estado de una zona en poco tiempo (por ejemplo, de 🔴 a 🟢 en masa).

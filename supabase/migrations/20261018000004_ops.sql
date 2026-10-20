@@ -5,8 +5,8 @@ set search_path = public, extensions;
 
 create extension if not exists pg_cron;
 
--- Cada 10 minutos: detector de anomalías + promoción de aportes pendientes.
-select cron.schedule('pocitos-promote', '*/10 * * * *', $$select public.promote_pending()$$);
+-- Cada minuto: detector de anomalías + promoción de aportes pendientes.
+select cron.schedule('pocitos-promote', '* * * * *', $$select public.promote_pending()$$);
 
 -- Todos los días 03:10 (UTC): snapshot de KPIs, vaciado de contadores y de sesiones viejas.
 select cron.schedule('pocitos-daily', '10 3 * * *', $$
