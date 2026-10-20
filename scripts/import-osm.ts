@@ -46,7 +46,7 @@ async function main() {
   // Overpass rechaza (406) los pedidos sin un User-Agent que identifique a la app.
   const res = await fetch(OVERPASS, {
     method: "POST",
-    headers: { "User-Agent": "PocitosLP/0.1 (+mailto:hola@pocitoslp.com.ar)", Accept: "application/json" },
+    headers: { "User-Agent": "PocitosLP/0.1 (+mailto:hola@pocitos.com.ar)", Accept: "application/json" },
     body: new URLSearchParams({ data: query }),
   });
   if (!res.ok) throw new Error(`Overpass respondió ${res.status}: ${(await res.text()).slice(0, 300)}`);

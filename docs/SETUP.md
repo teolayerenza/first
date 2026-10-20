@@ -40,7 +40,7 @@ la calle de la plaza lleva el nombre de la plaza. El empedrado no viene en ese e
 4. **Auth** → Attack Protection: activá **Captcha** con Turnstile y la clave secreta.
 5. **Edge Function**:
    ```bash
-   npx supabase secrets set HMAC_SECRET="$(openssl rand -hex 32)" TURNSTILE_SECRET=... ALLOWED_ORIGIN=https://pocitoslp.com.ar
+   npx supabase secrets set HMAC_SECRET="$(openssl rand -hex 32)" TURNSTILE_SECRET=... ALLOWED_ORIGIN=https://pocitos.com.ar
    npx supabase functions deploy submit
    ```
    ⚠️ Guardá `HMAC_SECRET` en un gestor de contraseñas. Si se pierde, los votos viejos no se pueden deduplicar con los nuevos. Si se filtra, rotalo.
@@ -57,7 +57,7 @@ Creá un sitio en Cloudflare → Turnstile (modo **Invisible / Managed**). La *s
 
 1. Importá el repo en Vercel.
 2. Variables: copiá las de `.env.example` (solo las `NEXT_PUBLIC_*`).
-3. Dominio (`pocitoslp.com.ar` vía NIC Argentina), con Cloudflare como DNS/proxy y una regla de **rate limiting** para `/functions/v1/submit` (ej. 30 pedidos / 10 min por IP).
+3. Dominio (`pocitos.com.ar` vía NIC Argentina), con Cloudflare como DNS/proxy y una regla de **rate limiting** para `/functions/v1/submit` (ej. 30 pedidos / 10 min por IP).
 4. Configurá **límites de gasto** en Vercel, Supabase y Cloudflare.
 
 ## 5. Antes de lanzar (docs/SEGURIDAD.md §8)

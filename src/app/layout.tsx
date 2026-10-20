@@ -7,10 +7,8 @@ import { ThemeToggle, themeInitScript } from "@/components/theme";
 import { isDemo } from "@/lib/data";
 import "./globals.css";
 
-// En Vercel, si no se configuró el dominio propio, se usa la URL de producción del proyecto.
-const SITE =
-  process.env.NEXT_PUBLIC_SITE_URL ??
-  (process.env.VERCEL_PROJECT_PRODUCTION_URL ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}` : "http://localhost:3000");
+// Dominio propio en Vercel; en desarrollo, localhost.
+const SITE = process.env.NEXT_PUBLIC_SITE_URL ?? (process.env.VERCEL ? "https://pocitos.com.ar" : "http://localhost:3000");
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE),
@@ -102,7 +100,7 @@ function Footer() {
         </div>
         <div className="flex flex-col bg-asphalt-2 p-5 sm:col-span-2 lg:col-span-3 lg:min-h-48 lg:justify-end">
           <p className="text-small text-asphalt-ink-2">Contacto</p>
-          <a href="mailto:hola@pocitoslp.com.ar" className="text-lead hover:underline">hola@pocitoslp.com.ar</a>
+          <a href="mailto:hola@pocitos.com.ar" className="text-lead hover:underline">hola@pocitos.com.ar</a>
         </div>
         <div className="hidden min-h-40 items-center justify-center bg-asphalt-ink text-asphalt sm:col-span-2 sm:flex lg:col-span-8 lg:min-h-80">
           <p aria-hidden className="text-[clamp(3.5rem,9vw,9rem)] font-semibold leading-none tracking-[-0.05em]">Pocitos LP</p>

@@ -12,7 +12,8 @@ Todo lo de la cuenta está acá. Lo visual se regenera con `node scripts/instagr
 
 - [ ] Cuenta `@pocitoslp` creada y pasada a profesional (`perfil/perfil.md`).
 - [ ] Foto, nombre, bio y link cargados.
-- [ ] El mail `hola@pocitoslp.com.ar` existe (o se cambia en la web y en el perfil).
+- [ ] El mail `hola@pocitos.com.ar` existe (Cloudflare → Email → Email Routing: reenvía a tu Gmail, gratis).
+- [ ] `pocitos.com.ar` y `www.pocitos.com.ar` cargados en Cloudflare → Turnstile → Hostnames.
 - [ ] **Enviar un reporte de prueba desde el celular y que se guarde** (necesita la clave pública de Turnstile en Vercel).
 
 ## Día del lanzamiento
@@ -49,9 +50,9 @@ Desde el celular también se puede: al crear el posteo, **Configuración avanzad
 
 Por eso armamos Pocitos LP: un mapa abierto del casco urbano donde cualquier vecino puede reportar un pozo, un parche mal hecho o calificar cómo está su cuadra.
 
-Son 3.955 cuadras. Hoy no hay ninguna relevada. Empezamos ahora, entre todos.
+Son 3.955 cuadras y las medimos entre todos: cada vecino que califica la suya suma.
 
-Anónimo, sin cuentas, sin publicidad. Link en la bio.
+Anónimo, sin cuentas, sin publicidad. pocitos.com.ar (link en la bio).
 
 #LaPlata #CallesDeLaPlata #CascoUrbano #Pozos
 ```
@@ -69,7 +70,7 @@ Los parches mal hechos (elevados, hundidos o desarmados) también se reportan.
 
 Lo puede reportar cualquiera que pase. Si otro vecino lo confirma, cuenta.
 
-Link en la bio.
+pocitos.com.ar (link en la bio).
 
 #LaPlata #Pozos #Bacheo #CallesDeLaPlata
 ```
@@ -83,7 +84,7 @@ Por eso en Pocitos LP se miden por separado. Calificar tu cuadra tarda 10 segund
 
 ¿La repavimentaron? Avisanos: también cuenta.
 
-Link en la bio.
+pocitos.com.ar (link en la bio).
 
 #LaPlata #CallesDeLaPlata #Asfalto
 ```
@@ -98,7 +99,7 @@ Cómo leer el tablero de Pocitos LP:
 - El casco se divide en 36 zonas entre avenidas.
 - Una zona entra al ranking cuando tiene al menos el 20% relevado.
 
-Cuantos más vecinos se suman, más preciso es el mapa. Link en la bio.
+Cuantos más vecinos se suman, más preciso es el mapa. pocitos.com.ar (link en la bio).
 
 #LaPlata #DatosAbiertos #CallesDeLaPlata
 ```
@@ -113,7 +114,7 @@ Tu anonimato, en Pocitos LP:
 - Las fotos se limpian en tu celular antes de subirse: sin ubicación, sin fecha, sin modelo de teléfono.
 - Sin publicidad, sin rastreadores, sin venta de datos.
 
-En la web podés ver campo por campo qué se guarda. Link en la bio.
+En la web podés ver campo por campo qué se guarda. pocitos.com.ar (link en la bio).
 
 #LaPlata #Privacidad
 ```
@@ -127,7 +128,7 @@ En la web podés ver campo por campo qué se guarda. Link en la bio.
 - Cada mes vamos a publicar un informe con el estado de las calles y cómo cambió, y lo vamos a mandar al municipio, al Concejo Deliberante y a los medios.
 - Si arreglan un pozo, también lo vamos a mostrar.
 
-Cuantos más vecinos se sumen, más fuerte es el dato. Sumá tu cuadra y compartilo con tu barrio. Link en la bio.
+Cuantos más vecinos se sumen, más fuerte es el dato. Sumá tu cuadra y compartilo con tu barrio. pocitos.com.ar (link en la bio).
 
 #LaPlata #CallesDeLaPlata #DatosAbiertos
 ```

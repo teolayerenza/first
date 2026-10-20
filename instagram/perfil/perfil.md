@@ -9,8 +9,8 @@ Todo lo que se carga una sola vez al crear la cuenta.
 | Foto de perfil | `foto-de-perfil.png` (el corte de una calle con un pozo, sobre amarillo pintura vial) |
 | Tipo de cuenta | Profesional → **Empresa** (permite programar posteos y mostrar el botón de mail) |
 | Categoría | **Comunidad** |
-| Link | la dirección de la web (`https://first-rosy-ten.vercel.app` hasta tener dominio propio) |
-| Mail de contacto | `hola@pocitoslp.com.ar` (tiene que existir antes de mostrarlo) |
+| Link | `https://pocitos.com.ar` |
+| Mail de contacto | `hola@pocitos.com.ar` (tiene que existir antes de mostrarlo: Cloudflare → Email → Email Routing, gratis, reenvía a tu mail) |
 | Botones de acción | Solo "Enviar correo". Sin teléfono ni dirección: el proyecto es anónimo. |
 
 ## Bio (137 de 150 caracteres)

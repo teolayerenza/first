@@ -52,7 +52,7 @@ export default function PrensaPage() {
         </ul>
       </Block>
       <Block title="Contacto">
-        <p><a href="mailto:hola@pocitoslp.com.ar">hola@pocitoslp.com.ar</a></p>
+        <p><a href="mailto:hola@pocitos.com.ar">hola@pocitos.com.ar</a></p>
       </Block>
     </Page>
   );

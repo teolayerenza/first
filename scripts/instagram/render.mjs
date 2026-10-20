@@ -120,7 +120,7 @@ async function captureShots(browser) {
     donde: await shot("/reportar/pozo", "¿Dónde está?"),
     gravedad: await shot("/reportar/pozo", "¿Qué tan grave es?", () => p.getByText("Peligroso", { exact: true }).click()),
     parche: await shot("/reportar/parche", "¿Cómo quedó el parche?", () => p.getByText("Elevado", { exact: true }).click()),
-    estado: await shot("/calificar", "¿Cómo está el asfalto?", () => p.getByText("Gastada", { exact: true }).click()),
+    estado: await shot("/calificar", "¿Cómo está la calle?", () => p.getByText("Gastada", { exact: true }).click()),
   };
   await p.close();
   return shots;

@@ -28,7 +28,7 @@ Reglas de tono (para todas las redes):
 - Tono: platense, cercano y con humor, pero serio con los números.
 - Visual: fondo oscuro tipo "asfalto", colores del tablero (🟢🟡🔴🔵) y tipografía grande para los números.
   Cada placa tiene **un solo número protagonista**.
-- Email del proyecto (por ejemplo, `hola@pocitoslp.com.ar`), separado del personal, para la prensa y el municipio.
+- Email del proyecto (por ejemplo, `hola@pocitos.com.ar`), separado del personal, para la prensa y el municipio.
 - Bio de Instagram:
   > 🕳️ El estado real de las calles de La Plata, medido por vecinos
   > 📍 Casco urbano · 🔒 100% anónimo · 📊 Datos abiertos

@@ -17,16 +17,16 @@ export const POSTS = [
       { field: "asfalto", title: "¿Cuántas calles de La Plata están rotas?", size: 128, foot: "Deslizá" },
       { field: "asfalto", title: "Nadie lo sabe.", text: "No hay un registro público. Los reclamos se pierden y la calle sigue igual." },
       { field: "asfalto", title: "Lo vamos a medir entre todos.", text: "Cada vecino que pasa por una cuadra la puede calificar. Cada pozo y cada parche mal hecho, en un mapa abierto." },
-      { field: "asfalto", big: "3.955", title: "cuadras del casco. 0 relevadas.", size: 64, text: "Empezamos hoy.", map: true },
-      { field: "amarillo", title: "Pocitos LP", size: 150, text: "El estado real de las calles de La Plata, medido por vecinos. Anónimo, sin cuentas y con datos abiertos. <b>Link en la bio.</b>" },
+      { field: "asfalto", big: "3.955", title: "cuadras en el casco. Las medimos entre todos.", size: 64, text: "Empezamos hoy.", map: true },
+      { field: "amarillo", title: "Pocitos LP", size: 150, text: "El estado real de las calles de La Plata, medido por vecinos. Anónimo, sin cuentas y con datos abiertos. <b>pocitos.com.ar (link en la bio).</b>" },
     ],
     caption: `¿Cuántas calles de La Plata están rotas? Nadie lo sabe: no hay un registro público.
 
 Por eso armamos Pocitos LP: un mapa abierto del casco urbano donde cualquier vecino puede reportar un pozo, un parche mal hecho o calificar cómo está su cuadra.
 
-Son 3.955 cuadras. Hoy no hay ninguna relevada. Empezamos ahora, entre todos.
+Son 3.955 cuadras y las medimos entre todos: cada vecino que califica la suya suma.
 
-Anónimo, sin cuentas, sin publicidad. Link en la bio.
+Anónimo, sin cuentas, sin publicidad. pocitos.com.ar (link en la bio).
 
 #LaPlata #CallesDeLaPlata #CascoUrbano #Pozos`,
   },
@@ -50,7 +50,7 @@ Los parches mal hechos (elevados, hundidos o desarmados) también se reportan.
 
 Lo puede reportar cualquiera que pase. Si otro vecino lo confirma, cuenta.
 
-Link en la bio.
+pocitos.com.ar (link en la bio).
 
 #LaPlata #Pozos #Bacheo #CallesDeLaPlata`,
   },
@@ -59,7 +59,7 @@ Link en la bio.
     slides: [
       { field: "verde", title: "Un pozo no es lo mismo que una cuadra rota.", size: 112, foot: "Deslizá" },
       { field: "verde", title: "Calificá tu cuadra.", text: "Un pozo es una rotura puntual. Calificar tu cuadra es decir cómo está el asfalto <b>en general</b>." },
-      { field: "verde", title: "Buena, gastada o muy deteriorada.", size: 80, shot: "estado" },
+      { field: "verde", title: "Nueva, buena, gastada o muy deteriorada.", size: 72, shot: "estado" },
       { field: "verde", title: "¿La repavimentaron? Avisanos.", text: "Una cuadra repavimentada en los últimos 12 meses cuenta como nueva. También lo vamos a mostrar." },
     ],
     caption: `Un pozo es una rotura puntual. El estado de tu cuadra es otra cosa: cómo está el asfalto en general.
@@ -68,7 +68,7 @@ Por eso en Pocitos LP se miden por separado. Calificar tu cuadra tarda 10 segund
 
 ¿La repavimentaron? Avisanos: también cuenta.
 
-Link en la bio.
+pocitos.com.ar (link en la bio).
 
 #LaPlata #CallesDeLaPlata #Asfalto`,
   },
@@ -88,7 +88,7 @@ Link en la bio.
 - El casco se divide en 36 zonas entre avenidas.
 - Una zona entra al ranking cuando tiene al menos el 20% relevado.
 
-Cuantos más vecinos se suman, más preciso es el mapa. Link en la bio.
+Cuantos más vecinos se suman, más preciso es el mapa. pocitos.com.ar (link en la bio).
 
 #LaPlata #DatosAbiertos #CallesDeLaPlata`,
   },
@@ -107,7 +107,7 @@ Cuantos más vecinos se suman, más preciso es el mapa. Link en la bio.
 - Las fotos se limpian en tu celular antes de subirse: sin ubicación, sin fecha, sin modelo de teléfono.
 - Sin publicidad, sin rastreadores, sin venta de datos.
 
-En la web podés ver campo por campo qué se guarda. Link en la bio.
+En la web podés ver campo por campo qué se guarda. pocitos.com.ar (link en la bio).
 
 #LaPlata #Privacidad`,
   },
@@ -118,7 +118,7 @@ En la web podés ver campo por campo qué se guarda. Link en la bio.
       { field: "amarillo", title: "Datos abiertos.", text: "Cualquiera puede descargar el mapa y los números: vecinos, periodistas, concejales." },
       { field: "amarillo", title: "Un informe por mes.", text: "Con el estado de las calles y cómo cambió. Lo vamos a mandar al municipio, al Concejo Deliberante y a los medios." },
       { field: "amarillo", title: "Si arreglan un pozo, también lo mostramos.", size: 96, text: "La pregunta es una sola: ¿se arregla o no?" },
-      { field: "verde", title: "Sumá tu cuadra.", size: 150, text: "Es anónimo y tarda menos de un minuto. <b>Link en la bio.</b> Compartilo con tu barrio." },
+      { field: "verde", title: "Sumá tu cuadra.", size: 150, text: "Es anónimo y tarda menos de un minuto. <b>pocitos.com.ar (link en la bio).</b> Compartilo con tu barrio." },
     ],
     caption: `¿Para qué sirve Pocitos LP?
 
@@ -126,7 +126,7 @@ En la web podés ver campo por campo qué se guarda. Link en la bio.
 - Cada mes vamos a publicar un informe con el estado de las calles y cómo cambió, y lo vamos a mandar al municipio, al Concejo Deliberante y a los medios.
 - Si arreglan un pozo, también lo vamos a mostrar.
 
-Cuantos más vecinos se sumen, más fuerte es el dato. Sumá tu cuadra y compartilo con tu barrio. Link en la bio.
+Cuantos más vecinos se sumen, más fuerte es el dato. Sumá tu cuadra y compartilo con tu barrio. pocitos.com.ar (link en la bio).
 
 #LaPlata #CallesDeLaPlata #DatosAbiertos`,
   },

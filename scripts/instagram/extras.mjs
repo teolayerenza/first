@@ -19,9 +19,9 @@ export const PROFILE = { field: "amarillo", icon: "pozo" };
 
 export const STORIES = [
   { field: "asfalto", title: "Hoy arrancamos.", text: "Pocitos LP: el estado real de las calles de La Plata, medido por vecinos." },
-  { field: "asfalto", big: "3.955", title: "cuadras del casco. 0 relevadas.", size: 80, text: "Las vamos a medir entre todos.", map: true },
+  { field: "asfalto", big: "3.955", title: "cuadras en el casco. Las medimos entre todos.", size: 80, text: "Cada una cuenta. Sumá la tuya.", map: true },
   { field: "rojo", icon: "pozo", title: "Reportá un pozo en 15 segundos.", text: "Tocá el link." },
-  { field: "verde", icon: "cuadra", title: "Calificá tu cuadra.", text: "Buena, gastada o muy deteriorada. Tarda 10 segundos. Tocá el link." },
+  { field: "verde", icon: "cuadra", title: "Calificá tu cuadra.", text: "Nueva, buena, gastada o muy deteriorada. Tarda 10 segundos. Tocá el link." },
   { field: "asfalto", icon: "candado", title: "100% anónimo.", text: "Sin cuentas, sin publicidad, sin rastreadores." },
   { field: "amarillo", title: "Compartilo con tu barrio.", text: "Cuantos más vecinos se suman, más preciso es el mapa." },
 ];

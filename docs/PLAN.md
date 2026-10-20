@@ -582,4 +582,4 @@ saltándose la app (ver `SEGURIDAD.md`). Una foto que pasó por la app nunca lle
 - **Sesgo de reporte**: mostrar la cantidad de aportes por zona y exigir un % relevado mínimo para el ranking.
 - **Calibración** de umbrales y pesos con datos reales (tabla `config`).
 - **Fotos con personas o patentes**: aviso + moderación por votos `falso` en el MVP; blur automático después.
-- Dominio: ¿`pocitoslp.com.ar`?
+- Dominio: `pocitos.com.ar`.
