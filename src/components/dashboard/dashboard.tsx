@@ -56,7 +56,7 @@ export function Dashboard({ data, casco, zone }: Props) {
         lead={
           zone
             ? `Estado del asfalto, pozos y parches de las calles entre ${zone.name.replace(" / ", " y ")}.`
-            : "Medidas por vecinos: cada cuadra del casco, calificada por quienes viven y pasan por ahí. Cada pozo y cada parche mal hecho, en el mapa."
+            : "Medidas por vecinos: cada cuadra del casco, calificada por quienes viven y pasan por ahí. Cada pozo y cada parche mal hecho, en el mapa. Próximamente sumamos los barrios de alrededor de La Plata."
         }
         casco={casco}
         segmentsUrl={segmentsUrl}

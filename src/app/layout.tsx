@@ -16,7 +16,7 @@ export const metadata: Metadata = {
   metadataBase: new URL(SITE),
   title: { default: "Pocitos LP · El estado real de las calles de La Plata", template: "%s · Pocitos LP" },
   description:
-    "Tablero público y anónimo del estado de las calles del casco urbano de La Plata: pozos, parches mal hechos y estado del asfalto, medido por vecinos.",
+    "Tablero público y anónimo del estado de las calles del casco urbano de La Plata: pozos, parches mal hechos y estado del asfalto, medido por vecinos. Próximamente, los barrios de alrededor.",
   applicationName: "Pocitos LP",
   manifest: "/manifest.webmanifest",
   // En modo demo los números son simulados: que los buscadores no los indexen como si fueran reales.
@@ -60,7 +60,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
               ))}
             </nav>
             <ThemeToggle />
-            <Link href="/reportar" className="inline-flex h-10 items-center bg-paint px-3 text-small font-semibold text-paint-ink hover:bg-paint-2 sm:px-4">
+            <Link href="/reportar" className="inline-flex h-10 items-center bg-red px-3 text-small font-semibold text-red-ink hover:opacity-90 sm:px-4">
               Reportar<span className="hidden sm:inline">&nbsp;un pozo</span>
             </Link>
           </div>
