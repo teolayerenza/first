@@ -59,16 +59,27 @@ const store = rpcStore(
   },
 );
 
-const cors = {
-  "Access-Control-Allow-Origin": Deno.env.get("ALLOWED_ORIGIN") ?? "",
-  "Access-Control-Allow-Headers": "authorization, content-type, x-captcha-token",
-  "Access-Control-Allow-Methods": "POST, OPTIONS",
-};
+// ALLOWED_ORIGIN: una o más direcciones separadas por coma. Se comparan sin la barra final, así un
+// "https://sitio.app/" en el secreto no bloquea los envíos (el navegador manda el origen sin barra).
+const allowedOrigins = (Deno.env.get("ALLOWED_ORIGIN") ?? "")
+  .split(",")
+  .map((o) => o.trim().replace(/\/+$/, ""))
+  .filter(Boolean);
 
-const json = (body: unknown, status = 200) =>
-  new Response(JSON.stringify(body), { status, headers: { ...cors, "Content-Type": "application/json" } });
+function corsFor(req: Request): Record<string, string> {
+  const origin = req.headers.get("origin") ?? "";
+  return {
+    "Access-Control-Allow-Origin": allowedOrigins.includes(origin) ? origin : (allowedOrigins[0] ?? ""),
+    "Access-Control-Allow-Headers": "authorization, content-type, x-captcha-token",
+    "Access-Control-Allow-Methods": "POST, OPTIONS",
+    Vary: "Origin",
+  };
+}
 
 Deno.serve(async (req) => {
+  const cors = corsFor(req);
+  const json = (body: unknown, status = 200) =>
+    new Response(JSON.stringify(body), { status, headers: { ...cors, "Content-Type": "application/json" } });
   if (req.method === "OPTIONS") return new Response(null, { headers: cors });
   if (req.method !== "POST") return json({ ok: false, error: "method_not_allowed" }, 405);
 
