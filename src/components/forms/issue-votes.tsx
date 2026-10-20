@@ -1,8 +1,8 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState } from "react";
-import { submit } from "@/lib/client/submit";
+import { useEffect, useState } from "react";
+import { submit, warmSubmit } from "@/lib/client/submit";
 import { ERROR_MESSAGES, type SubmitError } from "@/lib/domain/submit";
 import type { FixQuality, IssueKind, VoteKind } from "@/lib/domain/types";
 
@@ -13,15 +13,19 @@ export function IssueVotes({ issueId, kind }: { issueId: string; kind: IssueKind
   const [msg, setMsg] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
+  useEffect(() => {
+    warmSubmit();
+  }, []);
+
+  // El agradecimiento aparece al toque; el envío sigue de fondo y, si falla, el mensaje cambia por el error.
   async function vote(v: VoteKind, fixQuality: FixQuality | null = null) {
     setBusy(true);
+    setAskQuality(false);
+    setMsg(v === "sigue" ? "¡Gracias por confirmar!" : v === "arreglado" ? "¡Gracias! Cuando otro vecino lo confirme, se marca como arreglado." : "Gracias. Si más vecinos coinciden, se oculta.");
     const r = await submit({ kind: "vote", issueId, vote: v, fixQuality });
     setBusy(false);
-    setAskQuality(false);
-    if (r.ok) {
-      setMsg(v === "sigue" ? "¡Gracias por confirmar!" : v === "arreglado" ? "¡Gracias! Cuando otro vecino lo confirme, se marca como arreglado." : "Gracias. Si más vecinos coinciden, se oculta.");
-      router.refresh();
-    } else setMsg(r.error === "offline_queued" ? "Sin señal: lo mandamos cuando vuelva." : ERROR_MESSAGES[r.error as SubmitError] ?? "No se pudo enviar.");
+    if (r.ok) router.refresh();
+    else setMsg(r.error === "offline_queued" ? "Sin señal: lo mandamos cuando vuelva." : ERROR_MESSAGES[r.error as SubmitError] ?? "No se pudo enviar.");
   }
 
   if (msg) return <p role="status" className="mt-3 font-semibold text-good">{msg}</p>;

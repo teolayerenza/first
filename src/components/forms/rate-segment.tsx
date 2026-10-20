@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { submit, type ClientResult } from "@/lib/client/submit";
+import { submit, warmSubmit, type ClientResult } from "@/lib/client/submit";
 import type { SegmentRef } from "@/lib/data/types";
 import { ERROR_MESSAGES, type SubmitError } from "@/lib/domain/submit";
 import type { Patching, Rating } from "@/lib/domain/types";
@@ -22,6 +22,10 @@ const QUICK: { v: Quick; t: string; cls: string }[] = [
 ];
 
 export function RateSegmentForm({ preset }: { preset?: { id: number; label: string; mid: [number, number] } | null }) {
+  // Al abrir el formulario: captchas resueltos y función despierta, así enviar no espera.
+  useEffect(() => {
+    warmSubmit();
+  }, []);
   // Si llega una cuadra elegida (desde el inicio o desde la página de la cuadra), queda fija: no hay que
   // buscarla de nuevo en el mapa. "Cambiar" abre el mapa.
   const [loc, setLoc] = useState<PickedLocation | null>(

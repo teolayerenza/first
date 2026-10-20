@@ -1,9 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { CompressedPhoto } from "@/lib/client/photo";
-import { submit, type ClientResult } from "@/lib/client/submit";
+import { submit, warmSubmit, type ClientResult } from "@/lib/client/submit";
 import type { IssueKind, ParcheType, Severity } from "@/lib/domain/types";
 import { ERROR_MESSAGES, type SubmitError } from "@/lib/domain/submit";
 import { LocationPicker, type PickedLocation } from "./location-picker";
@@ -29,6 +29,10 @@ function SeverityBars({ level, color, checked }: { level: number; color: string;
 
 /** Un formulario por tipo: `pozo` o `parche` (bacheo mal hecho). Así cada botón lleva directo a lo suyo. */
 export function ReportIssueForm({ kind }: { kind: IssueKind }) {
+  // Al abrir el formulario: captchas resueltos y función despierta, así enviar no espera.
+  useEffect(() => {
+    warmSubmit();
+  }, []);
   const [loc, setLoc] = useState<PickedLocation | null>(null);
   const [parche, setParche] = useState<ParcheType | null>(null);
   const [sev, setSev] = useState<Severity | null>(null);

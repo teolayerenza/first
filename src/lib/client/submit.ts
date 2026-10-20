@@ -8,7 +8,7 @@ import type { SubmitInput } from "../domain/schemas";
 import type { SubmitResult } from "../domain/submit";
 import { enqueue, pending, remove } from "./queue";
 import { getBrowserSupabase } from "./supabase";
-import { getCaptchaToken } from "./turnstile";
+import { getCaptchaToken, prefetchCaptcha } from "./turnstile";
 
 export type ClientResult = SubmitResult | { ok: false; status: 0; error: "offline_queued" } | { ok: false; status: number; error: "network" | "unauthorized" | "internal" };
 
@@ -26,6 +26,20 @@ function demoDevice(): string {
   }
 }
 
+const SUBMIT_URL = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1/submit`;
+
+/**
+ * Al abrir un formulario: deja resueltos los captchas que va a pedir el envío y despierta la Edge Function
+ * (el primer pedido a una función dormida tarda ~1,5 s). No envía nada ni crea la sesión.
+ */
+export async function warmSubmit(): Promise<void> {
+  const sb = getBrowserSupabase();
+  if (!sb) return;
+  const { data } = await sb.auth.getSession();
+  prefetchCaptcha(data.session ? 1 : 2);
+  fetch(SUBMIT_URL, { method: "OPTIONS" }).catch(() => {});
+}
+
 async function post(payload: SubmitInput): Promise<ClientResult> {
   const sb = getBrowserSupabase();
   if (!sb) {
@@ -38,20 +52,26 @@ async function post(payload: SubmitInput): Promise<ClientResult> {
   }
 
   let { data } = await sb.auth.getSession();
+  // El captcha del envío se resuelve en paralelo con el inicio de sesión, no después.
+  let sendToken: Promise<string | null>;
   if (!data.session) {
     // La sesión anónima también pide captcha: así un bot no puede fabricar miles de "vecinos".
-    const captchaToken = await getCaptchaToken();
-    if (!captchaToken) return { ok: false, status: 403, error: "captcha_failed" };
-    const signIn = await sb.auth.signInAnonymously({ options: { captchaToken } });
+    const [captchaToken, second] = [getCaptchaToken(), getCaptchaToken()];
+    sendToken = second;
+    const token = await captchaToken;
+    if (!token) return { ok: false, status: 403, error: "captcha_failed" };
+    const signIn = await sb.auth.signInAnonymously({ options: { captchaToken: token } });
     if (signIn.error) return { ok: false, status: 401, error: signIn.error.code === "captcha_failed" ? "captcha_failed" : "unauthorized" };
     data = { session: signIn.data.session! };
+  } else {
+    sendToken = getCaptchaToken();
   }
-  const res = await fetch(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1/submit`, {
+  const res = await fetch(SUBMIT_URL, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
       Authorization: `Bearer ${data.session!.access_token}`,
-      "x-captcha-token": (await getCaptchaToken()) ?? "",
+      "x-captcha-token": (await sendToken) ?? "",
     },
     body: JSON.stringify(payload),
   });

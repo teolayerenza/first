@@ -45,7 +45,10 @@ async function verifyCaptcha(token: string | null): Promise<boolean> {
   return body.success === true;
 }
 
-const store = rpcStore(
+// Supabase Edge Runtime: tareas que siguen después de responder.
+declare const EdgeRuntime: { waitUntil(p: Promise<unknown>): void };
+
+const base = rpcStore(
   async (fn, args) => {
     const { data, error } = await admin.rpc(fn, args);
     if (error) throw new Error(`${fn}: ${error.message}`);
@@ -58,6 +61,8 @@ const store = rpcStore(
     return { path, uploadUrl: data.signedUrl, token: data.token };
   },
 );
+// Publicar (promote_pending) corre después de responder: el vecino ve el "¡Gracias!" sin esperarlo.
+const store = { ...base, publish: async () => EdgeRuntime.waitUntil(base.publish!().catch(() => {})) };
 
 // CORS abierto: la función no usa cookies, así que otro sitio no puede aprovechar la sesión de nadie. Lo
 // que protege la escritura es el JWT de la sesión anónima (que ningún otro sitio puede leer) y el captcha
@@ -77,6 +82,8 @@ Deno.serve(async (req) => {
 
   const jwt = req.headers.get("authorization")?.replace(/^Bearer /, "");
   if (!jwt) return json({ ok: false, error: "unauthorized" }, 401);
+  // Captcha y sesión se verifican a la vez (son dos pedidos de red independientes).
+  const captcha = verifyCaptcha(req.headers.get("x-captcha-token")).catch(() => false);
   const { data: auth, error } = await admin.auth.getUser(jwt);
   if (error || !auth.user) return json({ ok: false, error: "unauthorized" }, 401);
 
@@ -89,7 +96,7 @@ Deno.serve(async (req) => {
         sessionCreatedAt: new Date(auth.user.created_at),
         captchaToken: req.headers.get("x-captcha-token"),
       },
-      { verifyCaptcha, hmac, store, now: () => new Date() },
+      { verifyCaptcha: () => captcha, hmac, store, now: () => new Date() },
     );
     return json(result, result.ok ? 200 : result.status);
   } catch (e) {

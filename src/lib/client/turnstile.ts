@@ -28,9 +28,34 @@ function load(): Promise<void> {
   return loading;
 }
 
+/** Resolver un captcha tarda 1 a 3 s: se resuelven de antemano y se guardan hasta 4 minutos (vencen a los 5). */
+const MAX_AGE_MS = 240_000;
+const ready: { token: Promise<string | null>; at: number }[] = [];
+
+/** Deja `n` captchas resueltos de antemano (al abrir un formulario), así enviar no espera. */
+export function prefetchCaptcha(n = 1): void {
+  if (!SITE_KEY) return;
+  const fresh = ready.filter((r) => Date.now() - r.at < MAX_AGE_MS);
+  ready.splice(0, ready.length, ...fresh);
+  while (ready.length < n) ready.push({ token: solve(), at: Date.now() });
+}
+
 export async function getCaptchaToken(): Promise<string | null> {
   if (!SITE_KEY) return null;
-  await load();
+  for (let r = ready.shift(); r; r = ready.shift()) {
+    if (Date.now() - r.at >= MAX_AGE_MS) continue;
+    const token = await r.token;
+    if (token) return token;
+  }
+  return solve();
+}
+
+async function solve(): Promise<string | null> {
+  try {
+    await load();
+  } catch {
+    return null;
+  }
   return new Promise((resolve) => {
     const host = document.createElement("div");
     host.style.position = "fixed";
