@@ -141,6 +141,10 @@ export const demoSource: DataSource = {
       state().data.segments.map((s) => ({ id: s.id, street: s.streetName, a: s.betweenA, b: s.betweenB, mid: midpoint(s.coords) })),
     );
   },
+  async getSegmentLabels(ids) {
+    const want = new Set(ids);
+    return Object.fromEntries(state().data.segments.filter((s) => want.has(s.id)).map((s) => [s.id, segmentLabel(s)]));
+  },
 };
 
 // ——— Escritura en modo demo ———

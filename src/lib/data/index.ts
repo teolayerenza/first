@@ -1,12 +1,10 @@
 import "server-only";
-import { demoSource } from "./demo";
-import { supabaseSource } from "./supabase";
+import { cachedSource } from "./cached";
 import type { DataSource } from "./types";
 
-/** Supabase si están las variables públicas; si no, el modo demo con datos simulados. */
+/** Supabase si están las variables públicas; si no, el modo demo con datos simulados. Lecturas con caché corta. */
 export function getDataSource(): DataSource {
-  if (process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) return supabaseSource;
-  return demoSource;
+  return cachedSource();
 }
 
 export const isDemo = () => getDataSource().mode === "demo";

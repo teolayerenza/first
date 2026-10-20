@@ -18,14 +18,14 @@ async function Content({ searchParams }: { searchParams: Promise<{ pagina?: stri
   await connection();
   const page = Math.max(1, Math.floor(Number((await searchParams).pagina)) || 1);
   const ds = getDataSource();
-  const [issues, segments] = await Promise.all([ds.getIssues(), ds.getSegments()]);
-  const label = new Map(segments.features.map((f) => [f.properties.id, f.properties.label]));
+  const issues = await ds.getIssues();
   const list = issues.features
     .map((f) => f.properties)
     .sort((a, b) => b.severity - a.severity || b.days - a.days);
   const pozos = list.filter((i) => i.kind === "pozo").length;
   const pages = Math.max(1, Math.ceil(list.length / PER_PAGE));
   const shown = list.slice((page - 1) * PER_PAGE, page * PER_PAGE);
+  const labels = await ds.getSegmentLabels(shown.map((i) => i.segmentId).sort((x, y) => x - y));
   return (
     <div>
       <header className="bg-red px-5 pb-12 pt-14 text-red-ink sm:px-8 lg:pb-16 lg:pt-20">
@@ -42,7 +42,7 @@ async function Content({ searchParams }: { searchParams: Promise<{ pagina?: stri
           <p className="bg-surface p-6 text-ink-2 sm:p-8">No hay pozos ni parches abiertos reportados.</p>
         ) : (
           <ul className="flex flex-col gap-1">
-            {shown.map((i) => <IssueRow key={i.id} issue={i} label={label.get(i.segmentId)} />)}
+            {shown.map((i) => <IssueRow key={i.id} issue={i} label={labels[i.segmentId]} />)}
           </ul>
         )}
         {pages > 1 && (

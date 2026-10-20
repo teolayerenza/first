@@ -113,4 +113,6 @@ export interface DataSource {
   adjacentSegments(id: number): Promise<SegmentRef[]>;
   /** Para el selector "Calle __ entre __ y __". */
   getStreetIndex(): Promise<StreetIndexEntry[]>;
+  /** Solo los nombres de esas cuadras (sin geometría): para listas como /problemas. */
+  getSegmentLabels(ids: number[]): Promise<Record<number, string>>;
 }

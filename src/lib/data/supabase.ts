@@ -234,6 +234,18 @@ export const supabaseSource: DataSource = {
     return (await must(client().rpc("public_adjacent_segments", { p_id: id }))) as { id: number; label: string; condition: Condition }[];
   },
 
+  async getSegmentLabels(ids) {
+    const sb = client();
+    const out: Record<number, string> = {};
+    const unique = [...new Set(ids)];
+    // De a 300 ids por pedido, para no pasarse del largo de la URL.
+    for (let k = 0; k < unique.length; k += 300) {
+      const rows = (await must(sb.from("v_segments").select("id, label").in("id", unique.slice(k, k + 300)))) as { id: number; label: string }[];
+      for (const r of rows) out[r.id] = r.label;
+    }
+    return out;
+  },
+
   async getStreetIndex() {
     const sb = client();
     const rows = await all<{ id: number; street_name: string; between_a: string; between_b: string; geometry: { coordinates: LngLat[] } }>((from, to) =>
