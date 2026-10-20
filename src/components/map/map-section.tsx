@@ -30,6 +30,7 @@ const LEGENDS: Record<MapView, { cls: string; label: string }[]> = {
     { cls: "bg-empedrado", label: "Empedrado" },
   ],
   parcheo: [
+    { cls: "bg-nueva", label: "Sin parches" },
     { cls: "bg-buena", label: "Pocos parches" },
     { cls: "bg-gastada", label: "Bastantes" },
     { cls: "bg-muy", label: "Es todo parche" },

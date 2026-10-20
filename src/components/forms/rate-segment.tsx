@@ -156,7 +156,7 @@ export function RateSegmentForm({ preset }: { preset?: { id: number; label: stri
         {rating !== "empedrado" && rating !== "nueva" && (<>
         <p className="mb-2 mt-6 font-semibold text-ink">¿Cuánto parche tiene? <span className="font-normal text-ink-2">(opcional)</span></p>
         <Chips label="Cantidad de parches" value={patching} onChange={setPatching}
-          options={[{ v: "pocos", t: "Pocos" }, { v: "bastantes", t: "Bastantes" }, { v: "todo_parche", t: "Es todo parche" }]} />
+          options={[{ v: "ninguno", t: "Ninguno" }, { v: "pocos", t: "Pocos" }, { v: "bastantes", t: "Bastantes" }, { v: "todo_parche", t: "Es todo parche" }]} />
         </>)}
       </Step>
 

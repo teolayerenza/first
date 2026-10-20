@@ -38,7 +38,6 @@ export function LocationPicker({ onChange, initial, hint }: { onChange: (l: Pick
   const [inCasco, setInCasco] = useState(true);
   const [gpsState, setGpsState] = useState<"idle" | "loading" | "ok">("idle");
   const [gpsMsg, setGpsMsg] = useState<string | null>(null);
-  const [searching, setSearching] = useState(false);
   const cb = useRef(onChange);
   useEffect(() => {
     cb.current = onChange;
@@ -138,29 +137,23 @@ export function LocationPicker({ onChange, initial, hint }: { onChange: (l: Pick
               ? "No hay una calle del casco cerca de este punto."
               : "Por ahora tu zona no está incluida. Pocitos LP empieza por el casco urbano y vamos a ir sumando barrios."}
       </p>
-      <button type="button" className="mt-3 text-small font-semibold text-ink underline" onClick={() => setSearching((v) => !v)}>
-        {searching ? "Cerrar búsqueda" : "Buscar por nombre: \"Calle __ entre __ y __\""}
-      </button>
-      {searching && (
-        <StreetSearch
-          onPick={(e) => {
-            map.current?.jumpTo({ center: e.mid, zoom: 18 });
-            setSearching(false);
-          }}
-        />
-      )}
+      <div className="mt-3 bg-surface-2 p-4">
+        <p className="font-semibold text-ink">O buscala por nombre</p>
+        <p className="text-small text-ink-2">Elegí la calle y después entre qué calles está: el mapa va solo a esa cuadra.</p>
+        <StreetSearch onPick={(e) => map.current?.jumpTo({ center: e.mid, zoom: 18 })} />
+      </div>
     </div>
   );
 }
 
-/** Plazas y parques, después avenidas y calles con nombre (alfabético), después calles por número y al final las diagonales. */
+/** Primero las calles y avenidas por número, después las diagonales, después las de nombre y al final plazas y parques. */
 function byStreet(x: string, y: string): number {
   const rank = (s: string): [number, number] => {
-    if (/^(Plaza|Parque)/.test(s)) return [0, 0];
+    if (/^(Plaza|Parque)/.test(s)) return [3, 0];
     const n = s.match(/^(?:Av\.|Calle)?\s*(\d+)/);
-    if (n) return [2, +n[1]];
+    if (n) return [0, +n[1]];
     const d = s.match(/^Diag(?:onal|\.)\s*(\d+)/);
-    return d ? [3, +d[1]] : [1, 0];
+    return d ? [1, +d[1]] : [2, 0];
   };
   const [[gx, nx], [gy, ny]] = [rank(x), rank(y)];
   return gx - gy || nx - ny || x.localeCompare(y, "es");
@@ -178,16 +171,19 @@ export function StreetSearch({ onPick, dark = false }: { onPick: (e: StreetIndex
     () => (idx?.filter((e) => e.street === street) ?? []).sort((x, y) => byStreet(x.a, y.a) || byStreet(x.b, y.b)),
     [idx, street],
   );
-  const sel = dark ? "h-12 w-full bg-asphalt-ink px-3 text-asphalt" : "h-12 w-full border border-line bg-surface px-3 text-ink";
+  const sel = dark
+    ? "h-14 w-full bg-asphalt-ink px-3 text-lead font-semibold text-asphalt"
+    : "h-14 w-full border-2 border-ink bg-surface px-3 text-lead font-semibold text-ink";
   if (!idx) return <p className={`mt-2 text-small ${dark ? "text-asphalt-ink-2" : "text-ink-3"}`}>Cargando calles…</p>;
   return (
     <div className="mt-2 grid grid-cols-[1fr_auto_1fr] items-center gap-2 text-sm">
       <label className="sr-only" htmlFor="calle">Calle</label>
+      <span className={`col-span-3 font-semibold ${dark ? "text-asphalt-ink" : "text-ink"}`}>Calle</span>
       <select id="calle" className={`${sel} col-span-3`} value={street} onChange={(e) => { setStreet(e.target.value); setA(""); }}>
         <option value="">Elegí la calle…</option>
         {streets.map((s) => <option key={s}>{s}</option>)}
       </select>
-      <span className={`col-span-3 ${dark ? "text-asphalt-ink-2" : "text-ink-2"}`}>entre</span>
+      <span className={`col-span-3 font-semibold ${dark ? "text-asphalt-ink" : "text-ink"}`}>entre</span>
       <label className="sr-only" htmlFor="entre">Entre</label>
       <select id="entre" className={`${sel} col-span-3`} value={a} disabled={!street}
         onChange={(e) => {

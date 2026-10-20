@@ -43,7 +43,7 @@ async function Content({ params }: { params: Promise<{ id: string }> }) {
           <p className="mt-3 max-w-[48ch] text-lead leading-snug">
             {key === "empedrado" ? "Se cuenta aparte del asfalto." : `${CONDITION_HINT[s.condition]}.`}{" "}
             {fmtInt(s.ratingCount)} {s.ratingCount === 1 ? "calificación vigente" : "calificaciones vigentes"}
-            {s.patching && `; parcheo: ${s.patching === "todo_parche" ? "es todo parche" : s.patching}`}
+            {s.patching && `; parcheo: ${s.patching === "todo_parche" ? "es todo parche" : s.patching === "ninguno" ? "sin parches" : s.patching}`}
             {s.repavedAt && `; repavimentada en ${new Date(s.repavedAt).toLocaleDateString("es-AR", { month: "long", year: "numeric", timeZone: "UTC" })}`}.
           </p>
           <Link href={`/calificar?cuadra=${s.id}`} className="mt-8 inline-flex h-[52px] items-center bg-asphalt px-6 font-semibold text-asphalt-ink hover:opacity-90">

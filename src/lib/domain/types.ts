@@ -4,7 +4,7 @@ export type LngLat = [number, number];
 
 export type Condition = "nueva" | "buena" | "gastada" | "muy_deteriorada" | "sin_relevar";
 export type Rating = "buena" | "gastada" | "muy_deteriorada";
-export type Patching = "pocos" | "bastantes" | "todo_parche";
+export type Patching = "ninguno" | "pocos" | "bastantes" | "todo_parche";
 export type IssueKind = "pozo" | "parche";
 export type ParcheType = "elevado" | "hundido" | "desarmado";
 export type Severity = 1 | 2 | 3;

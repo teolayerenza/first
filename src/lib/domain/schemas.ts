@@ -11,7 +11,7 @@ export const ratingPayload = z
     segmentId: z.number().int().positive(),
     // Sin estado solo si la marca como empedrada: el estado es del asfalto.
     rating: z.enum(["buena", "gastada", "muy_deteriorada"]).nullable().default(null),
-    patching: z.enum(["pocos", "bastantes", "todo_parche"]).nullable().default(null),
+    patching: z.enum(["ninguno", "pocos", "bastantes", "todo_parche"]).nullable().default(null),
     onSite: z.boolean().default(false),
     repaved: z.enum(["este_mes", "1_3_meses", "mas_3_meses"]).nullable().default(null),
     cobbled: z.boolean().default(false),

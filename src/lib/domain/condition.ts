@@ -6,7 +6,7 @@ import type { Condition, Patching, Rating, SegmentEvent, SegmentRating } from ".
 
 const DAY_MS = 86_400_000;
 const RATING_ORDER: Rating[] = ["buena", "gastada", "muy_deteriorada"];
-const PATCHING_ORDER: Patching[] = ["pocos", "bastantes", "todo_parche"];
+const PATCHING_ORDER: Patching[] = ["ninguno", "pocos", "bastantes", "todo_parche"];
 
 export interface ConditionResult {
   condition: Condition;

@@ -113,7 +113,6 @@ export const demoSource: DataSource = {
   },
 
   async nearestSegment(p) {
-    if (!pointInRing(p, casco)) return null;
     const ev = nowEval();
     let best: { s: (typeof ev.segments)[number]; d: number } | null = null;
     for (const s of ev.segments) {

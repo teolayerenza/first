@@ -41,7 +41,7 @@ function lineColor(view: MapView): ExpressionSpecification {
   const v = (n: string) => cssVar(n);
   if (view === "parcheo") {
     return ["case", ["==", ["get", "cobbled"], true], v("--c-empedrado"),
-      ["match", ["coalesce", ["get", "patching"], "none"], "todo_parche", v("--c-muy"), "bastantes", v("--c-gastada"), "pocos", v("--c-buena"), v("--c-sin")]];
+      ["match", ["coalesce", ["get", "patching"], "none"], "todo_parche", v("--c-muy"), "bastantes", v("--c-gastada"), "pocos", v("--c-buena"), "ninguno", v("--c-nueva"), v("--c-sin")]];
   }
   if (view === "problemas") {
     return ["case", ["==", ["get", "cobbled"], true], v("--c-empedrado"),

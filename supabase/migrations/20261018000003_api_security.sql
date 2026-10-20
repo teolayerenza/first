@@ -98,7 +98,8 @@ language sql stable security definer set search_path = public, extensions, pg_te
     select s.id, s.street_name || ' e/ ' || s.between_a || ' y ' || s.between_b as label, s.condition,
            st_distance(s.geom::geography, pt.g::geography) as d
       from segments s, pt
-     where (select st_within(pt.g, c.geom) from casco c)
+     -- Sin exigir que el punto esté dentro del casco: las avenidas del borde (31, 32, 72, 122), su mano
+     -- de afuera y las rotondas quedan sobre o apenas fuera del límite. Alcanza con estar a ≤ 60 m de una cuadra.
      order by s.geom <-> pt.g limit 8
   )
   select id, label, condition, d from near where d <= 60 order by d limit 1

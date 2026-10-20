@@ -66,7 +66,7 @@ begin
 
     select t.patching into v_patch from (
       select r.patching, sum(case when r.on_site then v_onsite_w else 1 end) as w,
-             case r.patching when 'pocos' then 1 when 'bastantes' then 2 else 3 end as ord
+             case r.patching when 'ninguno' then 0 when 'pocos' then 1 when 'bastantes' then 2 else 3 end as ord
         from public.segment_ratings r
        where r.segment_id = p_segment_id and r.state = 'activo' and r.patching is not null
          and r.created_at >= now() - v_win and r.created_at <= now()

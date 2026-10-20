@@ -64,7 +64,7 @@ create table segments (
   -- Estado derivado (lo mantiene recompute_segment)
   condition    text not null default 'sin_relevar'
                check (condition in ('nueva', 'buena', 'gastada', 'muy_deteriorada', 'sin_relevar')),
-  patching     text check (patching in ('pocos', 'bastantes', 'todo_parche')),
+  patching     text check (patching in ('ninguno', 'pocos', 'bastantes', 'todo_parche')),
   repaved_at   timestamptz,
   rating_count int not null default 0,
   open_pozos   int not null default 0,
@@ -83,7 +83,7 @@ create table segment_ratings (
   segment_id       bigint not null references segments,
   voter_hash       text not null,              -- HMAC(secreto, device | segment:id)
   rating           text not null check (rating in ('buena', 'gastada', 'muy_deteriorada')),
-  patching         text check (patching in ('pocos', 'bastantes', 'todo_parche')),
+  patching         text check (patching in ('ninguno', 'pocos', 'bastantes', 'todo_parche')),
   on_site          boolean not null default false,
   state            contribution_state not null default 'pendiente',
   contributor_hash text,                       -- temporal: se pone en NULL al promover
