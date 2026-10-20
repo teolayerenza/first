@@ -53,6 +53,7 @@ interface IssueRow {
   lng: number;
   lat: number;
   photo_path: string | null;
+  comment: string | null;
 }
 
 const toSegmentFeature = (r: SegmentRow): SegmentsFC["features"][number] => ({
@@ -83,6 +84,7 @@ const toIssueProps = (r: IssueRow) => ({
   days: r.days,
   sigueVotes: r.sigue_votes,
   photoUrl: photoUrl(r.photo_path),
+  comment: r.comment,
 });
 
 /** Supabase devuelve como mucho 1000 filas por pedido: se pagina. */

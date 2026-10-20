@@ -18,6 +18,7 @@ export default function PrivacidadPage() {
             ["Cuadras y zonas", "No", "Son datos públicos de OpenStreetMap."],
             ["Calificación de una cuadra (buena / gastada / muy deteriorada), si fue en el lugar (sí/no), hora redondeada", "No", "Calcular el estado del asfalto."],
             ["Pozo o parche: ubicación del problema, gravedad, foto revisada", "No", "Es lo que muestra el mapa."],
+            ["Comentario opcional del pozo o parche (hasta 200 caracteres)", "No, si no ponés datos tuyos", "Contar cómo está. Es público: se borran solos teléfonos, mails y links, y se oculta si lo denuncian."],
             ["Votos “sigue ahí / arreglado / no existe”", "No", "Verificar y cerrar reportes."],
             ["Un código por aporte (hash) que cambia en cada cuadra y en cada pozo", "No", "Que nadie vote dos veces lo mismo. No permite juntar los aportes de un mismo celular."],
             ["Contador de vecinos: un código por celular, el día del primer aporte y 3 sí/no", "No", "Mostrar cuántos vecinos se sumaron. No dice qué aportó ni dónde."],

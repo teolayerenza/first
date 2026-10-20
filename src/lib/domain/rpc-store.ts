@@ -66,6 +66,7 @@ export function rpcStore(
         p_lat: i.location[1],
         p_segment_id: i.segmentId,
         p_photo_path: i.photoPath,
+        p_comment: i.comment,
       });
     },
     async insertVote(v) {

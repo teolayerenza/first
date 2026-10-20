@@ -512,7 +512,7 @@ El límite de **1 MB en el servidor** no es para el usuario: es una red de segur
 saltándose la app (ver `SEGURIDAD.md`). Una foto que pasó por la app nunca llega a ese límite.
 
 ### Comunes a los dos formularios
-- No hay texto libre en el MVP (nada que moderar y ningún dato personal que se pueda filtrar).
+- El único texto libre es el comentario opcional de pozos y parches: corto, limpio de datos de contacto, público y denunciable (docs/SEGURIDAD.md).
 - Funciona sin señal: el envío queda en cola en IndexedDB.
 - Turnstile invisible + rate limit diario por dispositivo.
 

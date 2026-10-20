@@ -46,6 +46,7 @@ export interface SubmitStore {
     location: LngLat;
     segmentId: number;
     photoPath: string | null;
+    comment: string | null;
   }): Promise<void>;
   insertVote(row: {
     issueId: string;
@@ -169,6 +170,7 @@ export async function handleSubmit(raw: unknown, ctx: SubmitContext, deps: Submi
         location: p.location,
         segmentId: snapped.segmentId,
         photoPath: p.photoPath,
+        comment: cleanComment(p.comment),
       });
       return { ok: true, kind: "issue", issueId: id, segmentId: snapped.segmentId };
     }
@@ -209,3 +211,22 @@ export const ERROR_MESSAGES: Record<SubmitError, string> = {
   not_found: "No encontramos esa cuadra o ese reporte.",
   duplicate: "Ya hay un reporte muy cerca de ese punto.",
 };
+
+/**
+ * Comentario libre y público de un pozo o parche ("Hace meses que está así"). Antes de guardarlo se sacan
+ * teléfonos, mails, links y @usuarios: no son datos que Pocitos LP quiera tener. Máximo 200 caracteres.
+ */
+export function cleanComment(raw: string | null | undefined): string | null {
+  if (!raw) return null;
+  const text = raw
+    .replace(/[\u0000-\u001f\u007f]/g, " ")
+    .replace(/https?:\/\/\S+|www\.\S+/gi, "")
+    .replace(/[\w.+-]+@[\w-]+\.[\w.]+/g, "")
+    .replace(/@\w+/g, "")
+    .replace(/\+?\d[\d\s().-]{6,}\d/g, "")
+    .replace(/\s+/g, " ")
+    .trim()
+    .slice(0, 200)
+    .trim();
+  return text.length ? text : null;
+}

@@ -1,5 +1,5 @@
 // Payloads que acepta el endpoint de escritura. Se validan en el cliente (UX) y en el servidor (seguridad).
-// Solo enums, números y coordenadas: no hay texto libre.
+// Enums, números y coordenadas. El único texto libre es el comentario opcional de un pozo o parche.
 
 import { z } from "zod";
 
@@ -30,6 +30,8 @@ export const issuePayload = z
       .default(null),
     /** El vecino ya vio el "¿Es este?" y dijo que es otro. */
     forceNew: z.boolean().default(false),
+    // Texto libre opcional; se limpia y se corta a 200 caracteres en submit.ts (cleanComment).
+    comment: z.string().max(500).nullable().default(null),
   })
   .refine((p) => (p.issueKind === "parche") === (p.parcheType !== null), {
     message: "parcheType es obligatorio para parches y no aplica a pozos",

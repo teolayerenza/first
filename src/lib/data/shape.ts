@@ -56,6 +56,7 @@ export function issuesFC(ev: Evaluation, zoneId: number | null = null): IssuesFC
           sigueVotes: i.derived.sigueVotes,
           // Las fotos solo son públicas una vez verificado el problema (docs/SEGURIDAD.md §3).
           photoUrl: null,
+          comment: i.issue.comment ?? null,
         },
       })),
   };
@@ -85,6 +86,7 @@ export function segmentDetail(ev: Evaluation, zones: Zone[], id: number): Segmen
         days: Math.floor((now - i.issue.createdAt.getTime()) / DAY),
         sigueVotes: i.derived.sigueVotes,
         photoUrl: null,
+        comment: i.issue.comment ?? null,
         location: i.issue.location,
         status: i.derived.status as "abierto" | "resuelto",
       }))

@@ -33,6 +33,7 @@ export function ReportIssueForm({ kind }: { kind: IssueKind }) {
   const [parche, setParche] = useState<ParcheType | null>(null);
   const [sev, setSev] = useState<Severity | null>(null);
   const [photo, setPhoto] = useState<CompressedPhoto | null>(null);
+  const [comment, setComment] = useState("");
   const [busy, setBusy] = useState(false);
   const [result, setResult] = useState<ClientResult | null>(null);
   const [dup, setDup] = useState<string | null>(null);
@@ -43,7 +44,7 @@ export function ReportIssueForm({ kind }: { kind: IssueKind }) {
     if (!ready || !loc) return;
     setBusy(true);
     const r = await submit(
-      { kind: "issue", issueKind: kind, parcheType: kind === "parche" ? parche : null, severity: sev!, location: loc.point, onSite: loc.onSite, forceNew },
+      { kind: "issue", issueKind: kind, parcheType: kind === "parche" ? parche : null, severity: sev!, location: loc.point, onSite: loc.onSite, forceNew, comment: comment.trim() || null },
       photo ? { blob: photo.blob, type: photo.type } : null,
     );
     setBusy(false);
@@ -118,6 +119,18 @@ export function ReportIssueForm({ kind }: { kind: IssueKind }) {
         </div>
         <div className="mt-4">
           <PhotoField onReady={setPhoto} />
+        </div>
+        <div className="mt-4">
+          <label htmlFor="comentario" className="block font-semibold text-ink">
+            ¿Querés contar algo? <span className="font-normal text-ink-2">(opcional)</span>
+          </label>
+          <textarea id="comentario" value={comment} maxLength={200} rows={3} onChange={(e) => setComment(e.target.value)}
+            placeholder={kind === "pozo" ? "Ej.: Hace meses que está así. Ya se cayó una moto." : "Ej.: Lo tiraron hace dos semanas y ya se hundió."}
+            className="mt-2 block w-full resize-none border border-line bg-surface-2 p-3 text-ink" />
+          <p className="mt-1 flex justify-between gap-3 text-small text-ink-2">
+            <span>Es público. No pongas nombres, teléfonos ni direcciones de casas.</span>
+            <span className="tabular shrink-0">{comment.length}/200</span>
+          </p>
         </div>
       </Step>
 

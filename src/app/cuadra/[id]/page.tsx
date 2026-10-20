@@ -72,6 +72,10 @@ async function Content({ params }: { params: Promise<{ id: string }> }) {
                     </p>
                   </div>
                 </div>
+                {i.comment && (
+                  // Texto plano: React lo escapa, nunca se interpreta como HTML.
+                  <blockquote className="mt-3 border-l-4 border-ink-3 pl-3 text-ink">“{i.comment}”</blockquote>
+                )}
                 {i.photoUrl && (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img src={i.photoUrl} alt="Foto del problema" className="mt-3 max-h-64 w-full object-cover" loading="lazy" />

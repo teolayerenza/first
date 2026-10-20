@@ -146,7 +146,10 @@ Es lo más difícil de frenar sin identificar a la gente, así que la respuesta 
 
 ## 5. Aplicación web y operación
 
-- **Sin texto libre**: no hay comentarios, así que no hay XSS ni nada para moderar. Los únicos inputs son enums, números y coordenadas.
+- **Un solo texto libre: el comentario opcional de un pozo o parche** (hasta 200 caracteres, público). Antes de guardarlo,
+  `cleanComment` (src/lib/domain/submit.ts) saca teléfonos, mails, links y @usuarios. Se muestra solo en reportes verificados,
+  siempre como texto plano (React lo escapa; nunca en el globo del mapa, que usa HTML), y con 3 denuncias se oculta el
+  reporte entero. El resto de los inputs son enums, números y coordenadas.
 - Validación con **Zod** en el cliente (para la UX) y en la Edge Function (para la seguridad).
 - Headers: **CSP estricta**, HSTS, `X-Content-Type-Options`, `Referrer-Policy: no-referrer`, `Permissions-Policy`
   (geolocalización y cámara solo en la propia app).

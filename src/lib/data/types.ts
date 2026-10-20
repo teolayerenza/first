@@ -61,6 +61,7 @@ export interface IssueFeatureProps {
   days: number;
   sigueVotes: number;
   photoUrl: string | null;
+  comment: string | null;
 }
 
 export interface Feature<G, P> {

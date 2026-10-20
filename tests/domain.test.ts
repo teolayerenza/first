@@ -3,7 +3,7 @@ import { computeCondition } from "../src/lib/domain/condition";
 import { buildCasco, buildSegments, buildZones, segmentLabel } from "../src/lib/domain/grid";
 import { pointInRing, projectOnLine } from "../src/lib/domain/geo";
 import { deriveIssue } from "../src/lib/domain/issues";
-import { handleSubmit, type SubmitDeps } from "../src/lib/domain/submit";
+import { cleanComment, handleSubmit, type SubmitDeps } from "../src/lib/domain/submit";
 import { splitWays, streetLabel, type OsmWay } from "../src/lib/osm/split";
 import type { Issue, IssueVote, SegmentRating } from "../src/lib/domain/types";
 
@@ -137,5 +137,22 @@ describe("importación de OSM", () => {
     expect(segs.find((s) => s.streetName === "Calle 7")!.isCobbled).toBe(true);
     expect(streetLabel({ name: "Avenida 13" })).toEqual({ name: "Av. 13", isAvenue: true });
     expect(streetLabel({ name: "Diagonal 74" }).name).toBe("Diagonal 74");
+  });
+});
+
+describe("comentarios de pozos y parches", () => {
+  it("deja el texto del vecino tal cual", () => {
+    expect(cleanComment("Es imposible pasar. Hace meses que está roto")).toBe("Es imposible pasar. Hace meses que está roto");
+    expect(cleanComment("Me caí con la moto ahí hace 2 semanas, en 7 y 50")).toBe("Me caí con la moto ahí hace 2 semanas, en 7 y 50");
+  });
+  it("saca teléfonos, mails, links y @usuarios", () => {
+    expect(cleanComment("Llamame al 221 555-1234 o a juan@mail.com")).toBe("Llamame al o a");
+    expect(cleanComment("Mirá https://ejemplo.com y seguime en @juancito")).toBe("Mirá y seguime en");
+  });
+  it("corta a 200 caracteres y descarta lo vacío", () => {
+    expect(cleanComment("a".repeat(300))!.length).toBe(200);
+    expect(cleanComment("   ")).toBeNull();
+    expect(cleanComment("www.spam.com")).toBeNull();
+    expect(cleanComment(null)).toBeNull();
   });
 });

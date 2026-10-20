@@ -38,7 +38,7 @@ export function IssueVotes({ issueId, kind }: { issueId: string; kind: IssueKind
         <div className="flex flex-wrap gap-2">
           <button disabled={busy} className={btn} onClick={() => vote("sigue")}>Sigue ahí</button>
           <button disabled={busy} className={btn} onClick={() => (kind === "pozo" ? setAskQuality(true) : vote("arreglado", "bien"))}>Ya lo arreglaron</button>
-          <button disabled={busy} className={`${btn} text-ink-2`} onClick={() => vote("falso")}>No existe / denunciar foto</button>
+          <button disabled={busy} className={`${btn} text-ink-2`} onClick={() => vote("falso")}>No existe / denunciar foto o comentario</button>
         </div>
       )}
     </div>

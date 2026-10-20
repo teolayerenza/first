@@ -65,6 +65,8 @@ export interface Issue {
   segmentId: number;
   hasPhoto: boolean;
   photoApproved: boolean;
+  /** Comentario libre del vecino, ya limpio (submit.ts → cleanComment). Público. */
+  comment?: string | null;
   createdAt: Date;
   state: ContributionState;
 }

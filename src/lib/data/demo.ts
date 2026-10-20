@@ -213,6 +213,7 @@ const demoStore: SubmitStore = {
       segmentId: row.segmentId,
       hasPhoto: row.photoPath !== null,
       photoApproved: false,
+      comment: row.comment,
       createdAt: new Date(),
       state: "activo",
     });
