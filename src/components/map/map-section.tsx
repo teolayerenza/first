@@ -103,7 +103,7 @@ export function MapSection({ casco, zoneId, focus }: { casco: LngLat[]; zoneId?:
         ))}
         {mode === "2d" && showIssues && (
           <>
-            <li className="flex items-center gap-1.5"><span aria-hidden className="h-3 w-3 rounded-full bg-asphalt-ink" />Pozo</li>
+            <li className="flex items-center gap-1.5"><span aria-hidden className="h-3 w-3 rounded-full bg-pozo" />Pozo</li>
             <li className="flex items-center gap-1.5"><span aria-hidden className="h-3 w-3 rounded-full bg-parche" />Parche mal hecho</li>
             <li className="flex items-center gap-1.5"><span aria-hidden className="h-3 w-3 rounded-full border-2 border-asphalt-ink" />Pendiente de verificar</li>
           </>

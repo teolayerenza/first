@@ -4,6 +4,7 @@ import dynamic from "next/dynamic";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { StreetSearch } from "@/components/forms/location-picker";
+import { locateDevice } from "@/lib/client/locate";
 import type { SegmentDetail, SegmentsFC } from "@/lib/data/types";
 import type { LngLat } from "@/lib/domain/types";
 import { CONDITION_HINT, CONDITION_LABEL } from "@/lib/format";
@@ -55,34 +56,28 @@ export function Hero({ title, lead, casco, segmentsUrl, swatches }: { title: str
     setLoading(false);
   }
 
-  /** Tu cuadra por GPS: solo con ubicación precisa (celular); una compu sin GPS puede errar por kilómetros. */
-  function locate() {
+  /** Tu cuadra por ubicación del dispositivo (la ubicación no se envía: solo se busca la cuadra más cercana). */
+  async function locate() {
     setGpsMsg(null);
-    if (!navigator.geolocation) return setGpsMsg("Este dispositivo no permite usar la ubicación. Buscá la cuadra por nombre.");
     setLoading(true);
-    navigator.geolocation.getCurrentPosition(
-      async (pos) => {
-        if (pos.coords.accuracy > 500) {
-          setLoading(false);
-          return setGpsMsg("Este dispositivo no tiene GPS y solo da una ubicación aproximada. Buscá la cuadra por nombre.");
-        }
-        try {
-          const r = await fetch(`/api/geo/cercana?lng=${pos.coords.longitude}&lat=${pos.coords.latitude}`);
-          const { segment, inCasco } = (await r.json()) as { segment: { id: number } | null; inCasco: boolean };
-          if (!inCasco) setGpsMsg("Por ahora tu zona no está incluida. Pocitos LP empieza por el casco urbano y vamos a ir sumando barrios.");
-          else if (!segment) setGpsMsg("No hay una calle del casco cerca de donde estás.");
-          else return pick(segment.id);
-        } catch {
-          setGpsMsg("No pudimos buscar tu cuadra. Probá de nuevo.");
-        }
-        setLoading(false);
-      },
-      () => {
-        setLoading(false);
-        setGpsMsg("No pudimos usar el GPS. Buscá la cuadra por nombre.");
-      },
-      { enableHighAccuracy: true, timeout: 10_000, maximumAge: 30_000 },
-    );
+    const loc = await locateDevice();
+    if (!loc.ok) {
+      setLoading(false);
+      return setGpsMsg(loc.message);
+    }
+    try {
+      const r = await fetch(`/api/geo/cercana?lng=${loc.point[0]}&lat=${loc.point[1]}`);
+      const { segment, inCasco } = (await r.json()) as { segment: { id: number } | null; inCasco: boolean };
+      if (!inCasco) setGpsMsg("Por ahora tu zona no está incluida. Pocitos LP empieza por el casco urbano y vamos a ir sumando barrios.");
+      else if (!segment) setGpsMsg("No hay una calle del casco cerca de donde estás.");
+      else {
+        if (loc.accuracyM > 100) setGpsMsg(`Ubicación aproximada (a unos ${loc.accuracyM} m): si no es tu cuadra, buscala por nombre.`);
+        return pick(segment.id);
+      }
+    } catch {
+      setGpsMsg("No pudimos buscar tu cuadra. Probá de nuevo.");
+    }
+    setLoading(false);
   }
 
   const key = cuadra ? (cuadra.cobbled ? "empedrado" : cuadra.condition) : null;

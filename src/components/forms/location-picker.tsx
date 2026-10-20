@@ -6,6 +6,7 @@ import { tintParks } from "@/lib/client/map-style";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { cssVar, useResolvedTheme } from "@/components/theme";
 import type { SegmentRef, StreetIndexEntry } from "@/lib/data/types";
+import { locateDevice } from "@/lib/client/locate";
 import { haversineM } from "@/lib/domain/geo";
 import type { LngLat } from "@/lib/domain/types";
 import { Pin } from "./glyphs";
@@ -35,7 +36,8 @@ export function LocationPicker({ onChange, initial, hint }: { onChange: (l: Pick
   const theme = useResolvedTheme();
   const [seg, setSeg] = useState<SegmentRef | null | undefined>(undefined);
   const [inCasco, setInCasco] = useState(true);
-  const [gpsState, setGpsState] = useState<"idle" | "loading" | "ok" | "denied" | "rough">("idle");
+  const [gpsState, setGpsState] = useState<"idle" | "loading" | "ok">("idle");
+  const [gpsMsg, setGpsMsg] = useState<string | null>(null);
   const [searching, setSearching] = useState(false);
   const cb = useRef(onChange);
   useEffect(() => {
@@ -101,21 +103,18 @@ export function LocationPicker({ onChange, initial, hint }: { onChange: (l: Pick
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [theme]);
 
-  const locate = () => {
-    if (!navigator.geolocation) return setGpsState("denied");
+  const locate = async () => {
     setGpsState("loading");
-    navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        // Sin GPS (una compu), el navegador estima la ubicación por la conexión a internet: puede errar
-        // por kilómetros (te ubica en el proveedor). Ahí no se mueve el mapa.
-        if (pos.coords.accuracy > 500) return setGpsState("rough");
-        gps.current = [pos.coords.longitude, pos.coords.latitude];
-        setGpsState("ok");
-        map.current?.flyTo({ center: gps.current, zoom: 18 });
-      },
-      () => setGpsState("denied"),
-      { enableHighAccuracy: true, timeout: 10_000, maximumAge: 30_000 },
-    );
+    setGpsMsg(null);
+    const r = await locateDevice();
+    if (!r.ok) {
+      setGpsState("idle");
+      return setGpsMsg(r.message);
+    }
+    gps.current = r.point;
+    setGpsState("ok");
+    if (r.accuracyM > 100) setGpsMsg(`Ubicación aproximada (a unos ${r.accuracyM} m): si hace falta, mové el mapa hasta el lugar exacto.`);
+    map.current?.flyTo({ center: r.point, zoom: r.accuracyM > 100 ? 16 : 18 });
   };
 
   return (
@@ -129,12 +128,7 @@ export function LocationPicker({ onChange, initial, hint }: { onChange: (l: Pick
         </button>
       </div>
       <p className="mt-3 text-small text-ink-2">{hint}</p>
-      {gpsState === "denied" && <p className="mt-1 text-small text-ink-2">No pudimos usar el GPS. Mové el mapa o buscá la cuadra por nombre.</p>}
-      {gpsState === "rough" && (
-        <p className="mt-1 text-small text-ink-2">
-          Este dispositivo no tiene GPS y solo da una ubicación aproximada, que puede errar por kilómetros. Mové el mapa a mano o buscá la cuadra por nombre.
-        </p>
-      )}
+      {gpsMsg && <p className="mt-1 text-small text-ink-2" role="status">{gpsMsg}</p>}
       <p className="mt-3 bg-asphalt px-4 py-3 text-lead font-semibold leading-tight text-asphalt-ink" aria-live="polite">
         {seg === undefined
           ? "Ubicando…"
