@@ -80,5 +80,8 @@ export function rpcStore(
       });
     },
     createPhotoUpload,
+    async publish() {
+      await call("promote_pending", {});
+    },
   };
 }

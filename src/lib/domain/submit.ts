@@ -57,6 +57,8 @@ export interface SubmitStore {
     mature: boolean;
   }): Promise<void>;
   createPhotoUpload(contentType: string): Promise<{ path: string; uploadUrl: string; token?: string }>;
+  /** Publica al instante lo que quedó pendiente (mismo paso que el job: anomalías, contador, promoción). */
+  publish?(): Promise<void>;
 }
 
 export interface SubmitDeps {
@@ -141,6 +143,7 @@ export async function handleSubmit(raw: unknown, ctx: SubmitContext, deps: Submi
           approxDate: null,
         });
       }
+      await deps.store.publish?.();
       return { ok: true, kind: "rating", segmentId: p.segmentId };
     }
 
@@ -174,6 +177,7 @@ export async function handleSubmit(raw: unknown, ctx: SubmitContext, deps: Submi
         photoPath: p.photoPath,
         comment: cleanComment(p.comment),
       });
+      await deps.store.publish?.();
       return { ok: true, kind: "issue", issueId: id, segmentId: snapped.segmentId };
     }
 
@@ -189,6 +193,7 @@ export async function handleSubmit(raw: unknown, ctx: SubmitContext, deps: Submi
         fixQuality: p.fixQuality,
         mature,
       });
+      await deps.store.publish?.();
       return { ok: true, kind: "vote", issueId: p.issueId };
     }
   }

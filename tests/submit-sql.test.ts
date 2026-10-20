@@ -59,11 +59,9 @@ describe("escritura", () => {
     expect(await handleSubmit({ kind: "issue", issueKind: "parche", severity: 2, location: onSeg }, ctx("a"), deps)).toMatchObject({ ok: false, error: "invalid_payload" });
   });
 
-  it("una calificación queda pendiente hasta la promoción y nunca guarda el vínculo con el dispositivo", async () => {
+  it("una calificación se publica al instante y nunca guarda el vínculo con el dispositivo", async () => {
     const r = await handleSubmit({ kind: "rating", segmentId: seg.id, rating: "muy_deteriorada", onSite: true }, ctx("vecina-1"), deps);
     expect(r.ok).toBe(true);
-    expect((await segRow(seg.id)).condition).toBe("sin_relevar");
-    await promote();
     expect((await segRow(seg.id)).condition).toBe("muy_deteriorada"); // en el lugar pesa 2
     const { rows } = await db.query<{ n: number }>(`select count(*)::int as n from segment_ratings where contributor_hash is not null`);
     expect(rows[0].n).toBe(0);
@@ -94,10 +92,8 @@ describe("escritura", () => {
   it("no se puede autoconfirmar; una sesión nueva tampoco verifica sola", async () => {
     await handleSubmit({ kind: "vote", issueId: pozoId, vote: "sigue" }, ctx("reporter"), deps);
     await handleSubmit({ kind: "vote", issueId: pozoId, vote: "sigue" }, ctx("recien-llegado", new Date()), deps);
-    await promote();
     expect((await db.query<{ verified: boolean }>(`select verified from issues where id = $1`, [pozoId])).rows[0].verified).toBe(false);
     await handleSubmit({ kind: "vote", issueId: pozoId, vote: "sigue" }, ctx("vecino-viejo"), deps);
-    await promote();
     expect((await db.query<{ verified: boolean }>(`select verified from issues where id = $1`, [pozoId])).rows[0].verified).toBe(true);
     expect((await segRow(seg.id)).open_pozos).toBe(1);
   });
@@ -127,8 +123,10 @@ describe("escritura", () => {
 
   it("una ráfaga en una zona queda en revisión, no cuenta y queda en la bitácora pública", async () => {
     const zoneSegs = segments.filter((s) => s.zoneId === 20).slice(0, 60);
+    // El detector corre sobre lo pendiente: se carga la ráfaga sin publicar al instante, como si llegara toda junta.
+    const queued = { ...deps, store: { ...deps.store, publish: undefined } };
     for (const [i, s] of zoneSegs.entries()) {
-      await handleSubmit({ kind: "rating", segmentId: s.id, rating: "buena", onSite: true }, ctx(`bot-${i}`), deps);
+      await handleSubmit({ kind: "rating", segmentId: s.id, rating: "buena", onSite: true }, ctx(`bot-${i}`), queued);
     }
     await promote();
     const { rows } = await db.query<{ state: string; n: number }>(
