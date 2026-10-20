@@ -19,11 +19,11 @@ export function RateSegmentForm({ preset }: { preset?: { id: number; label: stri
     preset ? { point: preset.mid, segment: { id: preset.id, label: preset.label, condition: "sin_relevar" }, onSite: false } : null,
   );
   const [fixed, setFixed] = useState(!!preset);
-  const [rating, setRating] = useState<Rating | null>(null);
+  // "empedrado" es la cuarta opción: la cuadra es de adoquines y no tiene estado de asfalto.
+  const [rating, setRating] = useState<Rating | "empedrado" | null>(null);
   const [patching, setPatching] = useState<Patching | null>(null);
   const [repaved, setRepaved] = useState<Repaved | null>(null);
   const [repavedOn, setRepavedOn] = useState(false);
-  const [cobbled, setCobbled] = useState(false);
   const [busy, setBusy] = useState(false);
   const [result, setResult] = useState<ClientResult | null>(null);
   const [neighbors, setNeighbors] = useState<SegmentRef[]>([]);
@@ -43,11 +43,11 @@ export function RateSegmentForm({ preset }: { preset?: { id: number; label: stri
     const r = await submit({
       kind: "rating",
       segmentId: segment!.id,
-      rating: rating!,
-      patching,
+      rating: rating === "empedrado" ? null : rating!,
+      patching: rating === "empedrado" ? null : patching,
       onSite: loc!.onSite,
-      repaved: repavedOn ? repaved : null,
-      cobbled,
+      repaved: rating !== "empedrado" && repavedOn ? repaved : null,
+      cobbled: rating === "empedrado",
     });
     setBusy(false);
     setResult(r);
@@ -64,7 +64,7 @@ export function RateSegmentForm({ preset }: { preset?: { id: number; label: stri
         <div className={`p-6 sm:p-8 ${result.ok ? "bg-green text-green-ink" : "bg-paint text-paint-ink"}`}>
           <h2 className="text-head">{result.ok ? "¡Gracias! Calificación guardada" : "Guardado sin señal"}</h2>
           <p className="mt-4 max-w-[48ch] text-lead leading-snug">
-            {segment?.label}: la calificaste como <strong>{CONDITION_LABEL[rating!]}</strong>.
+            {segment?.label}: {rating === "empedrado" ? <>la marcaste como <strong>empedrada</strong>.</> : <>la calificaste como <strong>{CONDITION_LABEL[rating!]}</strong>.</>}
             {" "}El estado de la cuadra se actualiza cuando coinciden al menos dos vecinos (o uno que estuvo en el lugar).
           </p>
         </div>
@@ -94,7 +94,7 @@ export function RateSegmentForm({ preset }: { preset?: { id: number; label: stri
           </div>
         )}
         <div className="flex flex-col gap-2 sm:flex-row">
-          <button className="h-[52px] bg-asphalt px-5 font-semibold text-asphalt-ink" onClick={() => { setResult(null); setRating(null); setPatching(null); setRepavedOn(false); setRepaved(null); setCobbled(false); setNeighbors([]); }}>
+          <button className="h-[52px] bg-asphalt px-5 font-semibold text-asphalt-ink" onClick={() => { setResult(null); setRating(null); setPatching(null); setRepavedOn(false); setRepaved(null); setNeighbors([]); }}>
             Calificar otra cuadra
           </button>
           <Link href="/reportar/pozo" className="inline-flex h-[52px] items-center justify-center bg-surface px-5 font-semibold text-ink">Reportar un pozo</Link>
@@ -120,13 +120,15 @@ export function RateSegmentForm({ preset }: { preset?: { id: number; label: stri
         )}
       </Step>
 
-      <Step n={2} title="¿Cómo está el asfalto?">
+      <Step n={2} title="¿Cómo está la calle?">
         <p className="-mt-1 mb-4 text-ink-2">El estado general de la cuadra, no un pozo puntual (eso se reporta aparte).</p>
         <div role="radiogroup" className="flex flex-col gap-2">
           <Choice name="rating" value="buena" checked={rating === "buena"} onChange={() => setRating("buena")} swatch="bg-buena" title="Buena" desc="Asfalto en buen estado" />
           <Choice name="rating" value="gastada" checked={rating === "gastada"} onChange={() => setRating("gastada")} swatch="bg-gastada" title="Gastada" desc="Asfalto viejo, con grietas o algunos parches" />
           <Choice name="rating" value="muy_deteriorada" checked={rating === "muy_deteriorada"} onChange={() => setRating("muy_deteriorada")} swatch="bg-muy" title="Muy deteriorada" desc="Se desarma, todo parcheado, hace años que no la arreglan" />
+          <Choice name="rating" value="empedrado" checked={rating === "empedrado"} onChange={() => setRating("empedrado")} swatch="bg-empedrado" title="Es empedrado" desc="Adoquines, no asfalto: se cuenta aparte" />
         </div>
+        {rating !== "empedrado" && (<>
         <p className="mb-2 mt-6 font-semibold text-ink">¿Cuánto parche tiene? <span className="font-normal text-ink-2">(opcional)</span></p>
         <Chips label="Cantidad de parches" value={patching} onChange={setPatching}
           options={[{ v: "pocos", t: "Pocos" }, { v: "bastantes", t: "Bastantes" }, { v: "todo_parche", t: "Es todo parche" }]} />
@@ -139,11 +141,8 @@ export function RateSegmentForm({ preset }: { preset?: { id: number; label: stri
             <Chips label="¿Cuándo la repavimentaron?" value={repaved} onChange={setRepaved}
               options={[{ v: "este_mes", t: "Este mes" }, { v: "1_3_meses", t: "Hace 1 a 3 meses" }, { v: "mas_3_meses", t: "Hace más de 3 meses" }]} />
           )}
-          <label className="flex items-center gap-2 text-ink">
-            <input type="checkbox" checked={cobbled} onChange={(e) => setCobbled(e.target.checked)} className="h-5 w-5" />
-            Es empedrado / adoquinado
-          </label>
         </div>
+        </>)}
       </Step>
 
       {result && !result.ok && (

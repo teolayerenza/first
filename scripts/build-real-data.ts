@@ -84,7 +84,6 @@ function overpassToEdges(ways: OverpassWay[]): Edge[] {
   return out;
 }
 
-const COBBLED = /^(sett|cobblestone|unhewn_cobblestone)$/;
 // Avenidas de Circunvalación: boulevard con rambla en el medio.
 const BORDER = new Set(["31", "32", "72", "122"]);
 
@@ -457,7 +456,9 @@ const candidates = split.flatMap((pc) => {
     betweenA: lo,
     betweenB: hi,
     isAvenue,
-    isCobbled: COBBLED.test(pc.surface ?? ""),
+    // El empedrado de OSM es poco confiable en el casco: arranca todo como asfalto y lo marcan los vecinos
+    // ("Es empedrado" al calificar; con 2 confirmaciones la cuadra pasa a empedrado).
+    isCobbled: false,
     zoneId: zone.id,
     coords: pc.coords.map(([x, y]) => [Math.round(x * 1e6) / 1e6, Math.round(y * 1e6) / 1e6]),
     lengthM: Math.round(lengthM * 10) / 10,

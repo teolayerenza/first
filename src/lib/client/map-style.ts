@@ -22,7 +22,8 @@ export function tintParks(style: StyleSpecification, theme: "light" | "dark"): S
       type: "fill" as const,
       source,
       "source-layer": "landcover",
-      filter: ["match", ["get", "class"], ["grass", "wood"], true, false],
+      // Solo plazas, parques y jardines: el pasto suelto (vías del tren, banquinas) haría franjas enormes.
+      filter: ["match", ["get", "subclass"], ["park", "garden", "playground", "village_green", "recreation_ground"], true, false],
       paint: { "fill-color": color, "fill-opacity": 1 },
     },
     {

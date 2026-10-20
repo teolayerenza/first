@@ -25,7 +25,7 @@ export interface SubmitStore {
     segmentId: number;
     voterHash: string;
     contributorHash: string;
-    rating: RatingPayload["rating"];
+    rating: NonNullable<RatingPayload["rating"]>;
     patching: RatingPayload["patching"];
     onSite: boolean;
   }): Promise<void>;
@@ -113,14 +113,16 @@ export async function handleSubmit(raw: unknown, ctx: SubmitContext, deps: Submi
       if (!(await deps.store.segmentExists(p.segmentId))) return { ok: false, status: 404, error: "not_found" };
       if (await limited("ratings", config.rateLimits.ratingsPerDay)) return rateLimited();
       const voterHash = await deps.hmac(`${ctx.deviceId}|segment:${p.segmentId}`);
-      await deps.store.insertRating({
-        segmentId: p.segmentId,
-        voterHash,
-        contributorHash,
-        rating: p.rating,
-        patching: p.patching,
-        onSite: p.onSite,
-      });
+      if (p.rating) {
+        await deps.store.insertRating({
+          segmentId: p.segmentId,
+          voterHash,
+          contributorHash,
+          rating: p.rating,
+          patching: p.patching,
+          onSite: p.onSite,
+        });
+      }
       if (p.repaved) {
         await deps.store.insertSegmentEvent({
           segmentId: p.segmentId,

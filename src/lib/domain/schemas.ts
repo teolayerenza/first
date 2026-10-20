@@ -5,15 +5,18 @@ import { z } from "zod";
 
 const lngLat = z.tuple([z.number().min(-180).max(180), z.number().min(-90).max(90)]);
 
-export const ratingPayload = z.object({
-  kind: z.literal("rating"),
-  segmentId: z.number().int().positive(),
-  rating: z.enum(["buena", "gastada", "muy_deteriorada"]),
-  patching: z.enum(["pocos", "bastantes", "todo_parche"]).nullable().default(null),
-  onSite: z.boolean().default(false),
-  repaved: z.enum(["este_mes", "1_3_meses", "mas_3_meses"]).nullable().default(null),
-  cobbled: z.boolean().default(false),
-});
+export const ratingPayload = z
+  .object({
+    kind: z.literal("rating"),
+    segmentId: z.number().int().positive(),
+    // Sin estado solo si la marca como empedrada: el estado es del asfalto.
+    rating: z.enum(["buena", "gastada", "muy_deteriorada"]).nullable().default(null),
+    patching: z.enum(["pocos", "bastantes", "todo_parche"]).nullable().default(null),
+    onSite: z.boolean().default(false),
+    repaved: z.enum(["este_mes", "1_3_meses", "mas_3_meses"]).nullable().default(null),
+    cobbled: z.boolean().default(false),
+  })
+  .refine((p) => p.rating !== null || p.cobbled, { message: "Falta el estado de la cuadra", path: ["rating"] });
 
 export const issuePayload = z
   .object({
