@@ -121,6 +121,9 @@ export function Dashboard({ data, casco, zone }: Props) {
             </div>
           </div>
         </div>
+        <a href="/problemas" className="mt-6 inline-flex h-[52px] items-center bg-asphalt px-6 font-semibold text-asphalt-ink hover:opacity-90">
+          Ver los problemas abiertos
+        </a>
         <div className="mt-10 grid gap-10 sm:mt-20 sm:gap-12 lg:grid-cols-2">
           {i.badFixRatePct !== null ? (
             <div>

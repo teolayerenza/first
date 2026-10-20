@@ -48,6 +48,6 @@ export function issuePopup(p: Record<string, unknown>): string {
       p.verified ? "Verificado." : "Pendiente: falta una foto o que otro vecino lo confirme."
     }</p>
     ${comment}
-    <div class="pp-actions"><a class="pp-btn pp-primary" href="/cuadra/${Number(p.segmentId)}">¿Sigue ahí?</a></div>
+    <div class="pp-actions"><a class="pp-btn pp-primary" href="/pozo/${encodeURIComponent(String(p.id))}">¿Sigue ahí?</a></div>
   </div></div>`;
 }

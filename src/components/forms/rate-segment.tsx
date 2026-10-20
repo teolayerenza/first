@@ -12,6 +12,15 @@ import { Chips, Choice, QueueFlusher, Step, SubmitButton } from "./ui";
 
 type Repaved = "este_mes" | "1_3_meses" | "mas_3_meses";
 
+type Quick = Rating | "nueva" | "empedrado";
+const QUICK: { v: Quick; t: string; cls: string }[] = [
+  { v: "nueva", t: "Nueva", cls: "bg-nueva text-white" },
+  { v: "buena", t: "Buena", cls: "bg-buena text-asphalt" },
+  { v: "gastada", t: "Gastada", cls: "bg-gastada text-asphalt" },
+  { v: "muy_deteriorada", t: "Muy deteriorada", cls: "bg-muy text-white" },
+  { v: "empedrado", t: "Empedrado", cls: "bg-empedrado text-white" },
+];
+
 export function RateSegmentForm({ preset }: { preset?: { id: number; label: string; mid: [number, number] } | null }) {
   // Si llega una cuadra elegida (desde el inicio o desde la página de la cuadra), queda fija: no hay que
   // buscarla de nuevo en el mapa. "Cambiar" abre el mapa.
@@ -27,7 +36,7 @@ export function RateSegmentForm({ preset }: { preset?: { id: number; label: stri
   const [busy, setBusy] = useState(false);
   const [result, setResult] = useState<ClientResult | null>(null);
   const [neighbors, setNeighbors] = useState<SegmentRef[]>([]);
-  const [quickDone, setQuickDone] = useState<Record<number, Rating>>({});
+  const [quickDone, setQuickDone] = useState<Record<number, Quick>>({});
 
   const segment = loc?.segment ?? null;
   const ready = segment && rating && (rating !== "nueva" || repaved);
@@ -53,9 +62,17 @@ export function RateSegmentForm({ preset }: { preset?: { id: number; label: stri
     setResult(r);
   }
 
-  async function quickRate(n: SegmentRef, r: Rating) {
-    setQuickDone((q) => ({ ...q, [n.id]: r }));
-    await submit({ kind: "rating", segmentId: n.id, rating: r, onSite: false });
+  // Calificación rápida de las cuadras vecinas: las mismas cinco opciones. "Nueva" sin preguntar cuándo
+  // se manda como repavimentada hace 1 a 3 meses (cae dentro del año igual).
+  async function quickRate(n: SegmentRef, q: Quick) {
+    setQuickDone((d) => ({ ...d, [n.id]: q }));
+    await submit(
+      q === "empedrado"
+        ? { kind: "rating", segmentId: n.id, rating: null, onSite: false, cobbled: true }
+        : q === "nueva"
+          ? { kind: "rating", segmentId: n.id, rating: "buena", onSite: false, repaved: "1_3_meses" }
+          : { kind: "rating", segmentId: n.id, rating: q, onSite: false },
+    );
   }
 
   if (result?.ok || (result && !result.ok && result.error === "offline_queued")) {
@@ -74,16 +91,16 @@ export function RateSegmentForm({ preset }: { preset?: { id: number; label: stri
             <p className="mt-1 text-ink-2">Un toque cada una. Así bajamos el &quot;sin relevar&quot;.</p>
             <ul className="mt-5 flex flex-col gap-1">
               {neighbors.map((n) => (
-                <li key={n.id} className="flex flex-wrap items-center justify-between gap-2 bg-surface-2 p-3">
+                <li key={n.id} className="flex flex-col gap-2 bg-surface-2 p-3">
                   <span className="font-semibold text-ink">{n.label}{n.condition === "sin_relevar" && <span className="ml-1 text-small font-normal text-ink-2">(sin relevar)</span>}</span>
                   {quickDone[n.id] ? (
-                    <span className="font-semibold text-good">Listo: {CONDITION_LABEL[quickDone[n.id]].toLowerCase()}</span>
+                    <span className="font-semibold text-good">Listo: {QUICK.find((o) => o.v === quickDone[n.id])!.t.toLowerCase()}</span>
                   ) : (
-                    <span className="flex gap-1">
-                      {(["buena", "gastada", "muy_deteriorada"] as Rating[]).map((r) => (
-                        <button key={r} type="button" onClick={() => quickRate(n, r)} aria-label={`${n.label}: ${CONDITION_LABEL[r]}`}
-                          className={`h-11 px-3 text-small font-semibold ${r === "buena" ? "bg-buena text-asphalt" : r === "gastada" ? "bg-gastada text-asphalt" : "bg-muy text-white"}`}>
-                          {CONDITION_LABEL[r]}
+                    <span className="flex flex-wrap gap-1">
+                      {QUICK.map((o) => (
+                        <button key={o.v} type="button" onClick={() => quickRate(n, o.v)} aria-label={`${n.label}: ${o.t}`}
+                          className={`h-11 px-3 text-small font-semibold ${o.cls}`}>
+                          {o.t}
                         </button>
                       ))}
                     </span>

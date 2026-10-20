@@ -3,8 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { connection } from "next/server";
 import { Suspense } from "react";
-import { Glyph } from "@/components/forms/glyphs";
-import { IssueVotes } from "@/components/forms/issue-votes";
+import { IssueRow } from "@/components/issue-row";
 import { getDataSource } from "@/lib/data";
 import { CONDITION_HINT, CONDITION_LABEL, fmtInt, relativeDays } from "@/lib/format";
 
@@ -15,8 +14,6 @@ export async function generateMetadata(props: PageProps<"/cuadra/[id]">): Promis
   return s ? { title: s.label } : {};
 }
 
-const SEV = ["", "leve", "medio", "peligroso"];
-const PARCHE = { elevado: "elevado, como un lomo de burro", hundido: "hundido", desarmado: "se desarmó" } as const;
 /** El encabezado de la cuadra se pinta del color de su estado. */
 const FIELD = {
   nueva: "bg-nueva text-white",
@@ -45,7 +42,7 @@ async function Content({ params }: { params: Promise<{ id: string }> }) {
           <p className="mt-8 text-head font-semibold leading-none tracking-[-0.04em]">{key === "empedrado" ? "Empedrado" : CONDITION_LABEL[s.condition]}</p>
           <p className="mt-3 max-w-[48ch] text-lead leading-snug">
             {key === "empedrado" ? "Se cuenta aparte del asfalto." : `${CONDITION_HINT[s.condition]}.`}{" "}
-            {fmtInt(s.ratingCount)} calificaciones vigentes
+            {fmtInt(s.ratingCount)} {s.ratingCount === 1 ? "calificación vigente" : "calificaciones vigentes"}
             {s.patching && `; parcheo: ${s.patching === "todo_parche" ? "es todo parche" : s.patching}`}
             {s.repavedAt && `; repavimentada en ${new Date(s.repavedAt).toLocaleDateString("es-AR", { month: "long", year: "numeric", timeZone: "UTC" })}`}.
           </p>
@@ -59,30 +56,7 @@ async function Content({ params }: { params: Promise<{ id: string }> }) {
           <h2 className="text-lead tracking-[-0.02em]">Problemas abiertos: {open.length}</h2>
           {open.length === 0 && <p className="mt-3 text-ink-2">No hay pozos ni parches abiertos reportados en esta cuadra.</p>}
           <ul className="mt-5 flex flex-col gap-1">
-            {open.map((i) => (
-              <li key={i.id} className="bg-surface-2 p-4">
-                <div className="flex items-center gap-4">
-                  <Glyph kind={i.kind === "parche" ? (i.parcheType ?? "parche") : "pozo"} className="h-8 w-14 shrink-0 text-ink" />
-                  <div>
-                    <p className="font-semibold text-ink">
-                      {i.kind === "parche" ? `Parche mal hecho${i.parcheType ? `: ${PARCHE[i.parcheType]}` : ""}` : "Pozo"}, {SEV[i.severity]}
-                    </p>
-                    <p className="text-small text-ink-2">
-                      Reportado {relativeDays(i.days)}. {i.verified ? `Verificado, ${i.sigueVotes} confirmaciones.` : "Pendiente de verificación."}
-                    </p>
-                  </div>
-                </div>
-                {i.comment && (
-                  // Texto plano: React lo escapa, nunca se interpreta como HTML.
-                  <blockquote className="mt-3 border-l-4 border-ink-3 pl-3 text-ink">“{i.comment}”</blockquote>
-                )}
-                {i.photoUrl && (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src={i.photoUrl} alt="Foto del problema" className="mt-3 max-h-64 w-full object-cover" loading="lazy" />
-                )}
-                <IssueVotes issueId={i.id} kind={i.kind} />
-              </li>
-            ))}
+            {open.map((i) => <IssueRow key={i.id} issue={i} label={s.label} />)}
           </ul>
           <p className="mt-6 flex flex-wrap gap-x-6 gap-y-2 font-semibold text-ink"><Link href="/reportar/pozo" className="underline">Reportar un pozo</Link><Link href="/reportar/parche" className="underline">Reportar un parche</Link></p>
         </section>
