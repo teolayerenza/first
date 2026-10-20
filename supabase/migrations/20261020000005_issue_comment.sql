@@ -6,8 +6,9 @@ set search_path = public, extensions;
 alter table issues add column if not exists comment text
   check (comment is null or char_length(comment) between 1 and 200);
 
+-- Se cambia la firma (nuevo parámetro): se borra la versión de 10 parámetros. Repetible.
 drop function if exists rpc_insert_issue(uuid, text, text, text, text, smallint, float8, float8, bigint, text);
-create function rpc_insert_issue(p_id uuid, p_reporter_hash text, p_contributor_hash text, p_kind text,
+create or replace function rpc_insert_issue(p_id uuid, p_reporter_hash text, p_contributor_hash text, p_kind text,
                                  p_parche_type text, p_severity smallint, p_lng float8, p_lat float8,
                                  p_segment_id bigint, p_photo_path text, p_comment text default null) returns void
 language sql set search_path = public, extensions, pg_temp as $$
