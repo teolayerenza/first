@@ -164,7 +164,7 @@ export default function StreetMap({ casco, segmentsUrl, issuesUrl, focus, view, 
   }, [ready, view, showIssues, theme]);
 
   return (
-    <div ref={el} style={height === "fill" ? undefined : { height }} className={`w-full overflow-hidden bg-asphalt-2 ${height === "fill" ? "h-full" : ""}`}
+    <div ref={el} style={height === "fill" ? undefined : { height }} className={`viewer w-full overflow-hidden bg-asphalt-2 ${height === "fill" ? "h-full" : ""}`}
       aria-label="Mapa de las calles del casco" role="region" />
   );
 }

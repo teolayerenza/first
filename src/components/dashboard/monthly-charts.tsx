@@ -40,7 +40,7 @@ export function DeteriorationLine({ series }: { series: MonthPoint[] }) {
   const ticks = [0, max / 2, max];
 
   return (
-    <div ref={ref} className="relative w-full min-w-0">
+    <div ref={ref} className="viewer relative w-full min-w-0">
       <svg className="block max-w-full" width={w} height={H} role="img" aria-label="Evolución del porcentaje de calles muy deterioradas por mes"
         onPointerMove={(e) => {
           const r = (e.currentTarget as SVGSVGElement).getBoundingClientRect();
@@ -98,7 +98,7 @@ export function NewVsFixedColumns({ series }: { series: MonthPoint[] }) {
   };
 
   return (
-    <div ref={ref} className="relative w-full min-w-0">
+    <div ref={ref} className="viewer relative w-full min-w-0">
       <ul className="mb-3 flex gap-5 text-small text-ink-2">
         <li className="flex items-center gap-1.5"><span aria-hidden className="h-3 w-3 bg-s1" />Pozos nuevos</li>
         <li className="flex items-center gap-1.5"><span aria-hidden className="h-3 w-3 bg-s2" />Pozos arreglados</li>

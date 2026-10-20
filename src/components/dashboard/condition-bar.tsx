@@ -22,7 +22,7 @@ export function ConditionBar({ kpis }: { kpis: Kpis }) {
   const segments = CONDITIONS.filter((c) => kpis.pct[c] > 0);
 
   return (
-    <div>
+    <div className="viewer">
       <div className="relative">
         <div className="flex h-16 w-full gap-[2px] sm:h-20" role="img"
           aria-label={`Estado del asfalto: ${CONDITIONS.map((c) => `${CONDITION_LABEL[c]} ${fmtPct(kpis.pct[c])}`).join(", ")}`}>

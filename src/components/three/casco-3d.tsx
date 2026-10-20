@@ -165,7 +165,7 @@ export default function Casco3D({ data, casco, height = 520, mode, fill = false,
 
   return (
     <div className={fill ? "absolute inset-0" : "relative"}>
-      <div ref={el} style={fill ? undefined : { height }} className={fill ? "h-full w-full" : "w-full overflow-hidden"} />
+      <div ref={el} style={fill ? undefined : { height }} className={fill ? "viewer h-full w-full" : "viewer w-full overflow-hidden"} />
       {hover && (
         <div role="status" className={`${TOOLTIP} max-w-[260px]`}
           style={{ left: Math.min(hover.x + 12, hover.w - 270), top: hover.y + 12 }}>
