@@ -520,6 +520,9 @@ saltándose la app (ver `SEGURIDAD.md`). Una foto que pasó por la app nunca lle
 
 ## 10. Roadmap por fases
 
+> **Próximo (semana del 26/10/2026):** de pozo a parche — cada arreglo se sigue en el tiempo (tipo de parche,
+> durabilidad, reincidencia, puntos crónicos). Plan completo en [`PLAN-ARREGLOS.md`](PLAN-ARREGLOS.md).
+
 > **Estado (octubre 2026):** Fases 0 a 5 implementadas y testeadas en **modo demo** (datos simulados).
 > El backend de Supabase (migraciones, RLS, RPC, detector de anomalías, Edge Function) está escrito y testeado
 > contra Postgres+PostGIS en memoria. Falta: importar las calles reales de OSM, redibujar las zonas,
