@@ -88,6 +88,15 @@ body { font-family: "HG", system-ui, sans-serif; color: #f1f1ef; }
 
   <!-- Gancho: el video de la camioneta pisando el pozo (cuadros precargados), congelado al impacto. -->
   <div class="layer" id="hook"></div>
+  <!-- Click de la foto: recuadro de enfoque sobre el pozo, obturador y flash. -->
+  <div class="abs" id="focus">
+    <i class="abs" style="left:0;top:0;width:70px;height:70px;border-left:10px solid #f2c200;border-top:10px solid #f2c200"></i>
+    <i class="abs" style="right:0;top:0;width:70px;height:70px;border-right:10px solid #f2c200;border-top:10px solid #f2c200"></i>
+    <i class="abs" style="left:0;bottom:0;width:70px;height:70px;border-left:10px solid #f2c200;border-bottom:10px solid #f2c200"></i>
+    <i class="abs" style="right:0;bottom:0;width:70px;height:70px;border-right:10px solid #f2c200;border-bottom:10px solid #f2c200"></i>
+  </div>
+  <div class="abs" id="shut-t" style="left:0;top:0;width:100%;background:#000"></div>
+  <div class="abs" id="shut-b" style="left:0;bottom:0;width:100%;background:#000"></div>
   <div class="layer" id="flash" style="background:#fff"></div>
 
   <!-- Mapa grande del casco. -->
@@ -383,6 +392,9 @@ body { font-family: "HG", system-ui, sans-serif; color: #f1f1ef; }
   }
   const toScreen = (pt, c) => [PC[0] + (pt[0] - c.f[0]) * c.s, PC[1] + (pt[1] - c.f[1]) * c.s];
 
+  const FREEZE_S = 0.86;          // tamaño de la foto congelada antes de volar
+  const FOC = [470, 990];          // dónde está el pozo en el cuadro congelado (px del video)
+
   // Toques: [t, id]. El dedo llega antes, se achica y deja una onda.
   const TAPS = [[3.0, "btn-enviar"], [7.65, "btn-ubicacion"], [10.45, "sev-peligroso"], [13.05, "foto-field"], [15.45, "btn-enviar"], [27.6, "btn-sigue"]];
 
@@ -397,9 +409,19 @@ body { font-family: "HG", system-ui, sans-serif; color: #f1f1ef; }
     const hi = Math.min(HOOK_N - 1, Math.floor(t * 30));
     hookImgs.forEach((im, i) => (im.style.opacity = t < 0.9 && i === hi ? 1 : 0));
     const fz = t >= 0.9 && t < 1.25 ? 1 : 0;
-    set(freeze, fz, `scale(${1 + 0.035 * out(p(t, 0.9, 1.25))})`);
+    // La foto "sale": golpe de zoom, se achica y queda con borde blanco, como recién sacada.
+    const fs = t < 1.0 ? 1 + 0.05 * out(p(t, 0.9, 0.97)) : lerp(1.05, FREEZE_S, out(p(t, 1.0, 1.2)));
+    set(freeze, fz, `scale(${fs}) rotate(${-1.6 * out(p(t, 1.0, 1.2))}deg)`, { border: `${(22 / fs) * out(p(t, 1.0, 1.15))}px solid #fff`, boxSizing: "border-box" });
     $("hook").style.opacity = t < 1.25 ? 1 : 0;
-    set($("flash"), t >= 0.9 ? 0.85 * (1 - out(p(t, 0.9, 1.15))) : 0);
+    // Recuadro de enfoque: aparece y se cierra sobre el pozo antes del click.
+    const fo = p(t, 0.3, 0.75), fw = lerp(940, 600, out(fo)), fh = lerp(700, 420, out(fo));
+    Object.assign($("focus").style, { left: FOC[0] - fw / 2 + "px", top: FOC[1] - fh / 2 + "px", width: fw + "px", height: fh + "px",
+      opacity: Math.min(out(p(t, 0.3, 0.45)), 1 - p(t, 0.9, 0.93)), transform: `scale(${1 - 0.06 * Math.sin(Math.PI * p(t, 0.8, 0.9))})` });
+    // Obturador: cierra y abre en una décima.
+    const sh = t < 0.95 ? io(p(t, 0.9, 0.945)) : 1 - io(p(t, 0.96, 1.04));
+    $("shut-t").style.height = $("shut-b").style.height = (H / 2) * sh + 1 + "px";
+    $("shut-t").style.opacity = $("shut-b").style.opacity = sh > 0.001 ? 1 : 0;
+    set($("flash"), t >= 0.96 ? 0.95 * (1 - out(p(t, 0.96, 1.22))) : 0);
 
     // Teléfono y pantallas
     const phoneOn = Math.max(p(t, 1.2, 1.55) * (1 - p(t, 3.95, 4.2)), win(t, 6.25, 17.75, 0.3), win(t, 24.1, 31.0, 0.35));
@@ -448,9 +470,10 @@ body { font-family: "HG", system-ui, sans-serif; color: #f1f1ef; }
     const fl = p(t, 1.25, 2.4);
     if (t >= 1.25 && t < 2.45) {
       const th = M["foto-thumb"]; const pt = toScreen(raw("foto-thumb", t), c);
-      const w0 = W, h0 = H, x0 = 0, y0 = 0, w1 = th.w * c.s, h1 = th.h * c.s;
+      const w0 = W * FREEZE_S, h0 = H * FREEZE_S, x0 = (W - w0) / 2, y0 = (H - h0) / 2, w1 = th.w * c.s, h1 = th.h * c.s;
       const e = io(fl);
-      Object.assign($("fly").style, { display: "block", left: lerp(x0, pt[0] - w1 / 2, e) + "px", top: lerp(y0, pt[1] - h1 / 2, e) + "px", width: lerp(w0, w1, e) + "px", height: lerp(h0, h1, e) + "px", opacity: 1 });
+      Object.assign($("fly").style, { display: "block", left: lerp(x0, pt[0] - w1 / 2, e) + "px", top: lerp(y0, pt[1] - h1 / 2, e) + "px", width: lerp(w0, w1, e) + "px", height: lerp(h0, h1, e) + "px", opacity: 1,
+        border: `${lerp(22, 0, e)}px solid #fff`, boxSizing: "border-box", transform: `rotate(${lerp(-1.6, 0, e)}deg)` });
     } else $("fly").style.display = "none";
 
     // Marca

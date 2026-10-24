@@ -35,7 +35,7 @@ def main() -> None:
     ap.add_argument("--h", type=int, default=1920)
     ap.add_argument("--fps", type=int, default=30)
     ap.add_argument("--out", default=None, help="MP4 de salida (por defecto showreel_9x16.mp4 o showreel_16x9.mp4)")
-    ap.add_argument("--audio", default="assets/gancho.m4a", help="Audio que arranca en el segundo 0 (vacío: sin audio)")
+    ap.add_argument("--audio", default="assets/audio.m4a", help="Audio que arranca en el segundo 0 (vacío: sin audio)")
     ap.add_argument("--stills", default=None, help="Segundos sueltos, separados por coma: saca PNG en vez de video")
     ap.add_argument("--channel", default="msedge")
     ap.add_argument("--exe", default=None, help="Ruta a un Chromium/Edge (ignora --channel)")
