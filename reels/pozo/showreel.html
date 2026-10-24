@@ -530,12 +530,39 @@ body { font-family: "HG", system-ui, sans-serif; color: #f1f1ef; }
     } else $("ripple").style.opacity = 0;
   }
 
+  // ——— Montaje: tiempo del video → tiempo de la animación ———
+  // Pares [animación, video]. Pendiente 1 = velocidad normal; menos de 1 = cámara lenta; los saltos cortos recortan
+  // tiempo muerto. Estira el reporte del gancho y recorta la espera del mapa, de los números y del cierre.
+  const CUT = [
+    [0, 0], [0.9, 0.9],
+    [1.25, 1.6],    // la foto congelada queda más tiempo en pantalla
+    [2.4, 3.6],     // la foto baja al formulario más despacio
+    [3.0, 4.6],     // el dedo va hasta "Enviar reporte"
+    [3.75, 5.4],    // check
+    [3.95, 6.3],    // "Pozo reportado" queda a la vista
+    [21.9, 24.25],  // explicación y mapa a velocidad normal…
+    [23.5, 24.55],  // …sin la espera del mapa ya pintado
+    [33.5, 34.55],  // ficha y números…
+    [34.6, 34.8],   // …sin la espera de los números
+    [38.0, 38.2],   // cierre, sin la cola final
+  ];
+  const warp = (t, from, to) => {
+    for (let i = 1; i < CUT.length; i++) {
+      const a = CUT[i - 1], b = CUT[i];
+      if (t <= b[from]) return a[to] + (b[to] - a[to]) * p(t, a[from], b[from]);
+    }
+    return CUT[CUT.length - 1][to];
+  };
+  const animAt = (t) => warp(t, 1, 0);
+  const videoAt = (t) => warp(t, 0, 1);
+
   // ——— Arranque ———
-  window.DUR = 40;
+  window.DUR = CUT[CUT.length - 1][1];
   window.LISTO = false;
-  window.render = render;
-  window.TAP_TIMES = TAPS.map(([tt, id]) => ({ t: tt, id }));
-  window.tapCheck = (t) => {
+  window.render = (t) => render(animAt(t));
+  window.TAP_TIMES = TAPS.map(([tt, id]) => ({ t: +videoAt(tt).toFixed(3), id }));
+  window.tapCheck = (tv) => {
+    const t = animAt(tv);
     const c = camAt(t);
     return TAPS.filter(([tt]) => Math.abs(tt - t) < 0.01).map(([, id]) => {
       const m = M[id], pt = toScreen(raw(id, t), c), w = m.w * c.s, h = m.h * c.s;
@@ -562,7 +589,7 @@ body { font-family: "HG", system-ui, sans-serif; color: #f1f1ef; }
     window.LISTO = true;
     if (!RENDER) {
       const t0 = performance.now();
-      const loop = (now) => { render(((now - t0) / 1000) % window.DUR); requestAnimationFrame(loop); };
+      const loop = (now) => { window.render(((now - t0) / 1000) % window.DUR); requestAnimationFrame(loop); };
       requestAnimationFrame(loop);
     }
   });
