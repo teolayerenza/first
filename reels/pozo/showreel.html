@@ -1,0 +1,572 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pocitos LP · Showreel</title>
+<!--
+  Showreel de Pocitos LP: todo se dibuja en función del tiempo con render(t). Sin animaciones CSS ni timers.
+  ?render            → modo cuadro por cuadro (lo usa render_video.py)
+  ?w=1920&h=1080     → versión horizontal (por defecto 1080×1920)
+  Sin ?render se reproduce en loop.
+  Datos: calles del casco © colaboradores de OpenStreetMap (ODbL). Estados de cuadras y pozos del mapa: ejemplo.
+-->
+<style>
+@font-face { font-family: "HG"; src: url("assets/HankenGrotesk.woff2") format("woff2"); font-weight: 100 900; }
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { background: #000; overflow: hidden; }
+body { font-family: "HG", system-ui, sans-serif; color: #f1f1ef; }
+#stage { position: absolute; left: 0; top: 0; overflow: hidden; background: #141414; transform-origin: 0 0; }
+.layer { position: absolute; inset: 0; }
+.abs { position: absolute; }
+.word { display: inline-block; white-space: pre; will-change: transform, opacity, filter; }
+.head { position: absolute; font-weight: 700; letter-spacing: -0.035em; line-height: 1.02; }
+.head .l1, .head .l2 { display: block; }
+
+/* Teléfono: la interfaz real de la app (tema oscuro), en px de un celular de 390 de ancho. */
+#cam { position: absolute; left: 0; top: 0; transform-origin: 0 0; }
+.phone { position: absolute; width: 414px; height: 868px; padding: 12px; background: #000; border-radius: 56px; transform-origin: 0 0; }
+.vp { position: relative; width: 390px; height: 844px; overflow: hidden; border-radius: 44px; background: #121211; }
+.screen { position: absolute; inset: 0; }
+.scroll { position: absolute; left: 0; top: 0; width: 390px; }
+.hdr { display: flex; align-items: center; justify-content: space-between; height: 64px; padding: 0 16px; background: #141414; }
+.hdr b { font-size: 19px; }
+.btn-red { display: inline-flex; align-items: center; height: 40px; padding: 0 14px; background: #c8342f; color: #fff; font-weight: 600; font-size: 14px; }
+.ptitle { padding: 22px 20px 18px; }
+.ptitle h1 { font-size: 34px; letter-spacing: -0.03em; line-height: 1.05; }
+.ptitle p { margin-top: 8px; font-size: 15px; line-height: 1.35; color: #cfcdc5; }
+.card { margin: 0 12px 8px; padding: 16px; background: #1a1a19; }
+.card h2 { font-size: 20px; letter-spacing: -0.02em; margin-bottom: 12px; }
+.mapbox { position: relative; height: 290px; background: #262624; overflow: hidden; }
+.mbtn { position: absolute; left: 12px; bottom: 12px; display: inline-flex; align-items: center; height: 44px; padding: 0 16px; background: #141414; color: #f1f1ef; font-weight: 600; font-size: 14px; }
+.hint { margin-top: 10px; font-size: 13px; color: #cfcdc5; }
+.lbl { position: relative; margin-top: 10px; padding: 12px 14px; background: #141414; font-size: 19px; font-weight: 600; line-height: 1.15; }
+.search { margin-top: 10px; padding: 14px; background: #262624; }
+.search b { display: block; font-size: 15px; }
+.search small { display: block; margin-top: 2px; font-size: 12px; color: #cfcdc5; }
+.selx { margin-top: 8px; display: flex; align-items: center; justify-content: space-between; height: 48px; padding: 0 12px; border: 2px solid #f1f1ef; background: #1a1a19; font-size: 17px; font-weight: 600; }
+.cap { margin-top: 8px; font-size: 13px; font-weight: 600; }
+.choice { display: flex; align-items: center; gap: 12px; min-height: 66px; padding: 10px 12px; background: #262624; margin-bottom: 6px; }
+.choice .t { font-weight: 700; font-size: 16px; }
+.choice .d { font-size: 13px; color: #cfcdc5; }
+.photo { display: flex; align-items: center; gap: 12px; padding: 10px; background: #262624; margin-top: 10px; }
+.thumb { position: relative; width: 64px; height: 64px; flex-shrink: 0; background: #141414; display: grid; place-items: center; font-size: 13px; font-weight: 600; overflow: hidden; }
+.thumb i { position: absolute; inset: 0; background: url("assets/foto.jpg") center / cover; }
+.photo .t { font-weight: 600; font-size: 14px; }
+.photo .d { font-size: 13px; color: #cfcdc5; }
+.ta { margin-top: 12px; }
+.ta b { font-size: 15px; }
+.ta div { margin-top: 6px; height: 76px; padding: 10px; background: #262624; font-size: 14px; color: #8f8d86; }
+.send { margin: 8px 12px 0; height: 54px; display: grid; place-items: center; background: #0b6e3a; color: #fff; font-weight: 700; font-size: 17px; }
+.note { margin: 10px 14px 40px; font-size: 13px; color: #cfcdc5; }
+.okcard { margin: 0 12px; padding: 22px 20px; background: #0b6e3a; color: #fff; }
+.okcard h2 { font-size: 30px; letter-spacing: -0.03em; }
+.okcard p { margin-top: 8px; font-size: 16px; line-height: 1.35; }
+.okbtn { margin-top: 10px; height: 48px; display: grid; place-items: center; background: #141414; font-weight: 600; font-size: 15px; }
+.band { padding: 26px 20px 22px; background: #e5484d; color: #fff; }
+.band h1 { font-size: 32px; letter-spacing: -0.03em; line-height: 1.05; margin-top: 10px; }
+.band p { margin-top: 6px; font-size: 15px; }
+.tl { list-style: none; }
+.tl li { display: flex; gap: 12px; align-items: flex-start; padding: 8px 0; }
+.tl .dot { width: 16px; height: 16px; margin-top: 3px; flex-shrink: 0; }
+.tl b { display: block; font-size: 16px; }
+.tl span span { display: block; font-size: 13px; color: #cfcdc5; }
+.votes { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-top: 10px; }
+.vbtn { min-height: 48px; display: grid; place-items: center; background: #262624; font-weight: 600; font-size: 14px; text-align: center; padding: 0 6px; }
+.legend { display: flex; flex-wrap: wrap; gap: 14px 26px; font-size: 26px; font-weight: 600; }
+.legend span { display: inline-flex; align-items: center; gap: 10px; }
+.legend i { width: 24px; height: 24px; display: inline-block; }
+.cta { display: inline-flex; align-items: center; height: 110px; padding: 0 56px; background: #f2c200; color: #141414; font-size: 44px; font-weight: 700; position: relative; overflow: hidden; }
+.cta .shine { position: absolute; top: -20px; bottom: -20px; width: 70px; background: rgba(255,255,255,0.55); transform: skewX(-20deg); }
+</style>
+</head>
+<body>
+<div id="stage">
+  <!-- Fondos de cada capítulo (campos de color de la web). -->
+  <div class="layer" id="bg-red" style="background:#c8342f"></div>
+  <div class="layer" id="bg-yellow" style="background:#f2c200"></div>
+
+  <!-- Gancho: el video de la camioneta pisando el pozo (cuadros precargados), congelado al impacto. -->
+  <div class="layer" id="hook"></div>
+  <div class="layer" id="flash" style="background:#fff"></div>
+
+  <!-- Mapa grande del casco. -->
+  <div class="abs" id="bigmap">
+    <svg id="bigsvg" viewBox="0 0 1000 1000" width="100%" height="100%"><g id="bigg"></g></svg>
+  </div>
+  <div class="abs legend" id="legend">
+    <span><i style="background:#127a3b"></i>Nueva</span>
+    <span><i style="background:#14a58e"></i>Buena</span>
+    <span><i style="background:#c98500"></i>Gastada</span>
+    <span><i style="background:#e5484d"></i>Muy deteriorada</span>
+    <span><i style="background:#55554f"></i>Sin relevar</span>
+    <span><i style="background:#9085e9;border-radius:50%"></i>Pozo</span>
+  </div>
+  <div class="abs" id="ejemplo" style="font-size:22px;color:#aeaca4">Estados y pozos: datos de ejemplo</div>
+
+  <!-- Cámara con el teléfono adentro. -->
+  <div id="cam">
+    <div class="phone" id="phone">
+      <div class="vp">
+        <!-- Formulario real: Reportá un pozo -->
+        <div class="screen" id="scr-form">
+          <div class="scroll" id="form-scroll">
+            <div class="hdr"><b>Pocitos LP</b><span class="btn-red">Reportar</span></div>
+            <div class="ptitle"><h1>Reportá un pozo</h1><p>Donde falta asfalto. Lo puede reportar cualquiera que pase, y tarda unos 15 segundos.</p></div>
+            <div class="card">
+              <h2>¿Dónde está?</h2>
+              <div class="mapbox" id="map-small">
+                <svg viewBox="0 0 100 100" preserveAspectRatio="xMidYMid slice" width="100%" height="100%" id="smallsvg"><g id="smallg"></g></svg>
+                <svg id="pin" class="abs" width="34" height="44" viewBox="0 0 34 44" style="left:162px;top:101px"><path d="M17 2 C8 2 2 8.5 2 17 C2 28 17 42 17 42 C17 42 32 28 32 17 C32 8.5 26 2 17 2 Z" fill="#f2c200" stroke="#141414" stroke-width="2.5"/><circle cx="17" cy="17" r="5.5" fill="#141414"/></svg>
+                <span class="mbtn" id="btn-ubicacion">Usar mi ubicación</span>
+              </div>
+              <p class="hint">Mové el mapa hasta que el pin quede justo sobre el pozo.</p>
+              <div class="lbl" id="lbl-cuadra"><span id="lbl-a">Ubicando…</span><span id="lbl-b" class="abs" style="left:14px;top:12px">Calle 28 e/ 60 y 61</span></div>
+              <div class="search">
+                <b>O buscala por nombre</b><small>Elegí la calle y después entre qué calles está.</small>
+                <p class="cap">Calle</p><div class="selx" id="sel-calle"><span>Calle 28</span><span>⌄</span></div>
+                <p class="cap">entre</p><div class="selx"><span>60 y 61</span><span>⌄</span></div>
+              </div>
+            </div>
+            <div class="card" id="card-sev">
+              <h2 id="sev-title">¿Qué tan grave es?</h2>
+              <div class="choice" id="sev-leve"><svg width="42" height="30" viewBox="0 0 42 30"><rect x="0" y="20" width="10" height="10" fill="#c98500"/><rect x="15" y="10" width="10" height="20" fill="#55554f"/><rect x="30" y="0" width="10" height="30" fill="#55554f"/></svg><div><div class="t">Leve</div><div class="d">Se nota, pero se esquiva</div></div></div>
+              <div class="choice" id="sev-medio"><svg width="42" height="30" viewBox="0 0 42 30"><rect x="0" y="20" width="10" height="10" fill="#d95926"/><rect x="15" y="10" width="10" height="20" fill="#d95926"/><rect x="30" y="0" width="10" height="30" fill="#55554f"/></svg><div><div class="t">Medio</div><div class="d">Hay que frenar</div></div></div>
+              <div class="choice" id="sev-peligroso" style="position:relative">
+                <div class="abs" id="sev-on" style="inset:0;background:#e5484d"></div>
+                <svg width="42" height="30" viewBox="0 0 42 30" style="position:relative"><g id="bars-p" fill="#e5484d"><rect x="0" y="20" width="10" height="10"/><rect x="15" y="10" width="10" height="20"/><rect x="30" y="0" width="10" height="30"/></g></svg>
+                <div style="position:relative" id="sev-ptext"><div class="t">Peligroso</div><div class="d" id="sev-pd">Rompe ruedas, el auto salta o tira motos</div></div>
+              </div>
+              <div class="photo" id="foto-field">
+                <div class="thumb" id="foto-thumb">Foto<i id="thumb-img"></i></div>
+                <div><div class="t" id="foto-t">Sumar una foto (opcional)</div><div class="d">Sin ubicación ni datos del teléfono. No incluyas personas ni patentes.</div></div>
+              </div>
+              <div class="ta"><b>¿Querés contar algo?</b> <span style="font-size:14px;color:#cfcdc5">(opcional)</span><div>Ej.: Hace meses que está así.</div></div>
+            </div>
+            <div class="send" id="btn-enviar">Enviar reporte</div>
+            <p class="note">Es anónimo: guardamos dónde está el problema, no dónde estás vos.</p>
+            <div class="card" style="margin-top:8px;padding:20px"><p style="font-size:19px;line-height:1.3">Un proyecto vecinal, anónimo y sin fines de lucro. Sin publicidad, sin rastreadores, sin venta de datos.</p><p style="margin-top:10px;font-size:12px;color:#cfcdc5">Calles © colaboradores de OpenStreetMap. Datos bajo licencia ODbL.</p></div>
+            <div class="card" style="padding:20px;height:260px"><p style="font-size:16px;line-height:2">Tu anonimato<br>Cómo se calcula cada número<br>Datos abiertos<br>Prensa</p></div>
+          </div>
+        </div>
+        <!-- Enviado -->
+        <div class="screen" id="scr-ok">
+          <div class="hdr"><b>Pocitos LP</b><span class="btn-red">Reportar</span></div>
+          <div class="ptitle"><h1>Reportá un pozo</h1><p>Donde falta asfalto. Lo puede reportar cualquiera que pase, y tarda unos 15 segundos.</p></div>
+          <div class="okcard" id="ok-card">
+            <svg width="64" height="64" viewBox="0 0 64 64"><circle cx="32" cy="32" r="29" fill="none" stroke="#fff" stroke-width="5" id="ok-ring" stroke-dasharray="183" /><path id="ok-check" d="M18 33 L28 43 L47 22" fill="none" stroke="#fff" stroke-width="6" stroke-dasharray="44"/></svg>
+            <h2 style="margin-top:12px">Pozo reportado</h2>
+            <p>Con la foto ya cuenta. En unos minutos aparece en el tablero.</p>
+            <div class="okbtn">Reportar otro</div>
+            <div class="okbtn">Calificar esta cuadra</div>
+          </div>
+        </div>
+        <!-- Ficha del pozo -->
+        <div class="screen" id="scr-ficha">
+          <div class="hdr"><b>Pocitos LP</b><span class="btn-red">Reportar</span></div>
+          <div class="band">
+            <p style="font-size:13px;font-weight:600;text-decoration:underline">Problemas abiertos / Calle 28 e/ 60 y 61</p>
+            <svg width="60" height="30" viewBox="0 0 60 32" style="margin-top:14px"><path d="M2 18 H20 C22 18 23 28 30 28 C37 28 38 18 40 18 H58 V30 H2 Z" fill="#fff"/></svg>
+            <h1>Pozo, peligroso</h1>
+            <p style="font-size:17px;font-weight:600">Calle 28 e/ 60 y 61</p>
+          </div>
+          <div class="card" style="margin-top:8px">
+            <h2>¿Sigue ahí?</h2>
+            <div class="votes">
+              <div class="vbtn" id="btn-sigue" style="position:relative"><div class="abs" id="sigue-on" style="inset:0;background:#0b6e3a"></div><span style="position:relative">Sigue ahí</span></div>
+              <div class="vbtn">Ya lo arreglaron</div>
+            </div>
+            <p id="gracias" style="margin-top:10px;font-weight:700;color:#5fd35f;font-size:16px">¡Gracias por confirmar!</p>
+          </div>
+          <div class="card">
+            <h2>Historia</h2>
+            <ul class="tl">
+              <li id="tl-1"><i class="dot" style="background:#9085e9"></i><span><b>Reportado</b><span>Con foto, hoy</span></span></li>
+              <li id="tl-2"><i class="dot" style="background:#f1f1ef"></i><span><b>Verificado</b><span id="tl-votos">Lo confirmaron 3 vecinos</span></span></li>
+              <li id="tl-3"><i class="dot" style="background:#55554f"></i><span><b style="color:#aeaca4">Arreglado</b><span>Cuando lo arreglen: ¿quedó bien o quedó un parche?</span></span></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Foto que vuela del video al formulario. -->
+  <div class="abs" id="fly" style="background:url('assets/foto.jpg') center / cover"></div>
+
+  <!-- Marca -->
+  <div class="layer" id="brand">
+    <div class="abs" id="logo" style="background:#f2c200;display:grid;place-items:center">
+      <svg viewBox="0 8 60 60" width="62%" height="62%"><path d="M2 32 H20 C22 32 23 42 30 42 C37 42 38 32 40 32 H58 V44 H2 Z" fill="#141414"/></svg>
+    </div>
+  </div>
+
+  <!-- Números reales del casco -->
+  <div class="layer" id="impact" style="color:#141414">
+    <div class="abs" id="num1" style="font-weight:700;letter-spacing:-0.05em;line-height:0.9"></div>
+    <div class="abs" id="num1l" style="font-weight:600">cuadras en el casco</div>
+    <div class="abs" id="num2" style="font-weight:700;letter-spacing:-0.05em;line-height:0.9"></div>
+    <div class="abs" id="num2l" style="font-weight:600">de calles, cuadra por cuadra</div>
+  </div>
+
+  <!-- Cierre -->
+  <div class="layer" id="end">
+    <div class="abs" id="logo2" style="background:#f2c200;display:grid;place-items:center">
+      <svg viewBox="0 8 60 60" width="62%" height="62%"><path d="M2 32 H20 C22 32 23 42 30 42 C37 42 38 32 40 32 H58 V44 H2 Z" fill="#141414"/></svg>
+    </div>
+    <div class="abs" id="endname" style="font-weight:700;letter-spacing:-0.04em">Pocitos LP</div>
+    <div class="abs" id="endurl" style="font-weight:600;color:#cfcdc5">pocitos.com.ar</div>
+    <div class="abs" id="endcta"><span class="cta" id="cta">Reportá el tuyo<i class="shine" id="shine"></i></span></div>
+    <div class="abs" id="endfoot" style="color:#aeaca4">Anónimo. Sin cuentas. Sin publicidad.</div>
+  </div>
+
+  <div id="heads"></div>
+
+  <!-- Dedo virtual: fuera de la cámara. -->
+  <div class="abs" id="ripple" style="border:4px solid #fff;border-radius:50%"></div>
+  <div class="abs" id="tap" style="border-radius:50%;background:rgba(255,255,255,0.42);border:3px solid rgba(255,255,255,0.9)"></div>
+</div>
+
+<script src="assets/mapa.js"></script>
+<script>
+(() => {
+  const Q = new URLSearchParams(location.search);
+  const W = +Q.get("w") || 1080, H = +Q.get("h") || 1920;
+  const V = H > W; // vertical
+  const RENDER = Q.has("render");
+  const $ = (id) => document.getElementById(id);
+  const stage = $("stage");
+  stage.style.width = W + "px"; stage.style.height = H + "px";
+
+  // ——— Utilidades ———
+  const clamp = (x, a = 0, b = 1) => Math.min(b, Math.max(a, x));
+  const p = (t, a, b) => clamp((t - a) / (b - a));
+  const io = (x) => (x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2);
+  const out = (x) => 1 - Math.pow(1 - x, 3);
+  const back = (x) => { const c = 1.70158, d = c + 1; return 1 + d * Math.pow(x - 1, 3) + c * Math.pow(x - 1, 2); };
+  const lerp = (a, b, x) => (Array.isArray(a) ? a.map((v, i) => v + (b[i] - v) * x) : a + (b - a) * x);
+  /** kf(t, [[t0, v0], [t1, v1], …], ease) interpola números o arrays. */
+  const kf = (t, k, e = io) => {
+    if (t <= k[0][0]) return k[0][1];
+    for (let i = 1; i < k.length; i++) if (t <= k[i][0]) return lerp(k[i - 1][1], k[i][1], e(p(t, k[i - 1][0], k[i][0])));
+    return k[k.length - 1][1];
+  };
+  const win = (t, a, b, f = 0.3) => Math.min(p(t, a, a + f), 1 - p(t, b - f, b)); // ventana con fundidos
+  const set = (el, o, tr, extra) => { el.style.opacity = o; if (tr !== undefined) el.style.transform = tr; if (extra) Object.assign(el.style, extra); };
+  const fmt = (n) => Math.round(n).toLocaleString("es-AR");
+
+  // ——— Diseño según orientación ———
+  const L = V
+    ? { ps: 1.62, phone: [(W - 414 * 1.62) / 2, 470], head: { x: 72, y: 150, w: W - 144, size: 74, align: "left" },
+        map: [40, 520, 1000], legend: [72, 1560, W - 144], ejemplo: [72, 1700] }
+    : { ps: 1.1, phone: [1180, (H - 868 * 1.1) / 2], head: { x: 130, y: 330, w: 900, size: 92, align: "left" },
+        map: [1060, 60, 960], legend: [130, 640, 820], ejemplo: [130, 860] };
+  const phone = $("phone");
+  phone.style.left = L.phone[0] + "px"; phone.style.top = L.phone[1] + "px"; phone.style.transform = `scale(${L.ps})`;
+  const PC = [L.phone[0] + (414 * L.ps) / 2, L.phone[1] + (868 * L.ps) / 2]; // centro del teléfono
+  const bm = $("bigmap");
+  Object.assign(bm.style, { left: L.map[0] + "px", top: L.map[1] + "px", width: L.map[2] + "px", height: L.map[2] + "px" });
+  Object.assign($("legend").style, { left: L.legend[0] + "px", top: L.legend[1] + "px", width: L.legend[2] + "px" });
+  Object.assign($("ejemplo").style, { left: L.ejemplo[0] + "px", top: L.ejemplo[1] + "px" });
+
+  // ——— Gancho: cuadros precargados ———
+  const HOOK_N = 27, hookImgs = [];
+  for (let i = 0; i < HOOK_N; i++) {
+    const im = new Image();
+    im.src = `assets/hook/h${String(i + 1).padStart(3, "0")}.jpg`;
+    Object.assign(im.style, { position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", opacity: 0 });
+    $("hook").appendChild(im); hookImgs.push(im);
+  }
+  const freeze = new Image(); freeze.src = "assets/foto.jpg";
+  Object.assign(freeze.style, { position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", opacity: 0 });
+  $("hook").appendChild(freeze);
+
+  // ——— Mapas (geometría real del casco) ———
+  const COL = ["#127a3b", "#14a58e", "#c98500", "#e5484d", "#55554f", "#3987e5"];
+  const NS = "http://www.w3.org/2000/svg";
+  const [tx, ty] = MAPA.target;
+  const pts = (a) => { let s = ""; for (let i = 0; i < a.length; i += 2) s += a[i] + "," + a[i + 1] + " "; return s; };
+  // Mapa chico del formulario: calles en gris, centrado en la cuadra.
+  const sg = $("smallg");
+  const SV = 34; // ancho visible en unidades (~250 m)
+  $("smallsvg").setAttribute("viewBox", `${tx - SV / 2} ${ty - SV / 2 * 290 / 366} ${SV} ${SV * 290 / 366}`);
+  for (const [, a] of MAPA.segs) {
+    const xs = a.filter((_, i) => i % 2 === 0), ys = a.filter((_, i) => i % 2 === 1);
+    if (Math.min(...xs) > tx + SV || Math.max(...xs) < tx - SV || Math.min(...ys) > ty + SV || Math.max(...ys) < ty - SV) continue;
+    const pl = document.createElementNS(NS, "polyline");
+    pl.setAttribute("points", pts(a)); pl.setAttribute("fill", "none"); pl.setAttribute("stroke", "#5f5d57");
+    pl.setAttribute("stroke-width", "1.6"); pl.setAttribute("stroke-linecap", "round"); sg.appendChild(pl);
+  }
+  // Mapa grande: anillos por distancia a la cuadra, para la cascada.
+  const RINGS = 36, rings = [], prings = [];
+  const bg = $("bigg");
+  for (let r = 0; r < RINGS; r++) { const g = document.createElementNS(NS, "g"); bg.appendChild(g); rings.push(g); }
+  const dist = (x, y) => Math.hypot(x - tx, y - ty);
+  for (const [c, a] of MAPA.segs) {
+    const pl = document.createElementNS(NS, "polyline");
+    pl.setAttribute("points", pts(a)); pl.setAttribute("fill", "none"); pl.setAttribute("stroke", COL[c]);
+    pl.setAttribute("stroke-width", "2.6"); pl.setAttribute("stroke-linecap", "round");
+    rings[Math.min(RINGS - 1, Math.floor(dist(a[0], a[1]) / 22))].appendChild(pl);
+  }
+  for (let r = 0; r < 12; r++) { const g = document.createElementNS(NS, "g"); bg.appendChild(g); prings.push(g); }
+  for (const [x, y] of MAPA.pozos) {
+    const c = document.createElementNS(NS, "circle");
+    c.setAttribute("cx", x); c.setAttribute("cy", y); c.setAttribute("r", 5.5); c.setAttribute("fill", "#9085e9");
+    c.setAttribute("stroke", "#141414"); c.setAttribute("stroke-width", 1.5);
+    prings[Math.min(11, Math.floor(dist(x, y) / 60))].appendChild(c);
+  }
+
+  // ——— Titulares (dos líneas: la primera apagada, la segunda fuerte) ———
+  const HEADS = [
+    // [inicio, fin, línea 1, línea 2, color línea 1, color línea 2]
+    [1.45, 3.95, "Viste un pozo.", "Reportalo en 15 segundos.", "#ffd6d3", "#ffffff"],
+    [4.25, 6.35, "Pocitos LP.", "Las calles de La Plata, en tu mano.", "#8f8d86", "#f1f1ef"],
+    [6.55, 9.1, "Así de simple:", "marcá dónde está.", "#ffd6d3", "#ffffff"],
+    [9.1, 11.6, "Elegí qué tan", "grave es.", "#ffd6d3", "#ffffff"],
+    [11.6, 14.3, "Sumá una foto.", "Sin datos de tu teléfono.", "#ffd6d3", "#ffffff"],
+    [14.3, 17.55, "Enviá.", "Es anónimo, sin cuentas.", "#ffd6d3", "#ffffff"],
+    [17.7, 24.0, "Todo el casco,", "en un mapa.", "#8f8d86", "#f1f1ef"],
+    [24.2, 31.0, "Seguí cada pozo.", "Los vecinos lo confirman.", "#8f8d86", "#f1f1ef"],
+    [31.25, 35.0, "Las medimos", "entre todos.", "#4a4945", "#141414"],
+  ];
+  const headEls = HEADS.map(([, , a, b, c1, c2]) => {
+    const d = document.createElement("div");
+    d.className = "head";
+    Object.assign(d.style, { left: L.head.x + "px", width: L.head.w + "px", fontSize: L.head.size + "px", textAlign: L.head.align });
+    const words = [];
+    for (const [txt, col, cls] of [[a, c1, "l1"], [b, c2, "l2"]]) {
+      const line = document.createElement("span"); line.className = cls; line.style.color = col;
+      txt.split(" ").forEach((w, i, arr) => { const s = document.createElement("span"); s.className = "word"; s.textContent = w + (i < arr.length - 1 ? " " : ""); line.appendChild(s); words.push(s); });
+      d.appendChild(line);
+    }
+    $("heads").appendChild(d);
+    return { d, words };
+  });
+  // Los titulares de la marca, los números y el mapa van centrados en vertical; el resto arriba del teléfono.
+  const headY = (i) => (V ? (i === 1 ? 1180 : i === 8 ? 1300 : L.head.y) : (i === 8 ? 760 : L.head.y));
+
+  // ——— Medición de objetivos por id (cámara en escala 1, sin scroll) ———
+  const M = {};
+  const SCROLLED = new Set(["btn-ubicacion", "lbl-cuadra", "sel-calle", "sev-title", "sev-peligroso", "foto-field", "foto-thumb", "btn-enviar", "map-small"]);
+  function measure() {
+    $("cam").style.transform = "none"; $("form-scroll").style.transform = "none";
+    const s = stage.getBoundingClientRect(), k = s.width / W;
+    for (const id of [...SCROLLED, "btn-sigue", "ok-card"]) {
+      const r = $(id).getBoundingClientRect();
+      M[id] = { x: (r.left - s.left) / k + r.width / k / 2, y: (r.top - s.top) / k + r.height / k / 2, w: r.width / k, h: r.height / k, top: (r.top - s.top) / k, left: (r.left - s.left) / k };
+    }
+  }
+
+  // Scroll del formulario (px del celular), por tramos.
+  let SC = {};
+  const formScroll = (t) =>
+    kf(t, [[0, SC.foto], [6.2, SC.foto], [6.3, 0], [8.95, 0], [9.6, SC.sev], [11.6, SC.sev], [12.25, SC.foto], [14.3, SC.foto], [14.9, SC.send]]);
+
+  // Cámara: [t, escala, objetivo]. En vertical solo se mueve en Y, centrada en el teléfono.
+  const CAM = [
+    [0, 1, null], [6.3, 1, null], [6.9, 1.28, "map-small"], [8.9, 1.28, "map-small"], [9.5, 1.0, null],
+    [9.7, 1.0, null], [10.1, 1.22, "sev-peligroso"], [11.3, 1.22, "sev-peligroso"], [11.8, 1.0, null],
+    [12.3, 1.0, null], [12.6, 1.3, "foto-field"], [14.0, 1.3, "foto-field"], [14.4, 1.0, null],
+    [17.5, 1.0, null], [24.2, 1.0, null], [26.4, 1.0, null], [26.9, 1.2, "btn-sigue"], [29.6, 1.2, "btn-sigue"], [30.4, 1.0, null],
+  ];
+  /** Posición en el escenario (sin cámara) del centro de un objetivo en el instante t. */
+  const raw = (id, t) => {
+    const m = M[id]; if (!m) return PC;
+    return [m.x, m.y - (SCROLLED.has(id) ? formScroll(t) * L.ps : 0)];
+  };
+  function camAt(t) {
+    let i = 0; while (i < CAM.length - 1 && t > CAM[i + 1][0]) i++;
+    const a = CAM[i], b = CAM[Math.min(i + 1, CAM.length - 1)];
+    const x = b === a ? 1 : io(p(t, a[0], b[0]));
+    const fy = (k) => (k[2] ? raw(k[2], t)[1] : PC[1]);
+    return { s: lerp(a[1], b[1], x), f: [PC[0], lerp(fy(a), fy(b), x)] };
+  }
+  const toScreen = (pt, c) => [PC[0] + (pt[0] - c.f[0]) * c.s, PC[1] + (pt[1] - c.f[1]) * c.s];
+
+  // Toques: [t, id]. El dedo llega antes, se achica y deja una onda.
+  const TAPS = [[3.0, "btn-enviar"], [7.65, "btn-ubicacion"], [10.45, "sev-peligroso"], [13.05, "foto-field"], [15.45, "btn-enviar"], [27.6, "btn-sigue"]];
+
+  // ——— Render ———
+  function render(t) {
+    // Fondos
+    const redOn = Math.max(win(t, 0.95, 4.05, 0.3), win(t, 6.25, 17.75, 0.3));
+    set($("bg-red"), redOn);
+    set($("bg-yellow"), win(t, 31.0, 35.1, 0.3));
+
+    // Gancho
+    const hi = Math.min(HOOK_N - 1, Math.floor(t * 30));
+    hookImgs.forEach((im, i) => (im.style.opacity = t < 0.9 && i === hi ? 1 : 0));
+    const fz = t >= 0.9 && t < 1.25 ? 1 : 0;
+    set(freeze, fz, `scale(${1 + 0.035 * out(p(t, 0.9, 1.25))})`);
+    $("hook").style.opacity = t < 1.25 ? 1 : 0;
+    set($("flash"), t >= 0.9 ? 0.85 * (1 - out(p(t, 0.9, 1.15))) : 0);
+
+    // Teléfono y pantallas
+    const phoneOn = Math.max(p(t, 1.2, 1.55) * (1 - p(t, 3.95, 4.2)), win(t, 6.25, 17.75, 0.3), win(t, 24.1, 31.0, 0.35));
+    const c = camAt(t);
+    const cam = $("cam");
+    cam.style.opacity = phoneOn;
+    cam.style.transform = `translate(${PC[0] - c.f[0] * c.s}px, ${PC[1] - c.f[1] * c.s}px) scale(${c.s})`;
+    $("form-scroll").style.transform = `translateY(${-formScroll(t)}px)`;
+    const okOn = Math.max(win(t, 3.1, 4.3, 0.15), win(t, 15.6, 17.9, 0.15));
+    const fichaOn = t > 20 ? 1 : 0;
+    set($("scr-ficha"), fichaOn);
+    set($("scr-ok"), fichaOn ? 0 : okOn);
+    set($("scr-form"), fichaOn ? 0 : 1 - okOn);
+    // Check animado
+    const ck = t < 10 ? p(t, 3.2, 3.75) : p(t, 15.7, 16.25);
+    $("ok-ring").style.strokeDashoffset = 183 * (1 - out(ck));
+    $("ok-check").style.strokeDashoffset = 44 * (1 - out(p(ck, 0.4, 1)));
+
+    // Estado del formulario: en el gancho ya viene completo; en la explicación se completa toque a toque.
+    const lab = t < 6.25 ? 1 : out(p(t, 7.75, 8.0));
+    set($("lbl-a"), 1 - lab); set($("lbl-b"), lab);
+    const pinB = t < 6.25 ? 0 : Math.sin(Math.PI * p(t, 7.7, 8.1)) * 14;
+    $("pin").style.transform = `translateY(${-pinB}px)`;
+    const sev = t < 6.25 ? 1 : p(t, 10.45, 10.55);
+    set($("sev-on"), sev);
+    $("bars-p").setAttribute("fill", sev > 0.5 ? "#141414" : "#e5484d");
+    $("sev-ptext").style.color = sev > 0.5 ? "#141414" : "#f1f1ef";
+    $("sev-pd").style.color = sev > 0.5 ? "#141414" : "#cfcdc5";
+    const ph = t < 6.25 ? (t < 2.4 ? 0 : 1) : out(p(t, 13.15, 13.45));
+    set($("thumb-img"), ph);
+    $("foto-t").textContent = ph > 0.5 ? "Foto lista (tocá para cambiarla)" : "Sumar una foto (opcional)";
+    // Botón de enviar apretado
+    const pressed = (t >= 3.0 && t < 3.15) || (t >= 15.45 && t < 15.6);
+    $("btn-enviar").style.background = pressed ? "#085a2f" : "#0b6e3a";
+    // Ficha: voto
+    const vote = p(t, 27.6, 27.7);
+    set($("sigue-on"), vote);
+    set($("gracias"), out(p(t, 27.75, 28.05)));
+    $("tl-votos").textContent = `Lo confirmaron ${t >= 27.75 ? 4 : 3} vecinos`;
+    ["tl-1", "tl-2", "tl-3"].forEach((id, i) => {
+      const a = out(p(t, 24.9 + i * 0.35, 25.35 + i * 0.35));
+      set($(id), t > 20 ? a : 1, `translateX(${(1 - a) * 24}px)`);
+    });
+
+    // La foto que vuela del video al formulario
+    const fl = p(t, 1.25, 2.4);
+    if (t >= 1.25 && t < 2.45) {
+      const th = M["foto-thumb"]; const pt = toScreen(raw("foto-thumb", t), c);
+      const w0 = W, h0 = H, x0 = 0, y0 = 0, w1 = th.w * c.s, h1 = th.h * c.s;
+      const e = io(fl);
+      Object.assign($("fly").style, { display: "block", left: lerp(x0, pt[0] - w1 / 2, e) + "px", top: lerp(y0, pt[1] - h1 / 2, e) + "px", width: lerp(w0, w1, e) + "px", height: lerp(h0, h1, e) + "px", opacity: 1 });
+    } else $("fly").style.display = "none";
+
+    // Marca
+    const br = win(t, 4.1, 6.4, 0.3);
+    $("brand").style.opacity = br;
+    const lg = $("logo"), ls = V ? 300 : 260, b1 = back(p(t, 4.15, 4.6));
+    Object.assign(lg.style, { width: ls + "px", height: ls + "px", left: (V ? (W - ls) / 2 : 130) + "px", top: (V ? 760 : 300) + "px", transform: `scale(${b1})` });
+
+    // Mapa grande: entra acercado a la cuadra y se aleja mientras se pintan las calles.
+    const mp = win(t, 17.6, 24.2, 0.4);
+    bm.style.opacity = mp; $("legend").style.opacity = mp * out(p(t, 20.2, 20.8)); $("ejemplo").style.opacity = mp * out(p(t, 20.6, 21.2));
+    const z = kf(t, [[17.6, 5], [20.6, 1]]);
+    $("bigg").setAttribute("transform", `translate(${500 - tx * z} ${500 - ty * z}) scale(${z})`);
+    rings.forEach((g, r) => g.setAttribute("opacity", out(p(t, 17.8 + r * 0.06, 18.1 + r * 0.06))));
+    prings.forEach((g, r) => g.setAttribute("opacity", out(p(t, 20.4 + r * 0.1, 20.7 + r * 0.1))));
+
+    // Números (reales: cuadras y km del casco)
+    const ip = win(t, 31.0, 35.1, 0.3);
+    $("impact").style.opacity = ip;
+    const n1 = $("num1"), n2 = $("num2");
+    n1.textContent = fmt(3955 * out(p(t, 31.2, 32.6)));
+    n2.textContent = fmt(495 * out(p(t, 32.0, 33.2))) + " km";
+    if (V) {
+      Object.assign(n1.style, { left: "72px", top: "380px", fontSize: "240px" }); Object.assign($("num1l").style, { left: "80px", top: "610px", fontSize: "48px" });
+      Object.assign(n2.style, { left: "72px", top: "760px", fontSize: "240px" }); Object.assign($("num2l").style, { left: "80px", top: "990px", fontSize: "48px" });
+    } else {
+      Object.assign(n1.style, { left: "130px", top: "150px", fontSize: "210px" }); Object.assign($("num1l").style, { left: "136px", top: "350px", fontSize: "42px" });
+      Object.assign(n2.style, { left: "1020px", top: "150px", fontSize: "210px" }); Object.assign($("num2l").style, { left: "1026px", top: "350px", fontSize: "42px" });
+    }
+    set($("num2"), out(p(t, 32.0, 32.4))); set($("num2l"), out(p(t, 32.3, 32.7))); set($("num1l"), out(p(t, 31.6, 32.0)));
+
+    // Cierre
+    const en = p(t, 35.0, 35.4);
+    $("end").style.opacity = en;
+    const l2 = $("logo2"), s2 = V ? 220 : 200;
+    Object.assign(l2.style, { width: s2 + "px", height: s2 + "px", left: (V ? (W - s2) / 2 : (W - s2) / 2) + "px", top: (V ? 560 : 150) + "px", transform: `scale(${back(p(t, 35.1, 35.55))})` });
+    const center = (el, y, size) => Object.assign(el.style, { left: 0, width: W + "px", textAlign: "center", top: y + "px", fontSize: size + "px" });
+    center($("endname"), V ? 830 : 380, V ? 110 : 96); set($("endname"), out(p(t, 35.3, 35.7)), `translateY(${(1 - out(p(t, 35.3, 35.7))) * 30}px)`);
+    center($("endurl"), V ? 970 : 510, V ? 54 : 46); set($("endurl"), out(p(t, 35.5, 35.9)));
+    center($("endcta"), V ? 1110 : 620, 44); set($("endcta"), out(p(t, 35.8, 36.1)), `scale(${0.6 + 0.4 * back(p(t, 35.8, 36.4))})`);
+    $("shine").style.left = lerp(-120, 640, io(p(t, 36.6, 37.4))) + "px";
+    center($("endfoot"), V ? 1290 : 790, V ? 34 : 30); set($("endfoot"), out(p(t, 36.2, 36.6)));
+
+    // Titulares
+    HEADS.forEach(([a, b], i) => {
+      const { d, words } = headEls[i];
+      const on = t >= a - 0.05 && t <= b + 0.05;
+      d.style.display = on ? "block" : "none"; if (!on) return;
+      d.style.top = headY(i) + "px";
+      const ex = p(t, b - 0.3, b);
+      words.forEach((w, j) => {
+        const e = out(p(t, a + j * 0.08, a + j * 0.08 + 0.45));
+        w.style.opacity = e * (1 - ex);
+        w.style.transform = `translateY(${(1 - e) * 42 - ex * 24}px)`;
+        w.style.filter = `blur(${(1 - e) * 10}px)`;
+      });
+    });
+
+    // Dedo
+    let tapO = 0, tapS = 1, pos = [W * 0.8, H * 1.05], rip = null;
+    for (let i = 0; i < TAPS.length; i++) {
+      const [tt, id] = TAPS[i];
+      if (t < tt - 0.9 || t > tt + 0.55) continue;
+      const tgt = toScreen(raw(id, t), c);
+      const from = [tgt[0] + 160, tgt[1] + 260];
+      pos = lerp(from, tgt, io(p(t, tt - 0.75, tt - 0.12)));
+      tapO = Math.min(p(t, tt - 0.9, tt - 0.6), 1 - p(t, tt + 0.3, tt + 0.55));
+      tapS = 1 - 0.28 * Math.sin(Math.PI * p(t, tt - 0.06, tt + 0.2));
+      const r = p(t, tt, tt + 0.55);
+      if (r > 0 && r < 1) rip = [tgt, r];
+    }
+    const TS = 64;
+    Object.assign($("tap").style, { width: TS + "px", height: TS + "px", left: pos[0] - TS / 2 + "px", top: pos[1] - TS / 2 + "px", opacity: tapO, transform: `scale(${tapS})` });
+    if (rip) {
+      const [pt, r] = rip, s = TS * (0.8 + 1.9 * out(r));
+      Object.assign($("ripple").style, { width: s + "px", height: s + "px", left: pt[0] - s / 2 + "px", top: pt[1] - s / 2 + "px", opacity: 0.7 * (1 - r) });
+    } else $("ripple").style.opacity = 0;
+  }
+
+  // ——— Arranque ———
+  window.DUR = 40;
+  window.LISTO = false;
+  window.render = render;
+  window.TAP_TIMES = TAPS.map(([tt, id]) => ({ t: tt, id }));
+  window.tapCheck = (t) => {
+    const c = camAt(t);
+    return TAPS.filter(([tt]) => Math.abs(tt - t) < 0.01).map(([, id]) => {
+      const m = M[id], pt = toScreen(raw(id, t), c), w = m.w * c.s, h = m.h * c.s;
+      const tap = $("tap").getBoundingClientRect(), s = stage.getBoundingClientRect(), k = s.width / W;
+      const cx = (tap.left - s.left) / k + tap.width / k / 2, cy = (tap.top - s.top) / k + tap.height / k / 2;
+      return { id, cx, cy, inside: Math.abs(cx - pt[0]) < w / 2 && Math.abs(cy - pt[1]) < h / 2 };
+    });
+  };
+  const fit = () => {
+    if (RENDER) return;
+    const k = Math.min(innerWidth / W, innerHeight / H);
+    stage.style.transform = `translate(${(innerWidth - W * k) / 2}px, ${(innerHeight - H * k) / 2}px) scale(${k})`;
+  };
+  Promise.all([document.fonts.ready, ...[...hookImgs, freeze].map((im) => im.decode())]).then(() => {
+    stage.style.transform = "none";
+    measure();
+    SC = {
+      sev: M["sev-title"].top / L.ps - L.phone[1] / L.ps - 70,
+      foto: (M["foto-field"].top - L.phone[1]) / L.ps - 330,
+      send: (M["btn-enviar"].top - L.phone[1]) / L.ps - 520,
+    };
+    fit(); addEventListener("resize", fit);
+    render(0);
+    window.LISTO = true;
+    if (!RENDER) {
+      const t0 = performance.now();
+      const loop = (now) => { render(((now - t0) / 1000) % window.DUR); requestAnimationFrame(loop); };
+      requestAnimationFrame(loop);
+    }
+  });
+})();
+</script>
+</body>
+</html>
