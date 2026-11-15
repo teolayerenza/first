@@ -106,3 +106,31 @@ const demoStore: Store = {
 };
 
 export const store: Store = sb ? supabaseStore(sb) : demoStore;
+
+/** Viajes de ejemplo para mostrar la página (se pueden borrar). Recorridos aproximados sobre rutas reales. */
+export const EXAMPLES: TripDraft[] = [
+  {
+    title: "Ruta 40: Cafayate a Cachi (ejemplo)", date_from: "2024-09-14", date_to: "2024-09-16", difficulty: 3,
+    terrains: ["Ripio", "Tierra", "Vado / río"], companions: "", notes: "Quebrada de las Flechas. Ripio con serrucho en varios tramos.",
+    route: [[-65.976, -26.073], [-66.01, -25.93], [-66.08, -25.78], [-66.15, -25.62], [-66.21, -25.48], [-66.27, -25.34], [-66.31, -25.2], [-66.36, -25.11]],
+  },
+  {
+    title: "Paso San Francisco y Laguna Verde (ejemplo)", date_from: "2025-02-10", date_to: "2025-02-13", difficulty: 4,
+    terrains: ["Asfalto", "Ripio", "Arena", "Piedra"], companions: "", notes: "Subida larga. Cargar nafta en Fiambalá.",
+    route: [[-67.62, -27.68], [-67.78, -27.6], [-67.95, -27.48], [-68.15, -27.33], [-68.35, -27.18], [-68.55, -27.07], [-68.8, -26.99], [-68.95, -26.98]],
+  },
+  {
+    title: "Península Valdés (ejemplo)", date_from: "2023-11-02", date_to: "2023-11-05", difficulty: 2,
+    terrains: ["Asfalto", "Ripio"], companions: "", notes: "Puerto Pirámides y Punta Delgada.",
+    route: [[-65.04, -42.77], [-64.6, -42.58], [-64.28, -42.57], [-64.0, -42.62], [-63.75, -42.75], [-63.62, -42.83]],
+  },
+  {
+    title: "Médanos de Villa Gesell (ejemplo)", date_from: "2024-01-20", date_to: null, difficulty: 5,
+    terrains: ["Arena", "Médanos"], companions: "", notes: "Bajar presión de cubiertas antes de entrar.",
+    route: [[-56.97, -37.26], [-56.99, -37.3], [-57.02, -37.35], [-57.06, -37.4], [-57.1, -37.45]],
+  },
+];
+
+export async function loadExamples() {
+  for (const draft of EXAMPLES) await store.save({ draft, newPhotos: [], removedPhotoIds: [], captions: {} });
+}

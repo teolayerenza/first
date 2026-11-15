@@ -3,7 +3,7 @@ import { MapView, type MapStyle } from "./components/MapView";
 import { TripEditor, type DrawMode } from "./components/TripEditor";
 import { TripDetail, TripList } from "./components/TripPanel";
 import { routeBetween } from "./lib/routing";
-import { store } from "./lib/store";
+import { loadExamples, store } from "./lib/store";
 import type { LngLat, Photo, Trip } from "./lib/types";
 
 type View = { kind: "list" } | { kind: "detail"; id: string } | { kind: "edit"; trip: Trip | null };
@@ -96,7 +96,7 @@ export function App() {
       <aside className={panelOpen ? "panel" : "panel closed"}>
         <button className="grip" onClick={() => setPanelOpen((v) => !v)} aria-label={panelOpen ? "Achicar panel" : "Abrir panel"}><span /></button>
         {loadError && <p className="error">{loadError}</p>}
-        {view.kind === "list" && <TripList trips={trips} demo={store.demo} onOpen={(id) => setView({ kind: "detail", id })} onNew={() => startEdit(null)} />}
+        {view.kind === "list" && <TripList trips={trips} demo={store.demo} onOpen={(id) => setView({ kind: "detail", id })} onNew={() => startEdit(null)} onExamples={async () => { await loadExamples(); load(); }} />}
         {view.kind === "detail" && selected && (
           <TripDetail
             trip={selected}

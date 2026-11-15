@@ -6,7 +6,7 @@ const fmtDate = (d: string) => new Date(d + "T12:00:00").toLocaleDateString("es-
 const dates = (t: Trip) => (t.date_to && t.date_to !== t.date_from ? `${fmtDate(t.date_from)} – ${fmtDate(t.date_to)}` : fmtDate(t.date_from));
 const km = (n: number) => `${Math.round(n).toLocaleString("es-AR")} km`;
 
-export function TripList({ trips, demo, onOpen, onNew }: { trips: Trip[]; demo: boolean; onOpen(id: string): void; onNew(): void }) {
+export function TripList({ trips, demo, onOpen, onNew, onExamples }: { trips: Trip[]; demo: boolean; onOpen(id: string): void; onNew(): void; onExamples(): void }) {
   const [level, setLevel] = useState<number | null>(null);
   const [year, setYear] = useState<string>("");
   const years = useMemo(() => [...new Set(trips.map((t) => t.date_from.slice(0, 4)))].sort().reverse(), [trips]);
@@ -54,6 +54,7 @@ export function TripList({ trips, demo, onOpen, onNew }: { trips: Trip[]; demo: 
         <div className="empty">
           <p><b>Todavía no hay viajes.</b></p>
           <p className="muted">Tocá “Nuevo viaje” y marcá el recorrido en el mapa: por camino, a mano o combinando los dos.</p>
+          <button className="btn ghost" onClick={onExamples}>Cargar viajes de ejemplo</button>
         </div>
       ) : (
         <ul className="trips">
